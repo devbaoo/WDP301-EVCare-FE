@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { BASE_URL } from "./apiConfig";
 
 const axiosInstance = axios.create({
@@ -31,11 +31,59 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       // Token expired or invalid
       localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
     return Promise.reject(error);
   }
 );
+
+// HTTP Methods
+export const api = {
+  // GET request
+  get: <T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+    return axiosInstance.get(url, config);
+  },
+
+  // POST request
+  post: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+    return axiosInstance.post(url, data, config);
+  },
+
+  // PUT request
+  put: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+    return axiosInstance.put(url, data, config);
+  },
+
+  // PATCH request
+  patch: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+    return axiosInstance.patch(url, data, config);
+  },
+
+  // DELETE request
+  delete: <T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+    return axiosInstance.delete(url, config);
+  },
+
+  // Upload file
+  upload: <T = any>(url: string, formData: FormData, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+    return axiosInstance.post(url, formData, {
+      ...config,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        ...config?.headers,
+      },
+    });
+  },
+
+  // Download file
+  download: (url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<Blob>> => {
+    return axiosInstance.get(url, {
+      ...config,
+      responseType: 'blob',
+    });
+  },
+};
 
 export default axiosInstance;

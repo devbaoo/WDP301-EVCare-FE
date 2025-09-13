@@ -3,7 +3,8 @@ import { Button } from "antd";
 import { Input } from "antd";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { authService, RegisterRequest } from "@/services/features/authService";
+import { useAppDispatch, useAppSelector } from "../../../services/store/store";
+import { registerUser } from "../../../services/features/auth/authSlice";
 
 interface RegisterData {
   username: string;
@@ -21,8 +22,9 @@ interface RegisterFormProps {
 
 export default function RegisterForm({ onSuccess }: RegisterFormProps) {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { loading } = useAppSelector((state) => state.auth);
   const [showPassword, setShowPassword] = useState(false);
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   
   // Register form data
   const [registerData, setRegisterData] = useState<RegisterData>({
@@ -84,29 +86,24 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
 
   const onSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    setStatus("loading");
 
     // Register validation
     if (!validateRegisterForm()) {
-      setStatus("error");
       return;
     }
 
     try {
-      const registerDataAPI: RegisterRequest = {
+      const resultAction = await dispatch(registerUser({
         username: registerData.username,
         email: registerData.email,
         password: registerData.password,
-        confirmPassword: registerData.confirmPassword,
         fullName: registerData.fullName,
         phone: registerData.phone,
         address: registerData.address
-      };
-
-      const response = await authService.register(registerDataAPI);
+      }));
       
-      if (response.success) {
-        console.log("Registration successful:", response);
+      if (registerUser.fulfilled.match(resultAction)) {
+        console.log("Registration successful:", resultAction.payload);
         
         // Save email for verification
         localStorage.setItem('registerEmail', registerData.email);
@@ -114,12 +111,9 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
         // Redirect to verify email page
         navigate('/verify-email');
         onSuccess?.();
-      } else {
-        setStatus("error");
       }
     } catch (error: any) {
       console.error("Registration error:", error);
-      setStatus("error");
     }
   };
 
@@ -331,27 +325,12 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
       <Button
         type="primary"
         htmlType="submit"
-        loading={status === "loading"}
+        loading={loading}
         className="w-full h-14 bg-gradient-to-r from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 border-none rounded-xl text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
       >
         Create Account
       </Button>
 
-      {/* Status Messages */}
-      <div className="mt-4 min-h-[28px] text-sm">
-        {status === "success" && (
-          <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-green-700 flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            Account created successfully! Redirecting...
-          </div>
-        )}
-        {status === "error" && (
-          <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-700 flex items-center gap-2">
-            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-            Please check your information and try again.
-          </div>
-        )}
-      </div>
     </form>
   );
 }

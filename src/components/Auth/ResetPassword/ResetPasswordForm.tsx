@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Button } from "antd";
 import { Input } from "antd";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "@/services/features/authService";
+import { useAppDispatch, useAppSelector } from "../../../services/store/store";
+import { resetPassword, verifyResetCode, updatePassword } from "../../../services/features/auth/authSlice";
 
 interface ResetPasswordFormProps {
   step: "email" | "code" | "password";
@@ -13,97 +14,82 @@ interface ResetPasswordFormProps {
 
 export default function ResetPasswordForm({ step, onStepChange, onSuccess }: ResetPasswordFormProps) {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { loading } = useAppSelector((state) => state.auth);
   const [email, setEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus("loading");
 
     if (!email.trim()) {
-      setStatus("error");
       return;
     }
 
     try {
-      const response = await authService.resetPassword(email);
+      const resultAction = await dispatch(resetPassword({ email }));
       
-      if (response.success) {
+      if (resetPassword.fulfilled.match(resultAction)) {
         onStepChange("code");
-        setStatus("idle");
-        console.log("Reset password email sent:", response);
-      } else {
-        setStatus("error");
+        console.log("Reset password email sent:", resultAction.payload);
       }
     } catch (error: any) {
       console.error("Reset password error:", error);
-      setStatus("error");
     }
   };
 
   const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus("loading");
 
     if (!verificationCode.trim()) {
-      setStatus("error");
       return;
     }
 
     try {
-      const response = await authService.verifyResetCode(email, verificationCode);
+      const resultAction = await dispatch(verifyResetCode({ email, resetCode: verificationCode }));
       
-      if (response.success) {
+      if (verifyResetCode.fulfilled.match(resultAction)) {
         onStepChange("password");
-        setStatus("idle");
-        console.log("Reset code verified:", response);
-      } else {
-        setStatus("error");
+        console.log("Reset code verified:", resultAction.payload);
       }
     } catch (error: any) {
       console.error("Verify reset code error:", error);
-      setStatus("error");
     }
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus("loading");
 
     if (!newPassword.trim() || !confirmPassword.trim()) {
-      setStatus("error");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setStatus("error");
       return;
     }
 
     if (newPassword.length < 6) {
-      setStatus("error");
       return;
     }
 
     try {
-      const response = await authService.updatePassword(email, verificationCode, newPassword);
+      const resultAction = await dispatch(updatePassword({ 
+        email, 
+        resetCode: verificationCode, 
+        newPassword 
+      }));
       
-      if (response.success) {
+      if (updatePassword.fulfilled.match(resultAction)) {
         onStepChange("success");
-        setStatus("idle");
-        console.log("Password updated successfully:", response);
+        console.log("Password updated successfully:", resultAction.payload);
         onSuccess?.();
-      } else {
-        setStatus("error");
       }
     } catch (error: any) {
       console.error("Update password error:", error);
-      setStatus("error");
     }
   };
 
@@ -127,7 +113,7 @@ export default function ResetPasswordForm({ step, onStepChange, onSuccess }: Res
         <Button
           type="primary"
           htmlType="submit"
-          loading={status === "loading"}
+          loading={loading}
           className="w-full h-14 bg-gradient-to-r from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 border-none rounded-xl text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
         >
           Send Reset Password 
@@ -145,15 +131,6 @@ export default function ResetPasswordForm({ step, onStepChange, onSuccess }: Res
           </button>
         </div>
 
-        {/* Status Messages */}
-        <div className="mt-4 min-h-[28px] text-sm">
-          {status === "error" && (
-            <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-700 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4" />
-              Please enter a valid email address
-            </div>
-          )}
-        </div>
       </form>
     );
   }
@@ -182,7 +159,7 @@ export default function ResetPasswordForm({ step, onStepChange, onSuccess }: Res
         <Button
           type="primary"
           htmlType="submit"
-          loading={status === "loading"}
+          loading={loading}
           className="w-full h-14 bg-gradient-to-r from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 border-none rounded-xl text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
         >
           Verify Code
@@ -199,15 +176,6 @@ export default function ResetPasswordForm({ step, onStepChange, onSuccess }: Res
           </Button>
         </div>
 
-        {/* Status Messages */}
-        <div className="mt-4 min-h-[28px] text-sm">
-          {status === "error" && (
-            <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-700 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4" />
-              Invalid verification code. Please try again.
-            </div>
-          )}
-        </div>
       </form>
     );
   }
@@ -263,21 +231,12 @@ export default function ResetPasswordForm({ step, onStepChange, onSuccess }: Res
         <Button
           type="primary"
           htmlType="submit"
-          loading={status === "loading"}
+          loading={loading}
           className="w-full h-14 bg-gradient-to-r from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 border-none rounded-xl text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
         >
           Reset Password
         </Button>
 
-        {/* Status Messages */}
-        <div className="mt-4 min-h-[28px] text-sm">
-          {status === "error" && (
-            <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-700 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4" />
-              Passwords do not match or are too short.
-            </div>
-          )}
-        </div>
       </form>
     );
   }
