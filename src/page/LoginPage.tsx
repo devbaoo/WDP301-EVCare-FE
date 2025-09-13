@@ -3,6 +3,7 @@ import { Button } from "antd";
 import { Input } from "antd";
 import { Eye, EyeOff, Settings, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { authService, LoginRequest, RegisterRequest } from "@/services/features/authService";
 
 interface RegisterData {
   username: string;
@@ -93,9 +94,40 @@ export default function LoginPage() {
       }
 
       try {
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        setStatus("success");
-      } catch {
+        const loginData: LoginRequest = {
+          email,
+          password
+        };
+
+        const response = await authService.login(loginData);
+        
+        if (response.success) {
+          // Store user data and token
+          localStorage.setItem('user', JSON.stringify(response.data?.user));
+          localStorage.setItem('token', response.data?.token || '');
+          
+          setStatus("success");
+          console.log("Login successful:", response);
+          
+          // Check if user needs email verification
+          if (response.data?.user?.needVerification) {
+            // Save email for verification
+            localStorage.setItem('registerEmail', response.data.user.email);
+            // Redirect to verify email page
+            setTimeout(() => {
+              navigate('/verify-email');
+            }, 1000);
+          } else {
+            // Redirect to home page or dashboard
+            setTimeout(() => {
+              navigate('/');
+            }, 1000);
+          }
+        } else {
+          setStatus("error");
+        }
+      } catch (error: any) {
+        console.error("Login error:", error);
         setStatus("error");
       }
     } else {
@@ -106,15 +138,31 @@ export default function LoginPage() {
       }
 
       try {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        console.log("Registration Data:", JSON.stringify(registerData, null, 2));
+        const registerDataAPI: RegisterRequest = {
+          username: registerData.username,
+          email: registerData.email,
+          password: registerData.password,
+          confirmPassword: registerData.confirmPassword,
+          fullName: registerData.fullName,
+          phone: registerData.phone,
+          address: registerData.address
+        };
+
+        const response = await authService.register(registerDataAPI);
         
-        // Save email for verification
-        localStorage.setItem('registerEmail', registerData.email);
-        
-        // Redirect to verify email page
-        navigate('/verify-email');
-      } catch {
+        if (response.success) {
+          console.log("Registration successful:", response);
+          
+          // Save email for verification
+          localStorage.setItem('registerEmail', registerData.email);
+          
+          // Redirect to verify email page
+          navigate('/verify-email');
+        } else {
+          setStatus("error");
+        }
+      } catch (error: any) {
+        console.error("Registration error:", error);
         setStatus("error");
       }
     }
