@@ -1,6 +1,5 @@
 import { Button } from "antd";
 import { MessageSquare, Globe } from "lucide-react";
-import { Input } from "antd";
 
 export default function Footer() {
   return (

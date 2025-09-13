@@ -2,7 +2,7 @@ import Footer from "@/components/Footer/Footer";
 import Header from "@/components/Header/Header";
 import { Button } from "antd";
 
-import { ArrowRight, Car, Users, Play, Calendar, FileText, Wrench, Package, BarChart3, Shield, CreditCard } from "lucide-react";
+import { ArrowRight, Car, Users, Calendar, FileText, Wrench, Package, BarChart3, Shield, CreditCard } from "lucide-react";
 
 export default function HomePage() {
   return (
