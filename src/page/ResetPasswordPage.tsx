@@ -3,6 +3,7 @@ import { Button } from "antd";
 import { Input } from "antd";
 import { Lock, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { authService } from "@/services/features/authService";
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -25,11 +26,17 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setStep("code");
-      setStatus("idle");
-    } catch {
+      const response = await authService.resetPassword(email);
+      
+      if (response.success) {
+        setStep("code");
+        setStatus("idle");
+        console.log("Reset password email sent:", response);
+      } else {
+        setStatus("error");
+      }
+    } catch (error: any) {
+      console.error("Reset password error:", error);
       setStatus("error");
     }
   };
@@ -44,17 +51,17 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await authService.verifyResetCode(email, verificationCode);
       
-      // Check if code is valid (demo: accept any 6-digit code)
-      if (verificationCode.length === 6) {
+      if (response.success) {
         setStep("password");
         setStatus("idle");
+        console.log("Reset code verified:", response);
       } else {
         setStatus("error");
       }
-    } catch {
+    } catch (error: any) {
+      console.error("Verify reset code error:", error);
       setStatus("error");
     }
   };
@@ -79,11 +86,17 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setStep("success");
-      setStatus("idle");
-    } catch {
+      const response = await authService.updatePassword(email, verificationCode, newPassword);
+      
+      if (response.success) {
+        setStep("success");
+        setStatus("idle");
+        console.log("Password updated successfully:", response);
+      } else {
+        setStatus("error");
+      }
+    } catch (error: any) {
+      console.error("Update password error:", error);
       setStatus("error");
     }
   };
@@ -187,7 +200,7 @@ export default function ResetPasswordPage() {
                 loading={status === "loading"}
                 className="w-full h-14 bg-gradient-to-r from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 border-none rounded-xl text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
               >
-                Send Reset Code
+                Send Reset Password 
               </Button>
 
               {/* Back to Login */}
