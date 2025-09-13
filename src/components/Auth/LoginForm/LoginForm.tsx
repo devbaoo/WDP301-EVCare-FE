@@ -3,7 +3,8 @@ import { Button } from "antd";
 import { Input } from "antd";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { authService, LoginRequest } from "@/services/features/authService";
+import { useAppDispatch, useAppSelector } from "../../../services/store/store";
+import { loginUser } from "../../../services/features/auth/authSlice";
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -11,42 +12,30 @@ interface LoginFormProps {
 
 export default function LoginForm({ onSuccess }: LoginFormProps) {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { loading } = useAppSelector((state) => state.auth);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   const onSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    setStatus("loading");
 
     // Login validation
     const emailOk = /[^@\s]+@[^@\s]+\.[^@\s]+/.test(email);
     if (!emailOk) {
-      setStatus("error");
       return;
     }
 
     try {
-      const loginData: LoginRequest = {
-        email,
-        password
-      };
-
-      const response = await authService.login(loginData);
+      const resultAction = await dispatch(loginUser({ email, password }));
       
-      if (response.success) {
-        // Store user data and token
-        localStorage.setItem('user', JSON.stringify(response.data?.user));
-        localStorage.setItem('token', response.data?.token || '');
-        
-        setStatus("success");
-        console.log("Login successful:", response);
+      if (loginUser.fulfilled.match(resultAction)) {
         
         // Check if user needs email verification
-        if (response.data?.user?.needVerification) {
+        if (resultAction.payload.needVerification) {
           // Save email for verification
-          localStorage.setItem('registerEmail', response.data.user.email);
+          localStorage.setItem('registerEmail', resultAction.payload.user.email);
           // Redirect to verify email page
           setTimeout(() => {
             navigate('/verify-email');
@@ -59,12 +48,9 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         }
         
         onSuccess?.();
-      } else {
-        setStatus("error");
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      setStatus("error");
     }
   };
 
@@ -118,7 +104,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
       <Button
         type="primary"
         htmlType="submit"
-        loading={status === "loading"}
+        loading={loading}
         className="w-full h-14 bg-gradient-to-r from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 border-none rounded-xl text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
       >
         Continue
@@ -163,21 +149,6 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         </Button>
       </>
 
-      {/* Status Messages */}
-      <div className="mt-4 min-h-[28px] text-sm">
-        {status === "success" && (
-          <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-green-700 flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            Login successful! Redirecting...
-          </div>
-        )}
-        {status === "error" && (
-          <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-700 flex items-center gap-2">
-            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-            Please enter a valid email address.
-          </div>
-        )}
-      </div>
     </form>
   );
 }

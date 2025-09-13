@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Settings, UserPlus } from "lucide-react";
+import { Settings, UserPlus, ArrowLeft, Home } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import LoginForm from "@/components/Auth/LoginForm/LoginForm";
 import RegisterForm from "@/components/Auth/RegisterForm/RegisterForm";
 
 export default function LoginPage() {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
 
   const toggleMode = () => {
@@ -12,6 +14,20 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Back to Home Button - Top Left */}
+      <div className="absolute top-6 left-6 z-20">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
+        >
+          <ArrowLeft className="w-4 h-4 text-gray-700 group-hover:text-gray-900 transition-colors" />
+          <Home className="w-4 h-4 text-gray-700 group-hover:text-gray-900 transition-colors" />
+          <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900 transition-colors">
+            Back to Home
+          </span>
+        </button>
+      </div>
+
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"></div>

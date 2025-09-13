@@ -1,5 +1,4 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import 'antd/dist/reset.css'; // dùng reset để tránh xung đột CSS
 import './apps/index.css';
 import App from './apps/App';
@@ -9,14 +8,14 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-ReactDOM.render(
-  <React.StrictMode>
+const container = document.getElementById('root');
+const root = createRoot(container!);
+
+root.render(
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <ToastContainer />
         <App />
       </PersistGate>
     </Provider>
-  </React.StrictMode>,
-  document.getElementById('root')
 );
