@@ -7,7 +7,7 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <div className="text-2xl font-bold text-synop-blue-dark">
-              Gnuh
+              EV-CARE 
             </div>
           </div>
           <div className="hidden md:flex items-center space-x-8">

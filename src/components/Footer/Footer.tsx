@@ -90,7 +90,7 @@ export default function Footer() {
                 <a href="#" className="hover:text-synop-blue-light transition-colors underline">Privacy Policy</a>
                 <a href="#" className="hover:text-synop-blue-light transition-colors underline">Terms & Conditions</a>
               </div>
-              <span>©COPYRIGHT GNUH 2025</span>
+              <span>©COPYRIGHT EV-CARE  2025</span>
             </div>
           </div>
         </div>

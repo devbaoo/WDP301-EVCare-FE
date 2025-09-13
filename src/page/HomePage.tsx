@@ -358,7 +358,7 @@ export default function HomePage() {
       <section className="py-16 bg-gradient-to-r from-blue-50/20 to-white">
         <div className="max-w-2xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-synop-blue-dark mb-8">
-            Simplify your EV fleet management today with Gnuh.
+            Simplify your EV fleet management today with EV-CARE .
           </h2>
           <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
             <Input
@@ -377,7 +377,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black text-synop-blue-dark">
-              Customers love Gnuh
+              Customers love EV-CARE 
             </h2>
           </div>
           <div className="grid lg:grid-cols-2 gap-12">
@@ -396,7 +396,7 @@ export default function HomePage() {
                 </div>
                 <div className="space-y-6">
                   <blockquote className="text-lg leading-relaxed">
-                    "Scaling our charging-as-a-service offering for our customers incorporating electric vehicles has been made easier through Gnuh's EV fleet and charging solutions. Gnuh enables us to maximize uptime and minimize cost for our EV fleet customers, further accelerating our goal to electrify fleets across our portfolio."
+                    "Scaling our charging-as-a-service offering for our customers incorporating electric vehicles has been made easier through EV-CARE 's EV fleet and charging solutions. EV-CARE  enables us to maximize uptime and minimize cost for our EV fleet customers, further accelerating our goal to electrify fleets across our portfolio."
                   </blockquote>
                   <div>
                     <div className="text-synop-blue-primary font-bold">Henrik Holland</div>
@@ -421,7 +421,7 @@ export default function HomePage() {
                 </div>
                 <div className="space-y-6">
                   <blockquote className="text-lg leading-relaxed">
-                    "We have closely observed the challenges that school bus operators face with electrification. One significant gap we've identified is the need for better hardware-software alignment. Gnuh and its hardware partners have impressed us by focusing on key interoperability criteria and support channels. Their efforts have resulted in an exceptional experience."
+                    "We have closely observed the challenges that school bus operators face with electrification. One significant gap we've identified is the need for better hardware-software alignment. EV-CARE  and its hardware partners have impressed us by focusing on key interoperability criteria and support channels. Their efforts have resulted in an exceptional experience."
                   </blockquote>
                   <div>
                     <div className="text-synop-blue-primary font-bold">Arjun Nair</div>
@@ -444,7 +444,7 @@ export default function HomePage() {
                 Ready to transform your EV fleet operations with AI-powered insights?
               </h2>
               <p className="text-lg text-white/90 leading-relaxed">
-                See for yourself how taking back control of your EV fleet operations with Gnuh's platform can lower costs and streamline resolution.
+                See for yourself how taking back control of your EV fleet operations with EV-CARE 's platform can lower costs and streamline resolution.
               </p>
               <Button className="bg-synop-blue-primary hover:bg-synop-blue-light text-white rounded-full px-12 py-4 text-lg font-bold">
                 Book a demo
@@ -471,7 +471,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="text-3xl font-bold text-synop-blue-dark mb-4">Current Events</div>
-            <div className="text-synop-gray-dark">Keep track of the latest from Gnuh</div>
+            <div className="text-synop-gray-dark">Keep track of the latest from EV-CARE </div>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
@@ -524,7 +524,7 @@ export default function HomePage() {
                   </div>
                   <div className="space-y-3">
                     <h4 className="font-medium leading-tight">
-                      Gnuh solutions for infrastructure providers scaling EV fleet operations
+                      EV-CARE  solutions for infrastructure providers scaling EV fleet operations
                     </h4>
                     <div className="flex items-center space-x-2 text-sm">
                       <span className="uppercase tracking-widest">Read Article</span>
@@ -553,7 +553,7 @@ export default function HomePage() {
                   </div>
                   <div className="space-y-3">
                     <h4 className="font-medium leading-tight">
-                      Optimizing commercial EV fleet operations with Gnuh charging and energy management software
+                      Optimizing commercial EV fleet operations with EV-CARE  charging and energy management software
                     </h4>
                     <div className="flex items-center space-x-2 text-sm">
                       <span className="uppercase tracking-widest">Read Article</span>
