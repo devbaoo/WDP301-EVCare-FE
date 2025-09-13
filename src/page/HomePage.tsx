@@ -1,34 +1,10 @@
 import Footer from "@/components/Footer/Footer";
 import Header from "@/components/Header/Header";
 import { Button } from "antd";
-import { Input } from "antd";
-import { ArrowRight, Zap, Car, Battery, DollarSign, Globe, Users, Play } from "lucide-react";
-import { useState } from "react";
+
+import { ArrowRight, Car, Users, Play, Calendar, FileText, Wrench, Package, BarChart3, Shield, CreditCard } from "lucide-react";
 
 export default function HomePage() {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-
-
-  const onSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
-    setStatus("loading");
-
-
-    const emailOk = /[^@\s]+@[^@\s]+\.[^@\s]+/.test(email);
-    if (!emailOk) {
-      setStatus("error");
-      return;
-    }
-
-
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      setStatus("success");
-    } catch {
-      setStatus("error");
-    }
-  };
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -38,55 +14,24 @@ export default function HomePage() {
           {/* Text block */}
           <div className="relative z-10 text-center lg:text-left">
             <h1 className="font-satoshi text-4xl font-black leading-[65px] tracking-[-0.02em] mb-5 sm:text-5xl lg:text-[60px]">
-              <span className="text-synop-blue-primary">Electricity is</span> <br />
-              <span className="text-synop-blue-primary">the new fuel.</span> <br />
-              <span className="text-synop-blue-dark">Power up.</span>
+              <span className="text-synop-blue-primary">EV Service Center</span> <br />
+              <span className="text-synop-blue-primary">Maintenance Management</span> <br />
+              <span className="text-synop-blue-dark">System</span>
             </h1>
 
             <p className="mx-auto mt-4 max-w-xl text-xl leading-[28px] text-synop-blue-dark">
-              Maximize vehicle and charger uptime, manage energy costs and unlock scale
+              Complete solution for EV service centers: customer tracking, maintenance scheduling, inventory management, and staff coordination
             </p>
 
 
-            {/* Form */}
-            <form
-              onSubmit={onSubmit}
-              className="mt-8 flex w-full flex-col items-center gap-3 sm:flex-row lg:items-stretch"
-            >
-              <label htmlFor="hero-email" className="sr-only">
-                Email Address
-              </label>
-              <input
-                id="hero-email"
-                type="email"
-                required
-                placeholder="Email Address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-full border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 placeholder-slate-400 shadow-sm outline-none transition focus:border-[#1a40b8] focus:ring-2 focus:ring-[#1a40b8]/20 sm:max-w-sm"
-              />
-              <button
-                type="submit"
-                disabled={status === "loading"}
-                className="inline-flex items-center justify-center rounded-full bg-[#1a40b8] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#163494] disabled:opacity-60"
+            {/* Booking Button */}
+            <div className="mt-8">
+              <a
+                href="/login"
+                className="inline-flex items-center justify-center rounded-full bg-[#1a40b8] px-8 py-4 text-lg font-semibold text-white shadow-sm transition hover:bg-[#163494]"
               >
-                {status === "loading" ? "Please wait…" : "Book a demo"}
-              </button>
-            </form>
-
-
-            {/* Messages */}
-            <div className="mt-3 min-h-[28px] text-sm">
-              {status === "success" && (
-                <div className="rounded-lg bg-green-50 px-3 py-2 text-green-700">
-                  Thank you! Your submission has been received!
-                </div>
-              )}
-              {status === "error" && (
-                <div className="rounded-lg bg-rose-50 px-3 py-2 text-rose-700">
-                  Oops! Something went wrong while submitting the form.
-                </div>
-              )}
+                Booking
+              </a>
             </div>
           </div>
 
@@ -232,15 +177,15 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="font-satoshi text-4xl font-black text-synop-blue-dark mb-4">
-              All-in-one platform designed<br />for commercial EV fleets
+              Comprehensive solution for<br />EV Service Center Management
             </h2>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Vehicle Management */}
+            {/* Customer Tracking & Reminders */}
             <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
               <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
-                Vehicle Management
+                Customer Features
               </div>
               <div className="flex justify-between items-start mb-6">
                 <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
@@ -249,93 +194,55 @@ export default function HomePage() {
                 <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
               </div>
               <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
-                Eliminate range anxiety across your fleet
+                Vehicle Tracking & Maintenance Reminders
               </h3>
               <p className="text-black leading-relaxed">
-                Real-time SOC, alerts, and efficiency data through telematics
+                Automatic reminders for scheduled maintenance by mileage or time, payment notifications for service packages
               </p>
             </a>
 
-            {/* Charge Management */}
+            {/* Service Booking */}
             <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
               <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
-                Charge Management
+                Online Booking
               </div>
               <div className="flex justify-between items-start mb-6">
                 <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
-                  <Zap className="w-8 h-8 text-white" />
+                  <Calendar className="w-8 h-8 text-white" />
                 </div>
                 <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
               </div>
               <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
-                Seamless charger controls
+                Easy Service Scheduling
               </h3>
               <p className="text-black leading-relaxed">
-                Gain complete control of chargers to maximize uptime and optimize schedules across your depots
+                Book maintenance and repair services online, choose service center and service type with real-time status updates
               </p>
             </a>
 
-            {/* Energy Management */}
+            {/* Profile & Cost Management */}
             <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
               <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
-                Energy Management
+                Profile Management
               </div>
               <div className="flex justify-between items-start mb-6">
                 <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
-                  <Battery className="w-8 h-8 text-white" />
+                  <FileText className="w-8 h-8 text-white" />
                 </div>
                 <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
               </div>
               <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
-                Boost performance with AI
+                Service History & Payment Management
               </h3>
               <p className="text-black leading-relaxed">
-                Lower costs with automated load management, curtailment, and demand response
+                Track maintenance history, manage service costs, and make online payments with multiple payment options
               </p>
             </a>
 
-            {/* Utility Management */}
+            {/* Customer & Vehicle Management */}
             <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
               <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
-                Utility Management
-              </div>
-              <div className="flex justify-between items-start mb-6">
-                <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
-                  <Globe className="w-8 h-8 text-white" />
-                </div>
-                <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
-              </div>
-              <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
-                Connect directly to the grid
-              </h3>
-              <p className="text-black leading-relaxed">
-                Stay ahead with TOU management, demand response alerts, and V2G events
-              </p>
-            </a>
-
-            {/* Payment Management */}
-            <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
-              <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
-                Payment Management
-              </div>
-              <div className="flex justify-between items-start mb-6">
-                <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
-                  <DollarSign className="w-8 h-8 text-white" />
-                </div>
-                <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
-              </div>
-              <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
-                Billing. Payments. Reimbursements. We take care of it all
-              </h3>
-              <p className="text-black leading-relaxed">
-                Monetize your depots and hubs, reimburse your drivers
-              </p>
-            </a>
-
-            {/* SynopLink */}
-            <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
-              <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
-                SynopLink
+                Service Center Features
               </div>
               <div className="flex justify-between items-start mb-6">
                 <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
@@ -344,40 +251,118 @@ export default function HomePage() {
                 <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
               </div>
               <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
-                Connect. Communicate. Control. All at the edge
+                Customer & Vehicle Database
               </h3>
               <p className="text-black leading-relaxed">
-                Site-level connectivity maintains operational resilience even in the face of outages
+                Comprehensive customer profiles, vehicle information (model, VIN, service history), and live chat support
+              </p>
+            </a>
+
+            {/* Maintenance Workflow */}
+            <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
+              <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
+                Maintenance Workflow
+              </div>
+              <div className="flex justify-between items-start mb-6">
+                <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
+                  <Wrench className="w-8 h-8 text-white" />
+                </div>
+                <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
+              </div>
+              <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
+                Complete Service Process Management
+              </h3>
+              <p className="text-black leading-relaxed">
+                Track service progress from waiting to completion, manage technician schedules, and maintain service checklists
+              </p>
+            </a>
+
+            {/* Inventory Management */}
+            <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
+              <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
+                Smart Inventory
+              </div>
+              <div className="flex justify-between items-start mb-6">
+                <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
+                  <Package className="w-8 h-8 text-white" />
+                </div>
+                <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
+              </div>
+              <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
+                AI-Powered Parts Management
+              </h3>
+              <p className="text-black leading-relaxed">
+                Track EV parts inventory, monitor minimum stock levels, and get AI suggestions for optimal stock management
+              </p>
+            </a>
+
+            {/* Staff Management */}
+            <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
+              <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
+                Staff Management
+              </div>
+              <div className="flex justify-between items-start mb-6">
+                <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
+                  <Shield className="w-8 h-8 text-white" />
+                </div>
+                <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
+              </div>
+              <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
+                Technician & Performance Tracking
+              </h3>
+              <p className="text-black leading-relaxed">
+                Assign technicians by shift, track performance and work hours, manage EV specialization certifications
+              </p>
+            </a>
+
+            {/* Financial Management */}
+            <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
+              <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
+                Financial Management
+              </div>
+              <div className="flex justify-between items-start mb-6">
+                <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
+                  <CreditCard className="w-8 h-8 text-white" />
+                </div>
+                <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
+              </div>
+              <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
+                Complete Financial Control
+              </h3>
+              <p className="text-black leading-relaxed">
+                Service quotes to invoicing, revenue and cost tracking, analytics on popular services and EV failure trends
+              </p>
+            </a>
+
+            {/* Analytics & Reporting */}
+            <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
+              <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
+                Analytics & Insights
+              </div>
+              <div className="flex justify-between items-start mb-6">
+                <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
+                  <BarChart3 className="w-8 h-8 text-white" />
+                </div>
+                <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
+              </div>
+              <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
+                Data-Driven Service Optimization
+              </h3>
+              <p className="text-black leading-relaxed">
+                Comprehensive reporting on service trends, EV failure patterns, and business performance metrics
               </p>
             </a>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-blue-50/20 to-white">
-        <div className="max-w-2xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-synop-blue-dark mb-8">
-            Simplify your EV fleet management today with EV-CARE .
-          </h2>
-          <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <Input
-              placeholder="Email Address"
-              className="flex-1 rounded-full border-synop-blue-dark h-12 px-6"
-            />
-            <Button className="bg-synop-blue-primary hover:bg-synop-blue-light rounded-full px-8 h-12 font-bold">
-              Book a demo
-            </Button>
-          </div>
-        </div>
-      </section>
 
       {/* Customer Testimonials */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black text-synop-blue-dark">
-              Customers love EV-CARE 
+              Service Centers trust EV-CARE 
             </h2>
           </div>
           <div className="grid lg:grid-cols-2 gap-12">
@@ -392,15 +377,15 @@ export default function HomePage() {
               ></div>
               <div className="relative p-8 h-96 flex flex-col justify-between">
                 <div className="text-center">
-                  <div className="text-2xl font-bold mb-8">Highland</div>
+                  <div className="text-2xl font-bold mb-8">EVTech Service Center</div>
                 </div>
                 <div className="space-y-6">
                   <blockquote className="text-lg leading-relaxed">
-                    "Scaling our charging-as-a-service offering for our customers incorporating electric vehicles has been made easier through EV-CARE 's EV fleet and charging solutions. EV-CARE  enables us to maximize uptime and minimize cost for our EV fleet customers, further accelerating our goal to electrify fleets across our portfolio."
+                    "EV-CARE has revolutionized our service center operations. The automated maintenance reminders and online booking system have increased customer satisfaction by 40%. Our technicians love the streamlined workflow management and the AI-powered inventory suggestions have reduced our parts costs by 25%."
                   </blockquote>
                   <div>
-                    <div className="text-synop-blue-primary font-bold">Henrik Holland</div>
-                    <div className="text-sm text-gray-300">Global Head of Prologis Mobility</div>
+                    <div className="text-synop-blue-primary font-bold">Sarah Johnson</div>
+                    <div className="text-sm text-gray-300">Service Center Manager</div>
                   </div>
                 </div>
               </div>
@@ -417,15 +402,15 @@ export default function HomePage() {
               ></div>
               <div className="relative p-8 h-96 flex flex-col justify-between">
                 <div className="text-center">
-                  <div className="text-xl font-bold mb-8">THOMAS BUILT BUSES</div>
+                  <div className="text-xl font-bold mb-8">PREMIUM EV SERVICE</div>
                 </div>
                 <div className="space-y-6">
                   <blockquote className="text-lg leading-relaxed">
-                    "We have closely observed the challenges that school bus operators face with electrification. One significant gap we've identified is the need for better hardware-software alignment. EV-CARE  and its hardware partners have impressed us by focusing on key interoperability criteria and support channels. Their efforts have resulted in an exceptional experience."
+                    "The comprehensive customer management system and real-time service tracking have transformed how we operate. Our customers appreciate the transparency and automated notifications. The financial reporting features help us understand our most profitable services and optimize our pricing strategy."
                   </blockquote>
                   <div>
-                    <div className="text-synop-blue-primary font-bold">Arjun Nair</div>
-                    <div className="text-sm text-gray-300">Manager of Electric Vehicle Programs and Consulting for Thomas Built Buses.</div>
+                    <div className="text-synop-blue-primary font-bold">Michael Chen</div>
+                    <div className="text-sm text-gray-300">Operations Director</div>
                   </div>
                 </div>
               </div>
@@ -435,138 +420,26 @@ export default function HomePage() {
       </section>
 
       {/* AI Insights CTA */}
-      <section className="py-20 bg-synop-blue-dark relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-synop-blue-dark/90 to-synop-blue-primary/20"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20">
+        <div className="bg-synop-blue-dark bg-[url('https://cdn.prod.website-files.com/63729aa3d8efde0bf7b4ccfb/66d862ed6f037a9c88a49aad_BlueGraphic.svg')] bg-right-top bg-no-repeat bg-auto rounded-[10px] w-[1800px] max-w-[95%] mx-auto px-10 py-[60px]">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <h2 className="text-3xl font-bold text-white leading-tight">
-                Ready to transform your EV fleet operations with AI-powered insights?
+                Ready to revolutionize your EV service center with AI-powered management?
               </h2>
               <p className="text-lg text-white/90 leading-relaxed">
-                See for yourself how taking back control of your EV fleet operations with EV-CARE 's platform can lower costs and streamline resolution.
+                Experience how EV-CARE's comprehensive platform can streamline your service operations, reduce costs, and enhance customer satisfaction with intelligent automation.
               </p>
               <Button className="bg-synop-blue-primary hover:bg-synop-blue-light text-white rounded-full px-12 py-4 text-lg font-bold">
-                Book a demo
+                Schedule Demo
               </Button>
             </div>
             <div className="relative">
-              <div className="w-full h-80 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-sm border border-white/20">
-                <div className="text-center text-white">
-                  <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Play className="w-12 h-12" />
-                  </div>
-                  <div className="text-6xl font-bold mb-2">AI</div>
-                  <div className="text-xl">Platform Demo</div>
-                </div>
-              </div>
+  
             </div>
           </div>
         </div>
       </section>
-
-
-      {/* Current Events */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="text-3xl font-bold text-synop-blue-dark mb-4">Current Events</div>
-            <div className="text-synop-gray-dark">Keep track of the latest from EV-CARE </div>
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Featured Article */}
-            <div className="lg:col-span-2 relative rounded-3xl overflow-hidden bg-gradient-to-br from-synop-blue-dark/80 to-black/60 text-white">
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundImage: `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><rect width="100%" height="100%" fill="%23374151"/></svg>')`,
-                  backgroundSize: 'cover'
-                }}
-              ></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-synop-blue-dark/90 to-black/40"></div>
-              <div className="relative p-8 h-96 flex flex-col justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="text-xs uppercase tracking-wide">May 21, 2025</div>
-                  <div className="px-3 py-1 border border-white rounded text-xs uppercase tracking-wide">
-                    Success Story
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <h3 className="text-xl font-medium leading-tight">
-                    Success Story: Managing SparkCharge's Mobile Charging Infrastructure
-                  </h3>
-                  <div className="flex items-center space-x-2 text-sm">
-                    <span className="uppercase tracking-widest">Read Article</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-8">
-              {/* Article 1 */}
-              <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-synop-blue-dark/80 to-black/60 text-white">
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundImage: `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="100%" height="100%" fill="%23374151"/></svg>')`,
-                    backgroundSize: 'cover'
-                  }}
-                ></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-synop-blue-dark/90 to-black/40"></div>
-                <div className="relative p-6 h-48 flex flex-col justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="text-xs uppercase tracking-wide">August 23, 2023</div>
-                    <div className="px-2 py-1 border border-white rounded text-xs uppercase">
-                      Software Spotlight
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <h4 className="font-medium leading-tight">
-                      EV-CARE  solutions for infrastructure providers scaling EV fleet operations
-                    </h4>
-                    <div className="flex items-center space-x-2 text-sm">
-                      <span className="uppercase tracking-widest">Read Article</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Article 2 */}
-              <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-synop-blue-dark/80 to-black/60 text-white">
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundImage: `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="100%" height="100%" fill="%23374151"/></svg>')`,
-                    backgroundSize: 'cover'
-                  }}
-                ></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-synop-blue-dark/90 to-black/40"></div>
-                <div className="relative p-6 h-48 flex flex-col justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="text-xs uppercase tracking-wide">June 15, 2023</div>
-                    <div className="px-2 py-1 border border-white rounded text-xs uppercase">
-                      Software Spotlight
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <h4 className="font-medium leading-tight">
-                      Optimizing commercial EV fleet operations with EV-CARE  charging and energy management software
-                    </h4>
-                    <div className="flex items-center space-x-2 text-sm">
-                      <span className="uppercase tracking-widest">Read Article</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <Footer />
     </div>
   );

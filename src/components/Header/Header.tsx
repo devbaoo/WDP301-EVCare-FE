@@ -12,18 +12,23 @@ export default function Header() {
           </div>
           <div className="hidden md:flex items-center space-x-8">
             <button className="text-synop-blue-dark font-semibold text-sm tracking-wide hover:text-synop-blue-primary transition-colors">
-              SOLUTIONS
+              Home
             </button>
             <button className="text-synop-blue-dark font-semibold text-sm tracking-wide hover:text-synop-blue-primary transition-colors">
-              INTEROPERABILITY
+              Booking
             </button>
             <button className="text-synop-blue-dark font-semibold text-sm tracking-wide hover:text-synop-blue-primary transition-colors">
-              COMPANY
+              About us
+            </button>
+            <button className="text-synop-blue-dark font-semibold text-sm tracking-wide hover:text-synop-blue-primary transition-colors">
+              Contacts
             </button>
           </div>
+          <a href="/login">
           <Button className="bg-white text-synop-blue-primary border border-synop-blue-primary hover:bg-synop-blue-primary hover:text-white rounded-full px-6">
-            Book a demo
+            Login/Register
           </Button>
+          </a>
         </div>
       </div>
     </nav>
