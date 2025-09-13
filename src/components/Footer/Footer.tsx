@@ -10,11 +10,13 @@ export default function Footer() {
           <div className="space-y-6">
             <div className="space-y-4">
               <h3 className="text-xl font-bold text-white">
-                Wondering how to take your fleet to the next level?
+                Ready to transform your EV service center?
               </h3>
+              <a href="/login">
               <Button className="bg-white text-synop-blue-primary hover:bg-gray-100 rounded-full px-8">
-                Book a demo
+                Get Started
               </Button>
+              </a>
             </div>
           </div>
 
@@ -42,28 +44,11 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="font-bold text-lg mb-6 text-white">Subscribe to our newsletter</h4>
-            <div className="space-y-3">
-              <Input
-                placeholder="Email Address"
-                className="rounded-full h-12 px-4"
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  borderColor: 'rgba(255, 255, 255, 0.3)',
-                  color: '#ffffff',
-                  fontSize: '16px'
-                }}
-                styles={{
-                  input: {
-                    color: '#ffffff',
-                    backgroundColor: 'transparent',
-                    fontSize: '16px'
-                  }
-                }}
-              />
-              <Button className="bg-synop-blue-primary hover:bg-synop-blue-light text-white rounded-full w-full h-12 font-bold">
-                Submit
-              </Button>
+            <h4 className="font-bold text-lg mb-6 text-white">Contact Information</h4>
+            <div className="space-y-3 text-sm">
+              <p>Email: info@ev-care.com</p>
+              <p>Phone: +1 (555) 123-4567</p>
+              <p>Address: 48 Grattan St, Brooklyn, NY 11237</p>
             </div>
           </div>
         </div>
