@@ -57,13 +57,15 @@ const AppRouter = () => {
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
             </Route>
 
-            {/* Public Routes - Accessible for everyone except unverified customers */}
+            {/* Home Route - Only accessible for guests and verified customers */}
             <Route path="/" element={
                 isAuthenticated && user?.role === "customer" && needVerification ?
                     <Navigate to="/verify-email" replace /> :
                     isAuthenticated && user?.role === "customer" && !needVerification ?
                         <CustomerLayout /> :
-                        <GuestLayout />
+                        isAuthenticated && (user?.role === "admin" || user?.role === "staff" || user?.role === "technician") ?
+                            <Navigate to={getInitialRoute()} replace /> :
+                            <GuestLayout />
             }>
                 <Route index element={<HomePage />} />
             </Route>
@@ -73,7 +75,9 @@ const AppRouter = () => {
                     <Navigate to="/verify-email" replace /> :
                     isAuthenticated && user?.role === "customer" && !needVerification ?
                         <CustomerLayout /> :
-                        <GuestLayout />
+                        isAuthenticated && (user?.role === "admin" || user?.role === "staff" || user?.role === "technician") ?
+                            <Navigate to={getInitialRoute()} replace /> :
+                            <GuestLayout />
             }>
                 <Route index element={<ServiceCentersPage />} />
             </Route>
@@ -83,7 +87,9 @@ const AppRouter = () => {
                     <Navigate to="/verify-email" replace /> :
                     isAuthenticated && user?.role === "customer" && !needVerification ?
                         <CustomerLayout /> :
-                        <GuestLayout />
+                        isAuthenticated && (user?.role === "admin" || user?.role === "staff" || user?.role === "technician") ?
+                            <Navigate to={getInitialRoute()} replace /> :
+                            <GuestLayout />
             }>
                 <Route index element={<ServiceCenterDetailPage />} />
             </Route>

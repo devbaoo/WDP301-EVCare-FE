@@ -39,8 +39,18 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
           // Redirect to verify email page immediately
           navigate('/verify-email');
         } else {
-          // Redirect to home page or dashboard
-          navigate('/');
+          // Redirect based on user role
+          const userRole = resultAction.payload.user.role;
+          if (userRole === "admin") {
+            navigate('/admin');
+          } else if (userRole === "staff") {
+            navigate('/staff');
+          } else if (userRole === "technician") {
+            navigate('/technician');
+          } else {
+            // Customer goes to home page
+            navigate('/');
+          }
         }
 
         onSuccess?.();
