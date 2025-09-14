@@ -1,12 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "antd";
 import { Lock, CheckCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ResetPasswordForm from "@/components/Auth/ResetPassword/ResetPasswordForm";
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
-  const [step, setStep] = useState<"email" | "code" | "password" | "success">("email");
+  const { token } = useParams();
+  const [step, setStep] = useState<"email" | "password" | "success">("email");
+
+  // Auto set to password step if token is present
+  useEffect(() => {
+    if (token) {
+      setStep("password");
+    }
+  }, [token]);
 
 
   if (step === "success") {
@@ -73,30 +81,28 @@ export default function ResetPasswordPage() {
         <div className="text-center space-y-3">
           <h1 className="text-4xl font-black bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent mb-2">
             {step === "email" && "Reset Password"}
-            {step === "code" && "Verify Code"}
             {step === "password" && "New Password"}
           </h1>
           <p className="text-gray-600 text-base leading-relaxed">
-            {step === "email" && "Enter your email address and we'll send you a reset code"}
-            {step === "code" && "We've sent a verification code to your email"}
+            {step === "email" && "Enter your email address and we'll send you a reset link"}
             {step === "password" && "Enter your new password"}
           </p>
         </div>
 
-        {/* Form */}
+        {/* Form - Simplified flow without verification code */}
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/20">
           <ResetPasswordForm 
             step={step} 
             onStepChange={setStep}
             onSuccess={() => setStep("success")}
+            token={token}
           />
         </div>
 
         {/* Help Text */}
         <div className="text-center space-y-2">
           <p className="text-sm text-gray-500">
-            {step === "email" && "We'll send you a secure code to reset your password"}
-            {step === "code" && "Check your email and spam folder"}
+            {step === "email" && "We'll send you a secure link to reset your password"}
             {step === "password" && "Make sure your password is at least 6 characters long"}
           </p>
         </div>

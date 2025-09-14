@@ -4,7 +4,8 @@ import axiosInstance from "../../constant/axiosInstance";
 import {
   LOGIN_ENDPOINT,
   REGISTER_ENDPOINT,
-  VERIFY_EMAIL_ENDPOINT,
+  VERIFY_EMAIL_TOKEN_ENDPOINT,
+  RESEND_VERIFICATION_ENDPOINT,
   RESET_PASSWORD_ENDPOINT,
   UPDATE_PASSWORD_ENDPOINT,
   VERIFY_RESET_CODE_ENDPOINT,
@@ -17,8 +18,8 @@ import {
   LoginResponse,
   RegisterCredentials,
   RegisterResponse,
-  VerifyEmailData,
   ResetPasswordData,
+  ResetPasswordWithTokenData,
   UpdatePasswordData,
 } from "../../../interfaces/auth";
 
@@ -46,7 +47,6 @@ export const loginUser = createAsyncThunk<
     return response.data;
   } catch (err: unknown) {
     const error = err as any;
-    // Extract message from response data if available
     const message = error.response?.data?.message || error.message || "Đăng nhập thất bại";
     return rejectWithValue({ message });
   }
@@ -67,17 +67,32 @@ export const registerUser = createAsyncThunk<
   }
 });
 
-export const verifyEmail = createAsyncThunk<
-  { success: boolean; message: string },
-  VerifyEmailData,
+export const verifyEmailWithToken = createAsyncThunk<
+  { success: boolean; message: string; user?: any },
+  string,
   { rejectValue: { message: string } }
->("auth/verifyEmail", async (data, { rejectWithValue }) => {
+>("auth/verifyEmailWithToken", async (token, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.post(VERIFY_EMAIL_ENDPOINT, data);
+    const response = await axiosInstance.get(VERIFY_EMAIL_TOKEN_ENDPOINT(token));
     return response.data;
   } catch (err: unknown) {
     const error = err as any;
     const message = error.response?.data?.message || error.message || "Xác thực email thất bại";
+    return rejectWithValue({ message });
+  }
+});
+
+export const resendVerification = createAsyncThunk<
+  { success: boolean; message: string },
+  { email: string },
+  { rejectValue: { message: string } }
+>("auth/resendVerification", async (data, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post(RESEND_VERIFICATION_ENDPOINT, data);
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as any;
+    const message = error.response?.data?.message || error.message || "Gửi lại email xác thực thất bại";
     return rejectWithValue({ message });
   }
 });
@@ -93,6 +108,21 @@ export const resetPassword = createAsyncThunk<
   } catch (err: unknown) {
     const error = err as any;
     const message = error.response?.data?.message || error.message || "Gửi email reset mật khẩu thất bại";
+    return rejectWithValue({ message });
+  }
+});
+
+export const resetPasswordWithToken = createAsyncThunk<
+  { success: boolean; message: string },
+  ResetPasswordWithTokenData,
+  { rejectValue: { message: string } }
+>("auth/resetPasswordWithToken", async (data, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post(RESET_PASSWORD_ENDPOINT, data);
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as any;
+    const message = error.response?.data?.message || error.message || "Reset mật khẩu thất bại";
     return rejectWithValue({ message });
   }
 });
@@ -222,29 +252,45 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
-        state.isAuthenticated = false; // User needs to verify email
+        state.isAuthenticated = false;           // Chưa cho đăng nhập ngay
+        state.needVerification = true;           // Yêu cầu xác thực qua email
         state.error = null;
-        message.success(action.payload.message);
+        message.success(action.payload.message || "Đăng ký thành công. Vui lòng kiểm tra email để xác thực.");
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || "Đăng ký thất bại";
         message.error(state.error);
       })
-      // Verify email cases
-      .addCase(verifyEmail.pending, (state) => {
+      // Verify email with token cases
+      .addCase(verifyEmailWithToken.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(verifyEmail.fulfilled, (state, action) => {
+      .addCase(verifyEmailWithToken.fulfilled, (state, action) => {
         state.loading = false;
         state.needVerification = false;
         state.error = null;
         message.success(action.payload.message);
       })
-      .addCase(verifyEmail.rejected, (state, action) => {
+      .addCase(verifyEmailWithToken.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || "Xác thực email thất bại";
+        message.error(state.error);
+      })
+      // Resend verification cases
+      .addCase(resendVerification.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resendVerification.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        message.success(action.payload.message);
+      })
+      .addCase(resendVerification.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Gửi lại email xác thực thất bại";
         message.error(state.error);
       })
       // Reset password cases
