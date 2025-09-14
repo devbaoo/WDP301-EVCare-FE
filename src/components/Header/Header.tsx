@@ -15,11 +15,16 @@ export default function Header() {
     navigate("/login");
   };
 
+  const handleNavigateToProfile = () => {
+    navigate("/profileCustomer");
+  };
+
   const userMenuItems: MenuProps['items'] = [
     {
       key: 'profile',
       icon: <UserOutlined />,
       label: 'Profile',
+      onClick: handleNavigateToProfile,
     },
     {
       type: 'divider',
@@ -38,16 +43,16 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <a href="/">
-            <div className="text-2xl font-bold text-synop-blue-dark">
-              EV-CARE 
-            </div>
+              <div className="text-2xl font-bold text-synop-blue-dark">
+                EV-CARE
+              </div>
             </a>
           </div>
           <div className="hidden md:flex items-center space-x-8">
             <a href="/">
-            <button className="text-synop-blue-dark font-semibold text-sm tracking-wide hover:text-synop-blue-primary transition-colors">
-              Home
-            </button>
+              <button className="text-synop-blue-dark font-semibold text-sm tracking-wide hover:text-synop-blue-primary transition-colors">
+                Home
+              </button>
             </a>
             <button className="text-synop-blue-dark font-semibold text-sm tracking-wide hover:text-synop-blue-primary transition-colors">
               Booking
@@ -66,8 +71,8 @@ export default function Header() {
                   Hello, {user.fullName}
                 </span>
                 <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
-                  <Button 
-                    type="text" 
+                  <Button
+                    type="text"
                     icon={<UserOutlined />}
                     className="text-synop-blue-primary hover:text-synop-blue-dark"
                   />
