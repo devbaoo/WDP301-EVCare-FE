@@ -1,4 +1,3 @@
-import Footer from "@/components/Footer/Footer";
 import Header from "@/components/Header/Header";
 import ServiceCenterCardSimple from "@/components/ServiceCenter/ServiceCenterCardSimple";
 import { Button, Spin, Empty, Typography, Select } from "antd";
@@ -56,10 +55,10 @@ export default function HomePage() {
   useEffect(() => {
     if (userLocation && !hasFetched.current) {
       hasFetched.current = true;
-      dispatch(fetchNearbyServiceCenters({ 
-        lat: userLocation.lat, 
-        lng: userLocation.lng, 
-        radius: searchRadius 
+      dispatch(fetchNearbyServiceCenters({
+        lat: userLocation.lat,
+        lng: userLocation.lng,
+        radius: searchRadius
       }));
     }
   }, [dispatch, userLocation, searchRadius]);
@@ -71,10 +70,10 @@ export default function HomePage() {
     setSearchRadius(radius);
     hasFetched.current = false; // Reset to allow new API call
     if (userLocation) {
-      dispatch(fetchNearbyServiceCenters({ 
-        lat: userLocation.lat, 
-        lng: userLocation.lng, 
-        radius: radius 
+      dispatch(fetchNearbyServiceCenters({
+        lat: userLocation.lat,
+        lng: userLocation.lng,
+        radius: radius
       }));
     }
   };
@@ -450,12 +449,12 @@ export default function HomePage() {
               Service Centers Near You
             </Title>
             <Paragraph className="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
-              {locationPermissionDenied 
+              {locationPermissionDenied
                 ? "Showing service centers near Ho Chi Minh City (default location)"
                 : "Discover EV service centers near your location with advanced technology"
               }
             </Paragraph>
-            
+
             {/* Radius Selection */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <span className="text-gray-700 font-medium">Search within radius:</span>
@@ -486,7 +485,7 @@ export default function HomePage() {
             </div>
           ) : error ? (
             <div className="text-center py-20">
-              <Empty 
+              <Empty
                 description={`Error: ${error}`}
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
               />
@@ -498,7 +497,7 @@ export default function HomePage() {
             </div>
           ) : nearbyServiceCenters.length === 0 ? (
             <div className="text-center py-20">
-              <Empty 
+              <Empty
                 description={`No service centers found within ${searchRadius}km radius`}
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
               />
@@ -518,8 +517,8 @@ export default function HomePage() {
 
           {/* View All Button */}
           <div className="text-center mt-12">
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               size="large"
               onClick={handleViewAllServiceCenters}
               className="bg-synop-blue-primary hover:bg-synop-blue-dark border-0 rounded-full px-8 py-4 h-auto text-lg font-semibold"
@@ -536,7 +535,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black text-synop-blue-dark">
-              Service Centers trust EV-CARE 
+              Service Centers trust EV-CARE
             </h2>
           </div>
           <div className="grid lg:grid-cols-2 gap-12">
@@ -609,12 +608,11 @@ export default function HomePage() {
               </Button>
             </div>
             <div className="relative">
-  
+
             </div>
           </div>
         </div>
       </section>
-      <Footer />
     </div>
   );
 }

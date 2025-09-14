@@ -16,7 +16,7 @@ export default function Header() {
   };
 
   const handleNavigateToProfile = () => {
-    navigate("/profileCustomer");
+    navigate("/customer/profile");
   };
 
   const userMenuItems: MenuProps['items'] = [

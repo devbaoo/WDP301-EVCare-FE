@@ -47,7 +47,8 @@ export const loginUser = createAsyncThunk<
     return response.data;
   } catch (err: unknown) {
     const error = err as any;
-    const message = error.response?.data?.message || error.message || "Đăng nhập thất bại";
+    const message =
+      error.response?.data?.message || error.message || "Đăng nhập thất bại";
     return rejectWithValue({ message });
   }
 });
@@ -62,7 +63,8 @@ export const registerUser = createAsyncThunk<
     return response.data;
   } catch (err: unknown) {
     const error = err as any;
-    const message = error.response?.data?.message || error.message || "Đăng ký thất bại";
+    const message =
+      error.response?.data?.message || error.message || "Đăng ký thất bại";
     return rejectWithValue({ message });
   }
 });
@@ -73,11 +75,16 @@ export const verifyEmailWithToken = createAsyncThunk<
   { rejectValue: { message: string } }
 >("auth/verifyEmailWithToken", async (token, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.get(VERIFY_EMAIL_TOKEN_ENDPOINT(token));
+    const response = await axiosInstance.get(
+      VERIFY_EMAIL_TOKEN_ENDPOINT(token)
+    );
     return response.data;
   } catch (err: unknown) {
     const error = err as any;
-    const message = error.response?.data?.message || error.message || "Xác thực email thất bại";
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Xác thực email thất bại";
     return rejectWithValue({ message });
   }
 });
@@ -88,11 +95,17 @@ export const resendVerification = createAsyncThunk<
   { rejectValue: { message: string } }
 >("auth/resendVerification", async (data, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.post(RESEND_VERIFICATION_ENDPOINT, data);
+    const response = await axiosInstance.post(
+      RESEND_VERIFICATION_ENDPOINT,
+      data
+    );
     return response.data;
   } catch (err: unknown) {
     const error = err as any;
-    const message = error.response?.data?.message || error.message || "Gửi lại email xác thực thất bại";
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Gửi lại email xác thực thất bại";
     return rejectWithValue({ message });
   }
 });
@@ -107,7 +120,10 @@ export const resetPassword = createAsyncThunk<
     return response.data;
   } catch (err: unknown) {
     const error = err as any;
-    const message = error.response?.data?.message || error.message || "Gửi email reset mật khẩu thất bại";
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Gửi email reset mật khẩu thất bại";
     return rejectWithValue({ message });
   }
 });
@@ -122,7 +138,10 @@ export const resetPasswordWithToken = createAsyncThunk<
     return response.data;
   } catch (err: unknown) {
     const error = err as any;
-    const message = error.response?.data?.message || error.message || "Reset mật khẩu thất bại";
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Reset mật khẩu thất bại";
     return rejectWithValue({ message });
   }
 });
@@ -137,7 +156,10 @@ export const verifyResetCode = createAsyncThunk<
     return response.data;
   } catch (err: unknown) {
     const error = err as any;
-    const message = error.response?.data?.message || error.message || "Xác thực mã reset thất bại";
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Xác thực mã reset thất bại";
     return rejectWithValue({ message });
   }
 });
@@ -152,7 +174,10 @@ export const updatePassword = createAsyncThunk<
     return response.data;
   } catch (err: unknown) {
     const error = err as any;
-    const message = error.response?.data?.message || error.message || "Cập nhật mật khẩu thất bại";
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Cập nhật mật khẩu thất bại";
     return rejectWithValue({ message });
   }
 });
@@ -167,7 +192,10 @@ export const refreshToken = createAsyncThunk<
     return response.data;
   } catch (err: unknown) {
     const error = err as any;
-    const message = error.response?.data?.message || error.message || "Làm mới token thất bại";
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Làm mới token thất bại";
     return rejectWithValue({ message });
   }
 });
@@ -182,7 +210,8 @@ export const logoutUser = createAsyncThunk<
     return response.data;
   } catch (err: unknown) {
     const error = err as any;
-    const message = error.response?.data?.message || error.message || "Đăng xuất thất bại";
+    const message =
+      error.response?.data?.message || error.message || "Đăng xuất thất bại";
     return rejectWithValue({ message });
   }
 });
@@ -226,7 +255,7 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.accessToken;
         state.refreshToken = action.payload.refreshToken;
-        state.isAuthenticated = true;
+        state.isAuthenticated = !action.payload.needVerification; // Only authenticated if no verification needed
         state.error = null;
         state.loginAttempts = 0;
         state.lastFailedAttempt = null;
@@ -234,7 +263,13 @@ const authSlice = createSlice({
         localStorage.setItem("token", action.payload.accessToken);
         localStorage.setItem("refreshToken", action.payload.refreshToken);
         localStorage.setItem("user", JSON.stringify(action.payload.user));
-        message.success(action.payload.message);
+
+        // Only show success message if user doesn't need verification
+        if (!action.payload.needVerification) {
+          message.success(action.payload.message);
+        } else {
+          message.info("Vui lòng kiểm tra email để xác thực tài khoản");
+        }
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -252,10 +287,13 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
-        state.isAuthenticated = false;           // Chưa cho đăng nhập ngay
-        state.needVerification = true;           // Yêu cầu xác thực qua email
+        state.isAuthenticated = false; // Chưa cho đăng nhập ngay
+        state.needVerification = true; // Yêu cầu xác thực qua email
         state.error = null;
-        message.success(action.payload.message || "Đăng ký thành công. Vui lòng kiểm tra email để xác thực.");
+        message.success(
+          action.payload.message ||
+            "Đăng ký thành công. Vui lòng kiểm tra email để xác thực."
+        );
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
@@ -290,7 +328,8 @@ const authSlice = createSlice({
       })
       .addCase(resendVerification.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || "Gửi lại email xác thực thất bại";
+        state.error =
+          action.payload?.message || "Gửi lại email xác thực thất bại";
         message.error(state.error);
       })
       // Reset password cases
@@ -305,7 +344,8 @@ const authSlice = createSlice({
       })
       .addCase(resetPassword.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || "Gửi email reset mật khẩu thất bại";
+        state.error =
+          action.payload?.message || "Gửi email reset mật khẩu thất bại";
         message.error(state.error);
       })
       // Verify reset code cases

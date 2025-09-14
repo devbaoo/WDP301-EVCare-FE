@@ -1,4 +1,3 @@
-import Footer from "@/components/Footer/Footer";
 import Header from "@/components/Header/Header";
 import ServiceCenterCard from "@/components/ServiceCenter/ServiceCenterCard";
 import { Spin, Empty, Input, Select, Pagination } from "antd";
@@ -21,8 +20,8 @@ export default function ServiceCentersPage() {
 
   useEffect(() => {
     // Load all service centers for local filtering and pagination
-    dispatch(fetchServiceCenters({ 
-      page: 1, 
+    dispatch(fetchServiceCenters({
+      page: 1,
       limit: 1000 // Load a large number to get all centers
     }));
   }, [dispatch]);
@@ -45,15 +44,15 @@ export default function ServiceCentersPage() {
   const filteredServiceCenters = serviceCenters.filter(center => {
     // Filter by status
     const statusMatch = statusFilter === "all" || center.status === statusFilter;
-    
+
     // Filter by search term (name and address)
-    const searchMatch = !searchTerm || 
+    const searchMatch = !searchTerm ||
       center.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       center.address.street.toLowerCase().includes(searchTerm.toLowerCase()) ||
       center.address.ward.toLowerCase().includes(searchTerm.toLowerCase()) ||
       center.address.district.toLowerCase().includes(searchTerm.toLowerCase()) ||
       center.address.city.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     return statusMatch && searchMatch;
   });
 
@@ -79,7 +78,7 @@ export default function ServiceCentersPage() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      
+
       {/* Page Header */}
       <section className="bg-gradient-to-r from-blue-600 to-blue-800 py-16 pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -138,14 +137,14 @@ export default function ServiceCentersPage() {
             </div>
           ) : error ? (
             <div className="text-center py-20">
-              <Empty 
+              <Empty
                 description="Unable to load service centers list"
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
               />
             </div>
           ) : filteredServiceCenters.length === 0 ? (
             <div className="text-center py-20">
-              <Empty 
+              <Empty
                 description="No service centers found"
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
               />
@@ -174,7 +173,7 @@ export default function ServiceCentersPage() {
                     onChange={handlePageChange}
                     showSizeChanger={false}
                     showQuickJumper
-                    showTotal={(total, range) => 
+                    showTotal={(total, range) =>
                       `${range[0]}-${range[1]} of ${total} centers`
                     }
                     className="pagination-custom"
@@ -185,8 +184,6 @@ export default function ServiceCentersPage() {
           )}
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 }

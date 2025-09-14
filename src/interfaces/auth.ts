@@ -1,3 +1,5 @@
+export type UserRole = "customer" | "staff" | "technician" | "admin";
+
 export interface User {
   id: string;
   username: string;
@@ -5,7 +7,7 @@ export interface User {
   email: string;
   phone: string;
   address: string;
-  role: string;
+  role: UserRole;
   avatar?: string;
   isVerified?: boolean;
   createdAt?: string;
