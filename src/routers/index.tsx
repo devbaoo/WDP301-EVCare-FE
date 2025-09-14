@@ -1,28 +1,138 @@
 
-
 import HomePage from "../page/Home/HomePage";
 import LoginPage from "../page/Auth/LoginPage";
-import VerifyEmailPage from "../page/Auth/VerifyEmailPage";
+import ResendVerificationPage from "../page/Auth/ResendVerificationPage";
 import VerifyEmailSuccessPage from "../page/Auth/VerifyEmailSuccessPage";
 import ResetPasswordPage from "../page/Auth/ResetPasswordPage";
 import ServiceCentersPage from "../page/ServiceCenters/ServiceCentersPage";
 import ServiceCenterDetailPage from "../page/ServiceCenterDetail/ServiceCenterDetailPage";
 import ProfileCustomer from "@/page/Customer/ProfileCustomer";
-import { Route, Routes } from "react-router-dom";
-
+import UnauthorizedPage from "@/page/Error/UnauthorizedPage";
+import NotFoundPage from "@/page/Error/NotFoundPage";
+import ProtectedRoute from "@/components/ProtectedRoute/ProtectedRoute";
+import CustomerLayout from "@/components/Layout/CustomerLayout";
+import StaffLayout from "@/components/Layout/StaffLayout";
+import TechnicianLayout from "@/components/Layout/TechnicianLayout";
+import AdminLayout from "@/components/Layout/AdminLayout";
+import GuestLayout from "@/components/Layout/GuestLayout";
+import AuthLayout from "@/components/Layout/AuthLayout";
+import { Route, Routes, Navigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "@/services/store/store";
 
 const AppRouter = () => {
+    const { isAuthenticated, user, needVerification } = useSelector((state: RootState) => state.auth);
+
+    // Redirect based on user role and verification status
+    const getInitialRoute = () => {
+        if (!isAuthenticated) {
+            return "/login";
+        }
+        // If customer needs verification, force to verify page
+        if (user?.role === "customer" && needVerification) {
+            return "/verify-email";
+        }
+        if (user?.role === "admin") {
+            return "/admin";
+        }
+        if (user?.role === "staff") {
+            return "/staff";
+        }
+        if (user?.role === "technician") {
+            return "/technician";
+        }
+        // Customer can stay on home page (only if verified)
+        return "/";
+    };
+
     return (
         <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
+            {/* Public verification routes */}
             <Route path="/verify-email/:token" element={<VerifyEmailSuccessPage />} />
-            <Route path="/verify-email" element={<VerifyEmailPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/service-centers/:id" element={<ServiceCenterDetailPage />} />
-            <Route path="/service-centers" element={<ServiceCentersPage />} />
-            <Route path="/profileCustomer" element={<ProfileCustomer />} />
+            <Route path="/verify-email" element={<ResendVerificationPage />} />
 
+            {/* Auth Routes - Only accessible when not authenticated */}
+            <Route element={!isAuthenticated ? <AuthLayout /> : <Navigate to={getInitialRoute()} />}>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+            </Route>
+
+            {/* Public Routes - Accessible for everyone except unverified customers */}
+            <Route path="/" element={
+                isAuthenticated && user?.role === "customer" && needVerification ?
+                    <Navigate to="/verify-email" replace /> :
+                    isAuthenticated && user?.role === "customer" && !needVerification ?
+                        <CustomerLayout /> :
+                        <GuestLayout />
+            }>
+                <Route index element={<HomePage />} />
+            </Route>
+
+            <Route path="/service-centers" element={
+                isAuthenticated && user?.role === "customer" && needVerification ?
+                    <Navigate to="/verify-email" replace /> :
+                    isAuthenticated && user?.role === "customer" && !needVerification ?
+                        <CustomerLayout /> :
+                        <GuestLayout />
+            }>
+                <Route index element={<ServiceCentersPage />} />
+            </Route>
+
+            <Route path="/service-centers/:id" element={
+                isAuthenticated && user?.role === "customer" && needVerification ?
+                    <Navigate to="/verify-email" replace /> :
+                    isAuthenticated && user?.role === "customer" && !needVerification ?
+                        <CustomerLayout /> :
+                        <GuestLayout />
+            }>
+                <Route index element={<ServiceCenterDetailPage />} />
+            </Route>
+
+            {/* Customer Routes - Only accessible when authenticated as customer */}
+            <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
+                <Route element={<CustomerLayout />}>
+                    <Route path="/customer/profile" element={<ProfileCustomer />} />
+                    <Route path="/customer/service-centers" element={<ServiceCentersPage />} />
+                    <Route path="/customer/service-centers/:id" element={<ServiceCenterDetailPage />} />
+                </Route>
+            </Route>
+
+            {/* Staff Routes - Only accessible when authenticated as staff */}
+            <Route element={<ProtectedRoute allowedRoles={["staff"]} />}>
+                <Route path="/staff" element={<StaffLayout />}>
+                    <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Dashboard</h1></div>} />
+                    <Route path="service-centers" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Service Centers</h1></div>} />
+                    <Route path="technicians" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Technicians</h1></div>} />
+                    <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Settings</h1></div>} />
+                </Route>
+            </Route>
+
+            {/* Technician Routes - Only accessible when authenticated as technician */}
+            <Route element={<ProtectedRoute allowedRoles={["technician"]} />}>
+                <Route path="/technician" element={<TechnicianLayout />}>
+                    <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Technician Dashboard</h1></div>} />
+                    <Route path="schedule" element={<div className="p-6"><h1 className="text-2xl font-bold">My Schedule</h1></div>} />
+                    <Route path="services" element={<div className="p-6"><h1 className="text-2xl font-bold">My Services</h1></div>} />
+                    <Route path="history" element={<div className="p-6"><h1 className="text-2xl font-bold">Service History</h1></div>} />
+                    <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Technician Settings</h1></div>} />
+                </Route>
+            </Route>
+
+            {/* Admin Routes - Only accessible when authenticated as admin */}
+            <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+                <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Admin Dashboard</h1></div>} />
+                    <Route path="customers" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Customers</h1></div>} />
+                    <Route path="staff" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Staff</h1></div>} />
+                    <Route path="service-centers" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Service Centers</h1></div>} />
+                    <Route path="analytics" element={<div className="p-6"><h1 className="text-2xl font-bold">Analytics</h1></div>} />
+                    <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Admin Settings</h1></div>} />
+                </Route>
+            </Route>
+
+            {/* Error Routes */}
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
+            <Route path="*" element={<NotFoundPage />} />
         </Routes>
     );
 }

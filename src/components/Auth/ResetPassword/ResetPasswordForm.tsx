@@ -33,12 +33,12 @@ export default function ResetPasswordForm({ step, onStepChange, onSuccess, token
 
     try {
       const resultAction = await dispatch(resetPassword({ email }));
-      
+
       if (resetPassword.fulfilled.match(resultAction)) {
         onStepChange("password");
         console.log("Forgot password email sent:", resultAction.payload);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Forgot password error:", error);
     }
   };
@@ -60,28 +60,28 @@ export default function ResetPasswordForm({ step, onStepChange, onSuccess, token
 
     try {
       let resultAction;
-      
+
       if (token) {
         // Token-based reset (from email link)
-        resultAction = await dispatch(resetPasswordWithToken({ 
-          email, 
-          newPassword 
+        resultAction = await dispatch(resetPasswordWithToken({
+          email,
+          newPassword
         }));
       } else {
         // Direct reset after sending email (no code needed)
-        resultAction = await dispatch(updatePassword({ 
-          email, 
+        resultAction = await dispatch(updatePassword({
+          email,
           resetCode: "", // Empty code since we don't need verification
-          newPassword 
+          newPassword
         }));
       }
-      
+
       if ((token ? resetPasswordWithToken : updatePassword).fulfilled.match(resultAction)) {
         onStepChange("success");
         console.log("Password updated successfully:", resultAction.payload);
         onSuccess?.();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Update password error:", error);
     }
   };

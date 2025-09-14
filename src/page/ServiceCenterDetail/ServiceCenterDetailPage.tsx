@@ -1,18 +1,17 @@
-import Footer from "@/components/Footer/Footer";
 import Header from "@/components/Header/Header";
 import { Button, Spin, Empty, Typography, Tag, Image, Carousel, Card, Row, Col, Space } from "antd";
 import { useAppDispatch, useAppSelector } from "@/services/store/store";
 import { fetchServiceCenterById } from "@/services/features/serviceCenter/serviceCenterSlice";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Globe, 
-  Clock, 
-  Users, 
-  Star, 
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Globe,
+  Clock,
+  Users,
+  Star,
   Wrench,
   CreditCard,
   Calendar,
@@ -57,10 +56,10 @@ export default function ServiceCenterDetailPage() {
 
   const formatOperatingHours = (operatingHours: any) => {
     if (!operatingHours) return null;
-    
+
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    
+
     return days.map((day, index) => {
       const dayHours = operatingHours[day];
       return (
@@ -99,7 +98,6 @@ export default function ServiceCenterDetailPage() {
         <div className="flex justify-center items-center py-20">
           <Spin size="large" />
         </div>
-        <Footer />
       </div>
     );
   }
@@ -109,19 +107,18 @@ export default function ServiceCenterDetailPage() {
       <div className="min-h-screen bg-white">
         <Header />
         <div className="text-center py-20">
-          <Empty 
+          <Empty
             description="Service center not found"
             image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             onClick={() => navigate('/service-centers')}
             className="mt-4"
           >
             Back to List
           </Button>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -147,12 +144,12 @@ export default function ServiceCenterDetailPage() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      
+
       {/* Back Button */}
       <div className="bg-gray-50 py-4 pt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Button 
-            icon={<ArrowLeft />} 
+          <Button
+            icon={<ArrowLeft />}
             onClick={() => navigate('/service-centers')}
             className="mb-0"
           >
@@ -216,9 +213,9 @@ export default function ServiceCenterDetailPage() {
 
                 {/* Quick Actions */}
                 <div className="space-y-3">
-                  <Button 
-                    type="primary" 
-                    size="large" 
+                  <Button
+                    type="primary"
+                    size="large"
                     icon={<Calendar />}
                     onClick={handleBookAppointment}
                     className="w-full"
@@ -226,7 +223,7 @@ export default function ServiceCenterDetailPage() {
                   >
                     Book Appointment
                   </Button>
-                  
+
                   {status !== 'active' ? (
                     <Text type="secondary" className="text-center block">
                       This center is currently not accepting bookings
@@ -239,7 +236,7 @@ export default function ServiceCenterDetailPage() {
                       {nextOpeningTime && (
                         <Text type="secondary" className="text-sm">
                           Opens {nextOpeningTime}
-                          
+
                         </Text>
                       )}
                     </div>
@@ -292,9 +289,9 @@ export default function ServiceCenterDetailPage() {
                       <div>
                         <Text strong>Website:</Text>
                         <div>
-                          <a 
-                            href={contact.website} 
-                            target="_blank" 
+                          <a
+                            href={contact.website}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline"
                           >
@@ -365,9 +362,9 @@ export default function ServiceCenterDetailPage() {
                       <div className="flex-grow">
                         <div className="font-medium">
                           {method.type === 'cash' ? 'Cash' :
-                           method.type === 'card' ? 'Credit/Debit Card' :
-                           method.type === 'banking' ? 'Bank Transfer' :
-                           method.type === 'ewallet' ? 'E-Wallet' : method.type}
+                            method.type === 'card' ? 'Credit/Debit Card' :
+                              method.type === 'banking' ? 'Bank Transfer' :
+                                method.type === 'ewallet' ? 'E-Wallet' : method.type}
                         </div>
                         <div className="text-sm text-gray-600">
                           {method.isEnabled ? 'Available' : 'Not Available'}
@@ -440,7 +437,6 @@ export default function ServiceCenterDetailPage() {
         </section>
       )}
 
-      <Footer />
     </div>
   );
 }

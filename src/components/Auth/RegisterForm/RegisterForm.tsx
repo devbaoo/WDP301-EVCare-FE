@@ -25,7 +25,7 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
   const dispatch = useAppDispatch();
   const { loading } = useAppSelector((state) => state.auth);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   // Register form data
   const [registerData, setRegisterData] = useState<RegisterData>({
     username: "",
@@ -101,18 +101,17 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
         phone: registerData.phone,
         address: registerData.address
       }));
-      
+
       if (registerUser.fulfilled.match(resultAction)) {
-        console.log("Registration successful:", resultAction.payload);
-        
+
         // Save email for verification
         localStorage.setItem('registerEmail', registerData.email);
-        
+
         // Redirect to verify email page
         navigate('/verify-email');
         onSuccess?.();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Registration error:", error);
     }
   };
@@ -141,9 +140,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
               placeholder="Enter your username"
               value={registerData.username}
               onChange={(e) => handleRegisterInputChange("username", e.target.value)}
-              className={`w-full rounded-xl border-2 px-4 py-3 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 ${
-                errors.username ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-gray-800"
-              }`}
+              className={`w-full rounded-xl border-2 px-4 py-3 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 ${errors.username ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-gray-800"
+                }`}
               required
             />
             {errors.username && (
@@ -165,9 +163,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
               placeholder="Enter your email"
               value={registerData.email}
               onChange={(e) => handleRegisterInputChange("email", e.target.value)}
-              className={`w-full rounded-xl border-2 px-4 py-3 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 ${
-                errors.email ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-gray-800"
-              }`}
+              className={`w-full rounded-xl border-2 px-4 py-3 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 ${errors.email ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-gray-800"
+                }`}
               required
             />
             {errors.email && (
@@ -190,9 +187,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
                 placeholder="Enter your password"
                 value={registerData.password}
                 onChange={(e) => handleRegisterInputChange("password", e.target.value)}
-                className={`w-full rounded-xl border-2 px-4 py-3 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 pr-12 ${
-                  errors.password ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-gray-800"
-                }`}
+                className={`w-full rounded-xl border-2 px-4 py-3 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 pr-12 ${errors.password ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-gray-800"
+                  }`}
                 required
               />
               <button
@@ -223,9 +219,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
                 placeholder="Confirm your password"
                 value={registerData.confirmPassword}
                 onChange={(e) => handleRegisterInputChange("confirmPassword", e.target.value)}
-                className={`w-full rounded-xl border-2 px-4 py-3 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 pr-12 ${
-                  errors.confirmPassword ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-gray-800"
-                }`}
+                className={`w-full rounded-xl border-2 px-4 py-3 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 pr-12 ${errors.confirmPassword ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-gray-800"
+                  }`}
                 required
               />
               <button
@@ -258,9 +253,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
               placeholder="Enter your full name"
               value={registerData.fullName}
               onChange={(e) => handleRegisterInputChange("fullName", e.target.value)}
-              className={`w-full rounded-xl border-2 px-4 py-3 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 ${
-                errors.fullName ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-gray-800"
-              }`}
+              className={`w-full rounded-xl border-2 px-4 py-3 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 ${errors.fullName ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-gray-800"
+                }`}
               required
             />
             {errors.fullName && (
@@ -282,9 +276,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
               placeholder="Enter your phone number"
               value={registerData.phone}
               onChange={(e) => handleRegisterInputChange("phone", e.target.value)}
-              className={`w-full rounded-xl border-2 px-4 py-3 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 ${
-                errors.phone ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-gray-800"
-              }`}
+              className={`w-full rounded-xl border-2 px-4 py-3 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 ${errors.phone ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-gray-800"
+                }`}
               required
             />
             {errors.phone && (
@@ -306,9 +299,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
               placeholder="Enter your address"
               value={registerData.address}
               onChange={(e) => handleRegisterInputChange("address", e.target.value)}
-              className={`w-full rounded-xl border-2 px-4 py-3 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 ${
-                errors.address ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-gray-800"
-              }`}
+              className={`w-full rounded-xl border-2 px-4 py-3 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 ${errors.address ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-gray-800"
+                }`}
               required
             />
             {errors.address && (

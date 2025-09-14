@@ -29,24 +29,20 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
     try {
       const resultAction = await dispatch(loginUser({ email, password }));
-      
+
       if (loginUser.fulfilled.match(resultAction)) {
-        
+
         // Check if user needs email verification
         if (resultAction.payload.needVerification) {
           // Save email for verification
           localStorage.setItem('registerEmail', resultAction.payload.user.email);
-          // Redirect to verify email page
-          setTimeout(() => {
-            navigate('/verify-email');
-          }, 1000);
+          // Redirect to verify email page immediately
+          navigate('/verify-email');
         } else {
           // Redirect to home page or dashboard
-          setTimeout(() => {
-            navigate('/');
-          }, 1000);
+          navigate('/');
         }
-        
+
         onSuccess?.();
       }
     } catch (error: any) {
