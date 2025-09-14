@@ -1,55 +1,55 @@
 import { useState, useEffect } from "react";
-import { Mail, ArrowLeft } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Mail, RefreshCw } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../services/store/store";
-import { verifyEmail } from "../../../services/features/auth/authSlice";
+import { resendVerification } from "../../../services/features/auth/authSlice";
 
 interface VerifyEmailFormProps {
   onSuccess?: () => void;
 }
 
-export default function VerifyEmailForm({ onSuccess }: VerifyEmailFormProps) {
+export default function VerifyEmailForm({}: VerifyEmailFormProps) {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { loading } = useAppSelector((state) => state.auth);
-  const [searchParams] = useSearchParams();
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationStatus, setVerificationStatus] = useState<"idle" | "success" | "error">("idle");
+  const { token } = useParams<{ token?: string }>();
+  const [isResending, setIsResending] = useState(false);
+  const [verificationStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
+  const [email, setEmail] = useState("");
+
+  // Get email from localStorage
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('registerEmail');
+    if (savedEmail) {
+      setEmail(savedEmail);
+    }
+  }, []);
 
   // Auto verify if token is present in URL
   useEffect(() => {
-    const token = searchParams.get('token');
     if (token) {
-      handleAutoVerify(token);
+      // Redirect to the success page which will handle the verification
+      navigate(`/verify-email/${token}`);
     }
-  }, [searchParams]);
+  }, [token, navigate]);
 
-  const handleAutoVerify = async (token: string) => {
-    setIsVerifying(true);
+
+  const handleResendVerification = async () => {
+    if (!email) return;
+    
+    setIsResending(true);
     try {
-      const resultAction = await dispatch(verifyEmail({ 
-        email: localStorage.getItem('registerEmail') || '', 
-        verificationCode: token 
-      }));
+      const resultAction = await dispatch(resendVerification({ email }));
       
-      if (verifyEmail.fulfilled.match(resultAction)) {
-        setVerificationStatus("success");
-        // Clear saved email
-        localStorage.removeItem('registerEmail');
-        
-        // Redirect to home page after 2 seconds
-        setTimeout(() => {
-          navigate('/');
-          onSuccess?.();
-        }, 2000);
-      } else {
-        setVerificationStatus("error");
+      if (resendVerification.fulfilled.match(resultAction)) {
+        // Success message is handled by the reducer
       }
     } catch (error: any) {
-      console.error("Email verification error:", error);
-      setVerificationStatus("error");
+      console.error("Resend verification error:", error);
     } finally {
-      setIsVerifying(false);
+      setIsResending(false);
     }
   };
 
@@ -57,32 +57,39 @@ export default function VerifyEmailForm({ onSuccess }: VerifyEmailFormProps) {
     <div className="text-center space-y-6">
       {/* Verification Info */}
       <div className="space-y-3">
-        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto shadow-lg ${
-          isVerifying || loading ? 'bg-gradient-to-br from-yellow-500 to-orange-600 animate-pulse' :
-          verificationStatus === 'success' ? 'bg-gradient-to-br from-green-500 to-emerald-600' :
-          verificationStatus === 'error' ? 'bg-gradient-to-br from-red-500 to-red-600' :
-          'bg-gradient-to-br from-blue-500 to-indigo-600'
-        }`}>
+        <div
+          className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto shadow-lg ${
+            verificationStatus === "success"
+              ? "bg-gradient-to-br from-green-500 to-emerald-600"
+              : verificationStatus === "error"
+              ? "bg-gradient-to-br from-red-500 to-red-600"
+              : "bg-gradient-to-br from-blue-500 to-indigo-600"
+          }`}
+        >
           <Mail className="w-8 h-8 text-white" />
         </div>
-        
-        {isVerifying || loading ? (
+
+        {loading ? (
           <>
-            <h3 className="text-xl font-bold text-gray-800">Verifying Email...</h3>
+            <h3 className="text-xl font-bold text-gray-800">
+              Processing...
+            </h3>
             <p className="text-gray-600 text-sm leading-relaxed">
-              Please wait while we verify your email address.
+              Please wait while we process your request.
             </p>
           </>
-        ) : verificationStatus === 'success' ? (
+        ) : verificationStatus === "success" ? (
           <>
             <h3 className="text-xl font-bold text-green-600">Email Verified!</h3>
             <p className="text-gray-600 text-sm leading-relaxed">
-              Your email has been successfully verified. Redirecting to home page...
+              Your email has been successfully verified. Redirecting to login page...
             </p>
           </>
-        ) : verificationStatus === 'error' ? (
+        ) : verificationStatus === "error" ? (
           <>
-            <h3 className="text-xl font-bold text-red-600">Verification Failed</h3>
+            <h3 className="text-xl font-bold text-red-600">
+              Verification Failed
+            </h3>
             <p className="text-gray-600 text-sm leading-relaxed">
               The verification link is invalid or has expired. Please try again.
             </p>
@@ -91,39 +98,41 @@ export default function VerifyEmailForm({ onSuccess }: VerifyEmailFormProps) {
           <>
             <h3 className="text-xl font-bold text-gray-800">Check Your Email</h3>
             <p className="text-gray-600 text-sm leading-relaxed">
-              We've sent a verification link to your email address. Please click the link in the email to verify your account.
+              We&apos;ve sent a verification link to your email address. Please click the link in the email to verify your account.
             </p>
           </>
         )}
       </div>
 
-      {/* Back to Login Button */}
-      {!isVerifying && !loading && (
-        <div className="pt-4">
-          <button
-            type="button"
-            onClick={() => navigate('/login')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors duration-200 mx-auto"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back to Login</span>
-          </button>
+      {/* Resend Verification Button */}
+      {(verificationStatus === "error" || verificationStatus === "idle") && email && (
+        <div className="space-y-4">
+          <div className="border-t border-gray-200 pt-4">
+            <p className="text-sm text-gray-600 mb-3">
+              Didn&apos;t receive the email? Check your spam folder or resend the verification email.
+            </p>
+            <button
+              onClick={handleResendVerification}
+              disabled={isResending || loading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              {isResending ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4" />
+                  Resend Verification Email
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Help Text */}
-      {!isVerifying && !loading && verificationStatus === 'idle' && (
-        <div className="space-y-2">
-          <p className="text-sm text-gray-500">
-            Check your spam folder if you don't see the email
-          </p>
-          <p className="text-sm text-gray-500">
-            The verification link will expire in 24 hours
-          </p>
-        </div>
-      )}
-      
-      {verificationStatus === 'error' && (
+      {verificationStatus === "error" && (
         <div className="space-y-2">
           <p className="text-sm text-red-500">
             Please contact support if you continue to have issues

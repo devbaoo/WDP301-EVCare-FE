@@ -50,6 +50,11 @@ export interface ResetPasswordData {
   email: string;
 }
 
+export interface ResetPasswordWithTokenData {
+  email: string;
+  newPassword: string;
+}
+
 export interface UpdatePasswordData {
   email: string;
   resetCode: string;

@@ -4,20 +4,21 @@ import { Input } from "antd";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../services/store/store";
-import { resetPassword, verifyResetCode, updatePassword } from "../../../services/features/auth/authSlice";
+import { resetPassword, resetPasswordWithToken, updatePassword } from "../../../services/features/auth/authSlice";
 
 interface ResetPasswordFormProps {
-  step: "email" | "code" | "password";
-  onStepChange: (step: "email" | "code" | "password" | "success") => void;
+  step: "email" | "password";
+  onStepChange: (step: "email" | "password" | "success") => void;
   onSuccess?: () => void;
+  token?: string;
 }
 
-export default function ResetPasswordForm({ step, onStepChange, onSuccess }: ResetPasswordFormProps) {
+export default function ResetPasswordForm({ step, onStepChange, onSuccess, token }: ResetPasswordFormProps) {
+  // Simplified reset password flow - no verification code needed
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { loading } = useAppSelector((state) => state.auth);
   const [email, setEmail] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -34,30 +35,11 @@ export default function ResetPasswordForm({ step, onStepChange, onSuccess }: Res
       const resultAction = await dispatch(resetPassword({ email }));
       
       if (resetPassword.fulfilled.match(resultAction)) {
-        onStepChange("code");
-        console.log("Reset password email sent:", resultAction.payload);
-      }
-    } catch (error: any) {
-      console.error("Reset password error:", error);
-    }
-  };
-
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!verificationCode.trim()) {
-      return;
-    }
-
-    try {
-      const resultAction = await dispatch(verifyResetCode({ email, resetCode: verificationCode }));
-      
-      if (verifyResetCode.fulfilled.match(resultAction)) {
         onStepChange("password");
-        console.log("Reset code verified:", resultAction.payload);
+        console.log("Forgot password email sent:", resultAction.payload);
       }
     } catch (error: any) {
-      console.error("Verify reset code error:", error);
+      console.error("Forgot password error:", error);
     }
   };
 
@@ -77,13 +59,24 @@ export default function ResetPasswordForm({ step, onStepChange, onSuccess }: Res
     }
 
     try {
-      const resultAction = await dispatch(updatePassword({ 
-        email, 
-        resetCode: verificationCode, 
-        newPassword 
-      }));
+      let resultAction;
       
-      if (updatePassword.fulfilled.match(resultAction)) {
+      if (token) {
+        // Token-based reset (from email link)
+        resultAction = await dispatch(resetPasswordWithToken({ 
+          email, 
+          newPassword 
+        }));
+      } else {
+        // Direct reset after sending email (no code needed)
+        resultAction = await dispatch(updatePassword({ 
+          email, 
+          resetCode: "", // Empty code since we don't need verification
+          newPassword 
+        }));
+      }
+      
+      if ((token ? resetPasswordWithToken : updatePassword).fulfilled.match(resultAction)) {
         onStepChange("success");
         console.log("Password updated successfully:", resultAction.payload);
         onSuccess?.();
@@ -93,7 +86,7 @@ export default function ResetPasswordForm({ step, onStepChange, onSuccess }: Res
     }
   };
 
-  if (step === "email") {
+  if (step === "email" && !token) {
     return (
       <form onSubmit={handleSendCode} className="space-y-6">
         {/* Email Input */}
@@ -116,7 +109,7 @@ export default function ResetPasswordForm({ step, onStepChange, onSuccess }: Res
           loading={loading}
           className="w-full h-14 bg-gradient-to-r from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 border-none rounded-xl text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
         >
-          Send Reset Password 
+          Send Reset Link
         </Button>
 
         {/* Back to Login */}
@@ -135,50 +128,6 @@ export default function ResetPasswordForm({ step, onStepChange, onSuccess }: Res
     );
   }
 
-  if (step === "code") {
-    return (
-      <form onSubmit={handleVerifyCode} className="space-y-6">
-        {/* Verification Code Input */}
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-gray-700">Verification Code</label>
-          <Input
-            type="text"
-            placeholder="Enter 6-digit code"
-            value={verificationCode}
-            onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            className="w-full rounded-xl border-2 border-gray-200 bg-white/50 px-4 py-4 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:border-gray-800 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 text-center text-2xl font-mono tracking-widest"
-            maxLength={6}
-            required
-          />
-          <p className="text-xs text-gray-500 text-center">
-            Enter the 6-digit code sent to your email
-          </p>
-        </div>
-
-        {/* Verify Button */}
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={loading}
-          className="w-full h-14 bg-gradient-to-r from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 border-none rounded-xl text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
-        >
-          Verify Code
-        </Button>
-
-        {/* Resend Code */}
-        <div className="text-center">
-          <Button
-            type="link"
-            onClick={() => onStepChange("email")}
-            className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200"
-          >
-            Didn't receive the code? Try again
-          </Button>
-        </div>
-
-      </form>
-    );
-  }
 
   if (step === "password") {
     return (
