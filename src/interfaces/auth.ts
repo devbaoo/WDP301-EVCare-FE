@@ -6,6 +6,10 @@ export interface User {
   phone: string;
   address: string;
   role: string;
+  avatar?: string;
+  isVerified?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface LoginCredentials {
@@ -55,6 +59,19 @@ export interface UpdatePasswordData {
   email: string;
   resetCode: string;
   newPassword: string;
+}
+
+export interface UpdateProfileData {
+  username?: string;
+  fullName?: string;
+  phone?: string;
+  address?: string;
+}
+
+export interface ProfileResponse {
+  success: boolean;
+  message: string;
+  user: User;
 }
 
 export interface ApiError {

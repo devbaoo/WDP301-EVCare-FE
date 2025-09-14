@@ -7,6 +7,7 @@ import VerifyEmailSuccessPage from "../page/Auth/VerifyEmailSuccessPage";
 import ResetPasswordPage from "../page/Auth/ResetPasswordPage";
 import ServiceCentersPage from "../page/ServiceCenters/ServiceCentersPage";
 import ServiceCenterDetailPage from "../page/ServiceCenterDetail/ServiceCenterDetailPage";
+import ProfileCustomer from "@/page/Customer/ProfileCustomer";
 import { Route, Routes } from "react-router-dom";
 
 
@@ -20,6 +21,8 @@ const AppRouter = () => {
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/service-centers/:id" element={<ServiceCenterDetailPage />} />
             <Route path="/service-centers" element={<ServiceCentersPage />} />
+            <Route path="/profileCustomer" element={<ProfileCustomer />} />
+
         </Routes>
     );
 }
