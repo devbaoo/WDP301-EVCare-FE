@@ -31,6 +31,7 @@ import {
     Badge,
     Tooltip
 } from 'antd';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAppDispatch, useAppSelector } from '../../services/store/store';
 import {
     getUserProfile,
@@ -145,135 +146,194 @@ function ProfileCustomer() {
 
     if (loading && !profile) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-synop-gray-light to-white flex justify-center items-center">
-                <div className="text-center">
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="min-h-screen bg-gradient-to-br from-synop-gray-light to-white flex justify-center items-center"
+            >
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                    className="text-center"
+                >
                     <Spin size="large" />
-                    <p className="mt-4 text-synop-gray-medium">Đang tải thông tin...</p>
-                </div>
-            </div>
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.6, delay: 0.4 }}
+                        className="mt-4 text-synop-gray-medium"
+                    >
+                        Đang tải thông tin...
+                    </motion.p>
+                </motion.div>
+            </motion.div>
         );
     }
 
     return (
-        <div className="min-h-screen">
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="min-h-screen"
+        >
             <Header />
             <div className="pt-16"> {/* Add padding to ensure content starts below the header */}
                 <div className="bg-gradient-to-br from-synop-gray-light to-white">
                     {/* Header Section */}
-                    <div className="bg-gradient-to-r from-synop-blue-primary to-synop-blue-light py-16">
+                    <motion.div
+                        initial={{ opacity: 0, y: -30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                        className="bg-gradient-to-r from-synop-blue-primary to-synop-blue-light py-16"
+                    >
                         <div className="max-w-6xl mx-auto px-4">
-                            <div className="text-center text-white">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6, delay: 0.2 }}
+                                className="text-center text-white"
+                            >
                                 <Title level={1} className="text-white mb-4 font-bold">
                                     Thông tin cá nhân
                                 </Title>
                                 <Text className="text-white/90 text-lg">
                                     Quản lý và cập nhật thông tin tài khoản của bạn
                                 </Text>
-                            </div>
+                            </motion.div>
                         </div>
-                    </div>
+                    </motion.div>
 
-                    <div className="max-w-6xl mx-auto px-4 -mt-8 relative z-10">
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.3 }}
+                        className="max-w-6xl mx-auto px-4 -mt-8 relative z-10"
+                    >
                         <Row gutter={[16, 16]} justify="center" align="middle">
                             {/* Profile Card */}
                             <Col xs={24} lg={8}>
-                                <Card
-                                    className="shadow-2xl border-0 rounded-2xl overflow-hidden"
-                                    style={{
-                                        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-                                        border: '1px solid rgba(55, 100, 243, 0.1)'
-                                    }}
+                                <motion.div
+                                    initial={{ opacity: 0, x: -30 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.8, delay: 0.4 }}
                                 >
-                                    <div className="text-center p-6">
-                                        {/* Avatar Section */}
-                                        <div className="mb-8">
-                                            <Upload
-                                                accept="image/*"
-                                                beforeUpload={handleAvatarUpload}
-                                                showUploadList={false}
-                                                disabled={uploading}
+                                    <Card
+                                        className="shadow-2xl border-0 rounded-2xl overflow-hidden"
+                                        style={{
+                                            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                                            border: '1px solid rgba(55, 100, 243, 0.1)'
+                                        }}
+                                    >
+                                        <div className="text-center p-6">
+                                            {/* Avatar Section */}
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.8 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ duration: 0.6, delay: 0.5 }}
+                                                className="mb-8"
                                             >
-                                                <div className="relative inline-block group">
-                                                    <Badge
-                                                        count={
-                                                            <Tooltip title="Tải lên ảnh đại diện">
-                                                                <div className="w-8 h-8 bg-synop-blue-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-synop-blue-dark transition-colors">
-                                                                    <UploadOutlined className="text-white text-sm" />
-                                                                </div>
-                                                            </Tooltip>
-                                                        }
-                                                        offset={[-5, 5]}
+                                                <Upload
+                                                    accept="image/*"
+                                                    beforeUpload={handleAvatarUpload}
+                                                    showUploadList={false}
+                                                    disabled={uploading}
+                                                >
+                                                    <motion.div
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                        className="relative inline-block group"
                                                     >
-                                                        <Avatar
-                                                            size={140}
-                                                            src={profile?.avatar}
-                                                            icon={<UserOutlined />}
-                                                            className="cursor-pointer hover:scale-105 transition-all duration-300 shadow-lg border-4 border-white"
-                                                            style={{
-                                                                background: 'linear-gradient(135deg, #3764F3 0%, #2EB7FA 100%)'
-                                                            }}
-                                                        />
-                                                    </Badge>
-                                                    {uploading && (
-                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full backdrop-blur-sm">
-                                                            <Spin size="small" />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </Upload>
-                                        </div>
+                                                        <Badge
+                                                            count={
+                                                                <Tooltip title="Tải lên ảnh đại diện">
+                                                                    <div className="w-8 h-8 bg-synop-blue-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-synop-blue-dark transition-colors">
+                                                                        <UploadOutlined className="text-white text-sm" />
+                                                                    </div>
+                                                                </Tooltip>
+                                                            }
+                                                            offset={[-5, 5]}
+                                                        >
+                                                            <Avatar
+                                                                size={140}
+                                                                src={profile?.avatar}
+                                                                icon={<UserOutlined />}
+                                                                className="cursor-pointer hover:scale-105 transition-all duration-300 shadow-lg border-4 border-white"
+                                                                style={{
+                                                                    background: 'linear-gradient(135deg, #3764F3 0%, #2EB7FA 100%)'
+                                                                }}
+                                                            />
+                                                        </Badge>
+                                                        <AnimatePresence>
+                                                            {uploading && (
+                                                                <motion.div
+                                                                    initial={{ opacity: 0 }}
+                                                                    animate={{ opacity: 1 }}
+                                                                    exit={{ opacity: 0 }}
+                                                                    className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full backdrop-blur-sm"
+                                                                >
+                                                                    <Spin size="small" />
+                                                                </motion.div>
+                                                            )}
+                                                        </AnimatePresence>
+                                                    </motion.div>
+                                                </Upload>
+                                            </motion.div>
 
-                                        {/* User Info */}
-                                        <div className="mb-6">
-                                            <Title level={3} className="mb-2 text-synop-gray-dark">
-                                                {profile?.fullName || 'Chưa cập nhật'}
-                                            </Title>
+                                            {/* User Info */}
+                                            <div className="mb-6">
+                                                <Title level={3} className="mb-2 text-synop-gray-dark">
+                                                    {profile?.fullName || 'Chưa cập nhật'}
+                                                </Title>
 
-                                            <Text className="text-synop-gray-medium text-lg block mb-4">
-                                                @{profile?.username}
-                                            </Text>
+                                                <Text className="text-synop-gray-medium text-lg block mb-4">
+                                                    @{profile?.username}
+                                                </Text>
 
-                                            <Tag
-                                                color={getRoleColor(profile?.role || '')}
-                                                className="mb-6 px-4 py-2 text-sm font-semibold rounded-full border-0"
-                                                icon={getRoleIcon(profile?.role || '')}
-                                            >
-                                                {getRoleText(profile?.role || '')}
-                                            </Tag>
-                                        </div>
-
-                                        {/* Contact Info */}
-                                        <div className="space-y-4">
-                                            <div className="flex items-center justify-center p-3 bg-white rounded-xl shadow-sm border border-gray-100">
-                                                <MailOutlined className="mr-3 text-synop-blue-primary text-lg" />
-                                                <Text className="text-synop-gray-dark font-medium">{profile?.email}</Text>
+                                                <Tag
+                                                    color={getRoleColor(profile?.role || '')}
+                                                    className="mb-6 px-4 py-2 text-sm font-semibold rounded-full border-0"
+                                                    icon={getRoleIcon(profile?.role || '')}
+                                                >
+                                                    {getRoleText(profile?.role || '')}
+                                                </Tag>
                                             </div>
 
-                                            {profile?.phone && (
+                                            {/* Contact Info */}
+                                            <div className="space-y-4">
                                                 <div className="flex items-center justify-center p-3 bg-white rounded-xl shadow-sm border border-gray-100">
-                                                    <PhoneOutlined className="mr-3 text-green-500 text-lg" />
-                                                    <Text className="text-synop-gray-dark font-medium">{profile.phone}</Text>
+                                                    <MailOutlined className="mr-3 text-synop-blue-primary text-lg" />
+                                                    <Text className="text-synop-gray-dark font-medium">{profile?.email}</Text>
                                                 </div>
-                                            )}
 
-                                            {profile?.isVerified !== undefined && (
-                                                <div className="flex items-center justify-center p-3 bg-white rounded-xl shadow-sm border border-gray-100">
-                                                    {profile.isVerified ? (
-                                                        <>
-                                                            <CheckCircleOutlined className="mr-3 text-green-500 text-lg" />
-                                                            <Text className="text-green-600 font-medium">Đã xác thực</Text>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <ExclamationCircleOutlined className="mr-3 text-orange-500 text-lg" />
-                                                            <Text className="text-orange-600 font-medium">Chưa xác thực</Text>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            )}
+                                                {profile?.phone && (
+                                                    <div className="flex items-center justify-center p-3 bg-white rounded-xl shadow-sm border border-gray-100">
+                                                        <PhoneOutlined className="mr-3 text-green-500 text-lg" />
+                                                        <Text className="text-synop-gray-dark font-medium">{profile.phone}</Text>
+                                                    </div>
+                                                )}
+
+                                                {profile?.isVerified !== undefined && (
+                                                    <div className="flex items-center justify-center p-3 bg-white rounded-xl shadow-sm border border-gray-100">
+                                                        {profile.isVerified ? (
+                                                            <>
+                                                                <CheckCircleOutlined className="mr-3 text-green-500 text-lg" />
+                                                                <Text className="text-green-600 font-medium">Đã xác thực</Text>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <ExclamationCircleOutlined className="mr-3 text-orange-500 text-lg" />
+                                                                <Text className="text-orange-600 font-medium">Chưa xác thực</Text>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                </Card>
+                                    </Card>
+                                </motion.div>
                             </Col>
 
                             {/* Profile Details */}
@@ -420,10 +480,10 @@ function ProfileCustomer() {
                                 </Card>
                             </Col>
                         </Row>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }
 

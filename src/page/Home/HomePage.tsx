@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from "@/services/store/store";
 import { fetchNearbyServiceCenters } from "@/services/features/serviceCenter/serviceCenterSlice";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { ArrowRight, Car, Calendar, FileText, Package, BarChart3, Shield, Wrench, Users, CreditCard } from "lucide-react";
 
@@ -19,6 +20,11 @@ export default function HomePage() {
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   const [searchRadius, setSearchRadius] = useState(5); // Default 5km radius
   const hasFetched = useRef(false);
+
+  // Scroll to top when component mounts (refresh page)
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   // Get user location
   useEffect(() => {
@@ -79,7 +85,7 @@ export default function HomePage() {
   };
 
 
-  const handleViewDetails = (serviceCenter: any) => {
+  const handleViewDetails = (serviceCenter: { _id: string }) => {
     navigate(`/service-centers/${serviceCenter._id}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -90,39 +96,95 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-white"
+    >
       {/* Hero Section */}
       <Header />
       <section className="relative overflow-hidden bg-gradient-to-b from-[#eaf0ff] to-white pt-20">
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-6 py-16 sm:py-24 lg:grid-cols-2 lg:gap-12">
           {/* Text block */}
-          <div className="relative z-10 text-center lg:text-left">
-            <h1 className="font-satoshi text-4xl font-black leading-[65px] tracking-[-0.02em] mb-5 sm:text-5xl lg:text-[60px]">
-              <span className="text-synop-blue-primary">EV Service Center</span> <br />
-              <span className="text-synop-blue-primary">Maintenance Management</span> <br />
-              <span className="text-synop-blue-dark">System</span>
-            </h1>
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="relative z-10 text-center lg:text-left"
+          >
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="font-satoshi text-4xl font-black leading-[65px] tracking-[-0.02em] mb-5 sm:text-5xl lg:text-[60px]"
+            >
+              <motion.span
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="text-synop-blue-primary"
+              >
+                EV Service Center
+              </motion.span> <br />
+              <motion.span
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
+                className="text-synop-blue-primary"
+              >
+                Maintenance Management
+              </motion.span> <br />
+              <motion.span
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1.0 }}
+                className="text-synop-blue-dark"
+              >
+                System
+              </motion.span>
+            </motion.h1>
 
-            <p className="mx-auto mt-4 max-w-xl text-xl leading-[28px] text-synop-blue-dark">
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.2 }}
+              className="mx-auto mt-4 max-w-xl text-xl leading-[28px] text-synop-blue-dark"
+            >
               Complete solution for EV service centers: customer tracking, maintenance scheduling, inventory management, and staff coordination
-            </p>
-
+            </motion.p>
 
             {/* Booking Button */}
-            <div className="mt-8">
-              <a
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.4 }}
+              className="mt-8"
+            >
+              <motion.a
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
                 href="/login"
                 className="inline-flex items-center justify-center rounded-full bg-[#1a40b8] px-8 py-4 text-lg font-semibold text-white shadow-sm transition hover:bg-[#163494]"
               >
                 Booking
-              </a>
-            </div>
-          </div>
+              </motion.a>
+            </motion.div>
+          </motion.div>
 
 
           {/* Right visuals */}
-          <div className="relative flex items-center justify-center">
-            <img
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="relative flex items-center justify-center"
+          >
+            <motion.img
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 1, delay: 0.6 }}
+              whileHover={{ scale: 1.02, rotateY: 5 }}
               src="https://cdn.prod.website-files.com/63729aa3d8efde0bf7b4ccfb/66e1b338534e1255895732db_Hero-mobile6.webp"
               srcSet="https://cdn.prod.website-files.com/63729aa3d8efde0bf7b4ccfb/66e1b338534e1255895732db_Hero-mobile6-p-500.webp 500w, https://cdn.prod.website-files.com/63729aa3d8efde0bf7b4ccfb/66e1b338534e1255895732db_Hero-mobile6-p-800.webp 800w, https://cdn.prod.website-files.com/63729aa3d8efde0bf7b4ccfb/66e1b338534e1255895732db_Hero-mobile6-p-1080.webp 1080w, https://cdn.prod.website-files.com/63729aa3d8efde0bf7b4ccfb/66e1b338534e1255895732db_Hero-mobile6.webp 1288w"
               sizes="(max-width: 1288px) 100vw, 1288px"
@@ -130,7 +192,7 @@ export default function HomePage() {
               className="mx-auto w-full max-w-[680px] rounded-2xl object-cover shadow-xl"
               loading="lazy"
             />
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -444,22 +506,47 @@ export default function HomePage() {
       <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              whileInView={{ scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6"
+            >
               <Wrench className="w-8 h-8 text-blue-600" />
-            </div>
-            <Title level={2} className="text-4xl font-black text-synop-blue-dark mb-4">
-              Service Centers Near You
-            </Title>
-            <Paragraph className="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
-              {locationPermissionDenied
-                ? "Showing service centers near Ho Chi Minh City (default location)"
-                : "Discover EV service centers near your location with advanced technology"
-              }
-            </Paragraph>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              viewport={{ once: true }}
+            >
+              <Title level={2} className="text-4xl font-black text-synop-blue-dark mb-4">
+                Service Centers Near You
+              </Title>
+              <Paragraph className="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
+                {locationPermissionDenied
+                  ? "Showing service centers near Ho Chi Minh City (default location)"
+                  : "Discover EV service centers near your location with advanced technology"
+                }
+              </Paragraph>
+            </motion.div>
 
             {/* Radius Selection */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              viewport={{ once: true }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            >
               <span className="text-gray-700 font-medium">Search within radius:</span>
               <Select
                 value={searchRadius}
@@ -475,61 +562,104 @@ export default function HomePage() {
                 <Option value={30}>30 km</Option>
                 <Option value={50}>50 km</Option>
               </Select>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
 
 
 
           {/* Service Centers Grid */}
-          {loading ? (
-            <div className="flex justify-center items-center py-20">
-              <Spin size="large" />
-            </div>
-          ) : error ? (
-            <div className="text-center py-20">
-              <Empty
-                description={`Error: ${error}`}
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              />
-              <div className="mt-4 text-sm text-gray-500">
-                Location: {userLocation ? `${userLocation.lat.toFixed(6)}, ${userLocation.lng.toFixed(6)}` : 'Location not available'}
-                <br />
-                Radius: {searchRadius}km
-              </div>
-            </div>
-          ) : nearbyServiceCenters.length === 0 ? (
-            <div className="text-center py-20">
-              <Empty
-                description={`No service centers found within ${searchRadius}km radius`}
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr">
-              {nearbyServiceCenters.map((serviceCenter) => (
-                <div key={serviceCenter._id} className="h-full">
-                  <ServiceCenterCardSimple
-                    serviceCenter={serviceCenter}
-                    onViewDetails={handleViewDetails}
-                  />
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex justify-center items-center py-20"
+              >
+                <Spin size="large" />
+              </motion.div>
+            ) : error ? (
+              <motion.div
+                key="error"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="text-center py-20"
+              >
+                <Empty
+                  description={`Error: ${error}`}
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                />
+                <div className="mt-4 text-sm text-gray-500">
+                  Location: {userLocation ? `${userLocation.lat.toFixed(6)}, ${userLocation.lng.toFixed(6)}` : 'Location not available'}
+                  <br />
+                  Radius: {searchRadius}km
                 </div>
-              ))}
-            </div>
-          )}
+              </motion.div>
+            ) : nearbyServiceCenters.length === 0 ? (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="text-center py-20"
+              >
+                <Empty
+                  description={`No service centers found within ${searchRadius}km radius`}
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="grid"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr"
+              >
+                {nearbyServiceCenters.map((serviceCenter, index) => (
+                  <motion.div
+                    key={serviceCenter._id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                    className="h-full"
+                  >
+                    <ServiceCenterCardSimple
+                      serviceCenter={serviceCenter}
+                      onViewDetails={handleViewDetails}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* View All Button */}
-          <div className="text-center mt-12">
-            <Button
-              type="primary"
-              size="large"
-              onClick={handleViewAllServiceCenters}
-              className="bg-synop-blue-primary hover:bg-synop-blue-dark border-0 rounded-full px-8 py-4 h-auto text-lg font-semibold"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            viewport={{ once: true }}
+            className="text-center mt-12"
+          >
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              View All Service Centers
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-          </div>
+              <Button
+                type="primary"
+                size="large"
+                onClick={handleViewAllServiceCenters}
+                className="bg-synop-blue-primary hover:bg-synop-blue-dark border-0 rounded-full px-8 py-4 h-auto text-lg font-semibold"
+              >
+                View All Service Centers
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
@@ -616,6 +746,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-    </div>
+    </motion.div>
   );
 }

@@ -55,7 +55,8 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
         onSuccess?.();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // You can handle specific error shapes here if needed
       console.error("Login error:", error);
     }
   };

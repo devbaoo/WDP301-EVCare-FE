@@ -1,6 +1,7 @@
 import { ShieldX, ArrowLeft, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '@/services/store/store';
+import { motion } from 'framer-motion';
 
 export default function UnauthorizedPage() {
     const navigate = useNavigate();
@@ -23,23 +24,79 @@ export default function UnauthorizedPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-red-50 to-pink-100 flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="min-h-screen bg-gradient-to-br from-slate-50 via-red-50 to-pink-100 flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden"
+        >
             {/* Background decorative elements */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-red-400/20 to-pink-400/20 rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-orange-400/20 to-red-400/20 rounded-full blur-3xl"></div>
-            </div>
+            <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 1, delay: 0.1 }}
+                className="absolute inset-0 overflow-hidden"
+            >
+                <motion.div
+                    animate={{
+                        rotate: [0, 360],
+                        scale: [1, 1.1, 1]
+                    }}
+                    transition={{
+                        duration: 20,
+                        repeat: Infinity,
+                        ease: "linear"
+                    }}
+                    className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-red-400/20 to-pink-400/20 rounded-full blur-3xl"
+                ></motion.div>
+                <motion.div
+                    animate={{
+                        rotate: [360, 0],
+                        scale: [1, 1.1, 1]
+                    }}
+                    transition={{
+                        duration: 25,
+                        repeat: Infinity,
+                        ease: "linear"
+                    }}
+                    className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-orange-400/20 to-red-400/20 rounded-full blur-3xl"
+                ></motion.div>
+            </motion.div>
 
             {/* Header line */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-red-300 to-transparent"></div>
+            <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+                className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-red-300 to-transparent"
+            ></motion.div>
 
-            <div className="w-full max-w-md space-y-8 relative z-10">
+            <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="w-full max-w-md space-y-8 relative z-10"
+            >
                 {/* Icon */}
-                <div className="flex justify-center">
-                    <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 group">
-                        <ShieldX className="w-10 h-10 text-white group-hover:scale-110 transition-transform duration-300" />
-                    </div>
-                </div>
+                <motion.div
+                    initial={{ opacity: 0, y: -30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                    className="flex justify-center"
+                >
+                    <motion.div
+                        whileHover={{ scale: 1.05, rotateY: 5 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-20 h-20 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center shadow-2xl hover:shadow-3xl transition-all duration-300 group"
+                    >
+                        <motion.div
+                            whileHover={{ scale: 1.1 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <ShieldX className="w-10 h-10 text-white transition-transform duration-300" />
+                        </motion.div>
+                    </motion.div>
+                </motion.div>
 
                 {/* Title */}
                 <div className="text-center space-y-3">
@@ -67,24 +124,33 @@ export default function UnauthorizedPage() {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="space-y-4">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.6 }}
+                            className="space-y-4"
+                        >
                             <div className="flex flex-col sm:flex-row gap-3">
-                                <button
+                                <motion.button
+                                    whileHover={{ scale: 1.05, y: -2 }}
+                                    whileTap={{ scale: 0.95 }}
                                     onClick={handleGoBack}
                                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold rounded-xl hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl"
                                 >
                                     <ArrowLeft className="w-4 h-4" />
                                     Go Back
-                                </button>
-                                <button
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.05, y: -2 }}
+                                    whileTap={{ scale: 0.95 }}
                                     onClick={handleGoHome}
                                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl"
                                 >
                                     <Home className="w-4 h-4" />
                                     Go Home
-                                </button>
+                                </motion.button>
                             </div>
-                        </div>
+                        </motion.div>
 
                         {/* User Info */}
                         {user && (
@@ -96,7 +162,7 @@ export default function UnauthorizedPage() {
                         )}
                     </div>
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }

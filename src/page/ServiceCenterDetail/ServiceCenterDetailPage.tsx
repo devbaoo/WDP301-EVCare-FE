@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "@/services/store/store";
 import { fetchServiceCenterById } from "@/services/features/serviceCenter/serviceCenterSlice";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   MapPin,
   Phone,
@@ -16,7 +17,6 @@ import {
   CreditCard,
   Calendar,
   ArrowLeft,
-  Camera,
   Navigation
 } from "lucide-react";
 import { isCurrentlyOpen, getNextOpeningTime } from "@/lib/timeUtils";
@@ -31,6 +31,21 @@ export default function ServiceCenterDetailPage() {
   const [searchParams] = useSearchParams();
   const { selectedServiceCenter, loading, error } = useAppSelector((state) => state.serviceCenter);
   const [showBookingForm, setShowBookingForm] = useState(false);
+
+  // Destructure service center data
+  const {
+    name,
+    description,
+    address,
+    contact,
+    rating,
+    operatingHours,
+    services,
+    paymentMethods,
+    images,
+    status,
+    capacity
+  } = selectedServiceCenter || {};
 
   useEffect(() => {
     if (id) {
@@ -59,6 +74,7 @@ export default function ServiceCenterDetailPage() {
   };
 
   const handleGetDirections = () => {
+    if (!address) return;
     const fullAddress = `${address.street}, ${address.ward}, ${address.district}, ${address.city}`;
     const encodedAddress = encodeURIComponent(fullAddress);
     const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
@@ -105,169 +121,264 @@ export default function ServiceCenterDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="min-h-screen bg-white"
+      >
         <Header />
-        <div className="flex justify-center items-center py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="flex justify-center items-center py-20"
+        >
           <Spin size="large" />
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     );
   }
 
   if (error || !selectedServiceCenter) {
     return (
-      <div className="min-h-screen bg-white">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="min-h-screen bg-white"
+      >
         <Header />
-        <div className="text-center py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="text-center py-20"
+        >
           <Empty
             description="Service center not found"
             image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
-          <Button
-            type="primary"
-            onClick={() => navigate('/service-centers')}
-            className="mt-4"
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
           >
-            Back to List
-          </Button>
-        </div>
-      </div>
+            <Button
+              type="primary"
+              onClick={() => navigate('/service-centers')}
+              className="mt-4"
+            >
+              Back to List
+            </Button>
+          </motion.div>
+        </motion.div>
+      </motion.div>
     );
   }
-
-  const {
-    name,
-    description,
-    address,
-    contact,
-    rating,
-    operatingHours,
-    capacity,
-    services,
-    paymentMethods,
-    images,
-    status
-  } = selectedServiceCenter;
 
   // Check if currently open based on real-time
   const isCurrentlyOpenNow = operatingHours ? isCurrentlyOpen(operatingHours) : false;
   const nextOpeningTime = operatingHours ? getNextOpeningTime(operatingHours) : null;
 
+  // Sample images for testing if no images from API
+  const sampleImages = [
+    {
+      _id: '1',
+      url: 'https://images.unsplash.com/photo-1593941707882-a5bac6861d75?w=800&h=600&fit=crop',
+      caption: 'Service Center Exterior',
+      isPrimary: true
+    },
+    {
+      _id: '2',
+      url: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&h=600&fit=crop',
+      caption: 'Charging Station',
+      isPrimary: false
+    },
+    {
+      _id: '3',
+      url: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=600&fit=crop',
+      caption: 'Workshop Area',
+      isPrimary: false
+    }
+  ];
+
+  // Use sample images if no images from API
+  const displayImages = images && images.length > 0 ? images : sampleImages;
+
   return (
-    <div className="min-h-screen bg-white">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-white"
+    >
       <Header />
 
       {/* Back Button */}
-      <div className="bg-gray-50 py-4 pt-20">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="bg-gray-50 py-4 pt-20"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Button
-            icon={<ArrowLeft />}
-            onClick={() => navigate('/service-centers')}
-            className="mb-0"
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            Back to List
-          </Button>
+            <Button
+              icon={<ArrowLeft />}
+              onClick={() => navigate('/service-centers')}
+              className="mb-0"
+            >
+              Back to List
+            </Button>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Hero Section */}
-      <section className="py-8">
+      <motion.section
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+        className="py-8"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Row gutter={[24, 24]}>
             {/* Images */}
             <Col xs={24} lg={12}>
-              <Card className="h-full">
-                {images && images.length > 0 ? (
-                  <Carousel autoplay>
-                    {images.map((image, index) => (
-                      <div key={index}>
-                        <Image
-                          src={image.url}
-                          alt={image.caption}
-                          className="w-full h-80 object-cover rounded-lg"
-                          preview={{
-                            mask: <div className="text-white">View Image</div>
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </Carousel>
-                ) : (
-                  <div className="w-full h-80 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center rounded-lg">
-                    <Camera className="w-16 h-16 text-blue-400" />
-                  </div>
-                )}
-              </Card>
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+              >
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Card className="h-full shadow-lg">
+                    <Carousel autoplay dots>
+                      {displayImages.map((image, index) => (
+                        <div key={image._id || index}>
+                          <Image
+                            src={image.url}
+                            alt={image.caption || name}
+                            className="w-full h-80 object-cover"
+                            preview={{
+                              mask: <div className="text-white">View Image</div>
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </Carousel>
+                  </Card>
+                </motion.div>
+              </motion.div>
             </Col>
 
             {/* Basic Info */}
             <Col xs={24} lg={12}>
-              <div className="h-full flex flex-col">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <Title level={2} className="mb-2">{name}</Title>
-                    <Tag color={getStatusColor(status)} className="text-sm">
-                      {getStatusText(status)}
-                    </Tag>
-                  </div>
-                  <div className="flex items-center space-x-1 bg-yellow-50 rounded-full px-3 py-1">
-                    <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                    <span className="font-semibold text-gray-700">
-                      {rating.average.toFixed(1)}
-                    </span>
-                    <span className="text-sm text-gray-500">({rating.count})</span>
-                  </div>
-                </div>
-
-                <Paragraph className="text-gray-600 mb-6 flex-grow">
-                  {description}
-                </Paragraph>
-
-                {/* Quick Actions */}
-                <div className="space-y-3">
-                  <Button
-                    type="primary"
-                    size="large"
-                    icon={<Navigation className="w-5 h-5 -mt-0.5" />}
-                    onClick={handleGetDirections}
-                    className="w-full h-12 rounded-full flex items-center justify-center gap-2 !bg-blue-600 hover:!bg-blue-700 !border-0"
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+              >
+                <div className="h-full flex flex-col">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.6 }}
+                    className="flex items-start justify-between mb-4"
                   >
-                    Get Directions
-                  </Button>
-
-                  <Button
-                    size="large"
-                    icon={<Calendar />}
-                    onClick={handleBookAppointment}
-                    className="w-full h-12 rounded-full"
-                    disabled={status !== 'active' || !isCurrentlyOpenNow}
-                  >
-                    Book Appointment
-                  </Button>
-
-                  {status !== 'active' ? (
-                    <Text type="secondary" className="text-center block">
-                      This center is currently not accepting bookings
-                    </Text>
-                  ) : !isCurrentlyOpenNow ? (
-                    <div className="text-center">
-                      <Text type="secondary" className="block mb-1">
-                        Currently closed
-                      </Text>
-                      {nextOpeningTime && (
-                        <Text type="secondary" className="text-sm">
-                          Opens {nextOpeningTime}
-
-                        </Text>
-                      )}
+                    <div>
+                      <Title level={2} className="mb-2">{name}</Title>
+                      <Tag color={getStatusColor(status || '')} className="text-sm">
+                        {getStatusText(status || '')}
+                      </Tag>
                     </div>
-                  ) : null}
+                    <div className="flex items-center space-x-1 bg-yellow-50 rounded-full px-3 py-1">
+                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                      <span className="font-semibold text-gray-700">
+                        {rating?.average?.toFixed(1) || '0.0'}
+                      </span>
+                      <span className="text-sm text-gray-500">({rating?.count || 0})</span>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.7 }}
+                  >
+                    <Paragraph className="text-gray-600 mb-6 flex-grow">
+                      {description}
+                    </Paragraph>
+                  </motion.div>
+
+                  {/* Quick Actions */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.8 }}
+                    className="space-y-3"
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Button
+                        type="primary"
+                        size="large"
+                        icon={<Navigation className="w-5 h-5 -mt-0.5" />}
+                        onClick={handleGetDirections}
+                        className="w-full h-12 rounded-full flex items-center justify-center gap-2 !bg-blue-600 hover:!bg-blue-700 !border-0"
+                        disabled={!address}
+                      >
+                        Get Directions
+                      </Button>
+                    </motion.div>
+
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Button
+                        size="large"
+                        icon={<Calendar />}
+                        onClick={handleBookAppointment}
+                        className="w-full h-12 rounded-full"
+                        disabled={status !== 'active' || !isCurrentlyOpenNow}
+                      >
+                        Book Appointment
+                      </Button>
+                    </motion.div>
+
+                    {status !== 'active' ? (
+                      <Text type="secondary" className="text-center block">
+                        This center is currently not accepting bookings
+                      </Text>
+                    ) : !isCurrentlyOpenNow ? (
+                      <div className="text-center">
+                        <Text type="secondary" className="block mb-1">
+                          Currently closed
+                        </Text>
+                        {nextOpeningTime && (
+                          <Text type="secondary" className="text-sm">
+                            Opens {nextOpeningTime}
+
+                          </Text>
+                        )}
+                      </div>
+                    ) : null}
+                  </motion.div>
                 </div>
-              </div>
+              </motion.div>
             </Col>
           </Row>
         </div>
-      </section>
+      </motion.section>
 
       {/* Details Section */}
       <section className="py-8 bg-gray-50">
@@ -282,8 +393,8 @@ export default function ServiceCenterDetailPage() {
                     <div>
                       <Text strong>Address:</Text>
                       <div className="text-gray-600">
-                        <div>{address.street}</div>
-                        <div>{address.ward}, {address.district}, {address.city}</div>
+                        <div>{address?.street || 'N/A'}</div>
+                        <div>{address ? `${address.ward}, ${address.district}, ${address.city}` : 'N/A'}</div>
                       </div>
                     </div>
                   </div>
@@ -292,7 +403,7 @@ export default function ServiceCenterDetailPage() {
                     <Phone className="w-5 h-5 text-green-500 flex-shrink-0" />
                     <div>
                       <Text strong>Phone:</Text>
-                      <div className="text-gray-600">{contact.phone}</div>
+                      <div className="text-gray-600">{contact?.phone || 'N/A'}</div>
                     </div>
                   </div>
 
@@ -300,23 +411,23 @@ export default function ServiceCenterDetailPage() {
                     <Mail className="w-5 h-5 text-blue-500 flex-shrink-0" />
                     <div>
                       <Text strong>Email:</Text>
-                      <div className="text-gray-600">{contact.email}</div>
+                      <div className="text-gray-600">{contact?.email || 'N/A'}</div>
                     </div>
                   </div>
 
-                  {contact.website && (
+                  {contact?.website && (
                     <div className="flex items-center space-x-3">
                       <Globe className="w-5 h-5 text-purple-500 flex-shrink-0" />
                       <div>
                         <Text strong>Website:</Text>
                         <div>
                           <a
-                            href={contact.website}
+                            href={contact?.website}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline"
                           >
-                            {contact.website}
+                            {contact?.website}
                           </a>
                         </div>
                       </div>
@@ -343,7 +454,7 @@ export default function ServiceCenterDetailPage() {
                       )}
                     </div>
                   </div>
-                  {formatOperatingHours(operatingHours)}
+                  {operatingHours ? formatOperatingHours(operatingHours) : null}
                 </div>
               </Card>
             </Col>
@@ -359,7 +470,7 @@ export default function ServiceCenterDetailPage() {
             <Col xs={24} lg={12}>
               <Card title="Available Services" className="h-full">
                 <div className="space-y-3">
-                  {services.map((service) => (
+                  {services?.map((service) => (
                     <div key={service._id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                       <Wrench className="w-5 h-5 text-blue-500 flex-shrink-0" />
                       <div className="flex-grow">
@@ -377,7 +488,7 @@ export default function ServiceCenterDetailPage() {
             <Col xs={24} lg={12}>
               <Card title="Payment Methods" className="h-full">
                 <div className="space-y-3">
-                  {paymentMethods.filter(pm => pm.isEnabled).map((method) => (
+                  {paymentMethods?.filter(pm => pm.isEnabled).map((method) => (
                     <div key={method._id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                       <CreditCard className="w-5 h-5 text-green-500 flex-shrink-0" />
                       <div className="flex-grow">
@@ -409,21 +520,21 @@ export default function ServiceCenterDetailPage() {
               <Col xs={24} sm={12} md={8}>
                 <div className="text-center p-4 bg-white rounded-lg">
                   <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-blue-600">{capacity.maxConcurrentServices}</div>
+                  <div className="text-2xl font-bold text-blue-600">{capacity?.maxConcurrentServices || 0}</div>
                   <div className="text-gray-600">Concurrent Services</div>
                 </div>
               </Col>
               <Col xs={24} sm={12} md={8}>
                 <div className="text-center p-4 bg-white rounded-lg">
                   <Wrench className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-green-600">{services.length}</div>
+                  <div className="text-2xl font-bold text-green-600">{services?.length || 0}</div>
                   <div className="text-gray-600">Available Services</div>
                 </div>
               </Col>
               <Col xs={24} sm={12} md={8}>
                 <div className="text-center p-4 bg-white rounded-lg">
                   <Star className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-yellow-600">{rating.average.toFixed(1)}</div>
+                  <div className="text-2xl font-bold text-yellow-600">{rating?.average?.toFixed(1) || '0.0'}</div>
                   <div className="text-gray-600">Average Rating</div>
                 </div>
               </Col>
@@ -445,8 +556,8 @@ export default function ServiceCenterDetailPage() {
                   Please contact the center directly to make an appointment.
                 </Paragraph>
                 <Space>
-                  <Button type="primary" onClick={() => window.open(`tel:${contact.phone}`)}>
-                    Call: {contact.phone}
+                  <Button type="primary" onClick={() => window.open(`tel:${contact?.phone}`)} disabled={!contact?.phone}>
+                    Call: {contact?.phone || 'N/A'}
                   </Button>
                   <Button onClick={() => setShowBookingForm(false)}>
                     Close
@@ -458,6 +569,6 @@ export default function ServiceCenterDetailPage() {
         </section>
       )}
 
-    </div>
+    </motion.div>
   );
 }

@@ -6,6 +6,7 @@ import { fetchServiceCenters } from "@/services/features/serviceCenter/serviceCe
 import { useEffect, useState } from "react";
 import { SearchOutlined, FilterOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 const { Option } = Select;
 
@@ -64,10 +65,11 @@ export default function ServiceCentersPage() {
   const paginatedServiceCenters = filteredServiceCenters.slice(startIndex, endIndex);
   const totalFilteredItems = filteredServiceCenters.length;
 
-  const handleViewDetails = (serviceCenter: any) => {
+  const handleViewDetails = (serviceCenter: { _id: string }) => {
     navigate(`/service-centers/${serviceCenter._id}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
 
 
   const handlePageChange = (page: number) => {
@@ -76,27 +78,57 @@ export default function ServiceCentersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-white"
+    >
       <Header />
 
       {/* Page Header */}
-      <section className="bg-gradient-to-r from-blue-600 to-blue-800 py-16 pt-24">
+      <motion.section
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="bg-gradient-to-r from-blue-600 to-blue-800 py-16 pt-24"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center text-white">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-center text-white"
+          >
             <h1 className="text-4xl font-bold mb-4">All Service Centers</h1>
             <p className="text-xl opacity-90">
               Search and discover EV service centers near you
             </p>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Search and Filter Section */}
-      <section className="py-8 bg-gray-50">
+      <motion.section
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+        className="py-8 bg-gray-50"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="flex flex-col md:flex-row gap-4 items-center justify-between"
+          >
             {/* Search */}
-            <div className="flex-1 max-w-md">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="flex-1 max-w-md"
+            >
               <Input
                 placeholder="Search service centers..."
                 prefix={<SearchOutlined />}
@@ -107,10 +139,15 @@ export default function ServiceCentersPage() {
                 size="large"
                 className="rounded-full"
               />
-            </div>
+            </motion.div>
 
             {/* Filter */}
-            <div className="flex gap-4">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="flex gap-4"
+            >
               <Select
                 value={statusFilter}
                 onChange={handleStatusFilter}
@@ -123,66 +160,110 @@ export default function ServiceCentersPage() {
                 <Option value="maintenance">Maintenance</Option>
                 <Option value="inactive">Inactive</Option>
               </Select>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Service Centers Grid */}
-      <section className="py-12">
+      <motion.section
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.5 }}
+        className="py-12"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {loading ? (
-            <div className="flex justify-center items-center py-20">
-              <Spin size="large" />
-            </div>
-          ) : error ? (
-            <div className="text-center py-20">
-              <Empty
-                description="Unable to load service centers list"
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              />
-            </div>
-          ) : filteredServiceCenters.length === 0 ? (
-            <div className="text-center py-20">
-              <Empty
-                description="No service centers found"
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              />
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-                {paginatedServiceCenters.map((serviceCenter) => (
-                  <div key={serviceCenter._id} className="h-full">
-                    <ServiceCenterCard
-                      serviceCenter={serviceCenter}
-                      onViewDetails={handleViewDetails}
-                    />
-                  </div>
-                ))}
-              </div>
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex justify-center items-center py-20"
+              >
+                <Spin size="large" />
+              </motion.div>
+            ) : error ? (
+              <motion.div
+                key="error"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="text-center py-20"
+              >
+                <Empty
+                  description="Unable to load service centers list"
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                />
+              </motion.div>
+            ) : filteredServiceCenters.length === 0 ? (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="text-center py-20"
+              >
+                <Empty
+                  description="No service centers found"
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="content"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <motion.div
+                  layout
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8"
+                >
+                  {paginatedServiceCenters.map((serviceCenter, index) => (
+                    <motion.div
+                      key={serviceCenter._id}
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: index * 0.1 }}
+                      className="h-full"
+                    >
+                      <ServiceCenterCard
+                        serviceCenter={serviceCenter}
+                        onViewDetails={handleViewDetails}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
 
-              {/* Pagination */}
-              {totalFilteredItems > pageSize && (
-                <div className="flex justify-center">
-                  <Pagination
-                    current={currentPage}
-                    total={totalFilteredItems}
-                    pageSize={pageSize}
-                    onChange={handlePageChange}
-                    showSizeChanger={false}
-                    showQuickJumper
-                    showTotal={(total, range) =>
-                      `${range[0]}-${range[1]} of ${total} centers`
-                    }
-                    className="pagination-custom"
-                  />
-                </div>
-              )}
-            </>
-          )}
+                {/* Pagination */}
+                {totalFilteredItems > pageSize && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    className="flex justify-center"
+                  >
+                    <Pagination
+                      current={currentPage}
+                      total={totalFilteredItems}
+                      pageSize={pageSize}
+                      onChange={handlePageChange}
+                      showSizeChanger={false}
+                      showQuickJumper
+                      showTotal={(total, range) =>
+                        `${range[0]}-${range[1]} of ${total} centers`
+                      }
+                      className="pagination-custom"
+                    />
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </section>
-    </div>
+      </motion.section>
+    </motion.div>
   );
 }
