@@ -55,6 +55,7 @@ const AppRouter = () => {
             <Route element={!isAuthenticated ? <AuthLayout /> : <Navigate to={getInitialRoute()} />}>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
             </Route>
 
             {/* Home Route - Only accessible for guests and verified customers */}

@@ -7,6 +7,7 @@ import {
   VERIFY_EMAIL_TOKEN_ENDPOINT,
   RESEND_VERIFICATION_ENDPOINT,
   RESET_PASSWORD_ENDPOINT,
+  RESET_PASSWORD_WITH_TOKEN_ENDPOINT,
   UPDATE_PASSWORD_ENDPOINT,
   VERIFY_RESET_CODE_ENDPOINT,
   LOGOUT_ENDPOINT,
@@ -130,11 +131,14 @@ export const resetPassword = createAsyncThunk<
 
 export const resetPasswordWithToken = createAsyncThunk<
   { success: boolean; message: string },
-  ResetPasswordWithTokenData,
+  { token: string; data: ResetPasswordWithTokenData },
   { rejectValue: { message: string } }
->("auth/resetPasswordWithToken", async (data, { rejectWithValue }) => {
+>("auth/resetPasswordWithToken", async ({ token, data }, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.post(RESET_PASSWORD_ENDPOINT, data);
+    const response = await axiosInstance.post(
+      RESET_PASSWORD_WITH_TOKEN_ENDPOINT(token),
+      data
+    );
     return response.data;
   } catch (err: unknown) {
     const error = err as any;
@@ -346,6 +350,22 @@ const authSlice = createSlice({
         state.loading = false;
         state.error =
           action.payload?.message || "Gửi email reset mật khẩu thất bại";
+        message.error(state.error);
+      })
+      // Reset password with token cases
+      .addCase(resetPasswordWithToken.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resetPasswordWithToken.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        message.success(action.payload.message);
+      })
+      .addCase(resetPasswordWithToken.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload?.message || "Reset mật khẩu thất bại";
         message.error(state.error);
       })
       // Verify reset code cases
