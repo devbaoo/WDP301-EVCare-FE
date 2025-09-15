@@ -663,7 +663,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black text-synop-blue-dark">
-              Service Centers trust EV-CARE
+              Service Centers trust EV CARE
             </h2>
           </div>
           <div className="grid lg:grid-cols-2 gap-12">
@@ -682,7 +682,7 @@ export default function HomePage() {
                 </div>
                 <div className="space-y-6">
                   <blockquote className="text-lg leading-relaxed">
-                    "EV-CARE has revolutionized our service center operations. The automated maintenance reminders and online booking system have increased customer satisfaction by 40%. Our technicians love the streamlined workflow management and the AI-powered inventory suggestions have reduced our parts costs by 25%."
+                    "EV CARE has revolutionized our service center operations. The automated maintenance reminders and online booking system have increased customer satisfaction by 40%. Our technicians love the streamlined workflow management and the AI-powered inventory suggestions have reduced our parts costs by 25%."
                   </blockquote>
                   <div>
                     <div className="text-synop-blue-primary font-bold">Sarah Johnson</div>
@@ -729,7 +729,7 @@ export default function HomePage() {
                 Ready to revolutionize your EV service center with AI-powered management?
               </h2>
               <p className="text-lg text-white/90 leading-relaxed">
-                Experience how EV-CARE's comprehensive platform can streamline your service operations, reduce costs, and enhance customer satisfaction with intelligent automation.
+                Experience how EV CARE's comprehensive platform can streamline your service operations, reduce costs, and enhance customer satisfaction with intelligent automation.
               </p>
               <Button className="bg-synop-blue-primary hover:bg-synop-blue-light text-white rounded-full px-12 py-4 text-lg font-bold">
                 Schedule Demo

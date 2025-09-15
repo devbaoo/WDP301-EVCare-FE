@@ -45,7 +45,7 @@ export default function Footer() {
           <div>
             <h4 className="font-bold text-lg mb-6 text-white">Contact Information</h4>
             <div className="space-y-3 text-sm">
-              <p>Email: info@ev-care.com</p>
+              <p>Email: info@EV CARE.com</p>
               <p>Phone: +1 (555) 123-4567</p>
               <p>Address: 48 Grattan St, Brooklyn, NY 11237</p>
             </div>
@@ -74,7 +74,7 @@ export default function Footer() {
                 <a href="#" className="hover:text-synop-blue-light transition-colors underline">Privacy Policy</a>
                 <a href="#" className="hover:text-synop-blue-light transition-colors underline">Terms & Conditions</a>
               </div>
-              <span>©COPYRIGHT EV-CARE  2025</span>
+              <span>©COPYRIGHT EV CARE  2025</span>
             </div>
           </div>
         </div>

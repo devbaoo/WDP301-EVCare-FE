@@ -59,7 +59,7 @@ export default function Header() {
               whileTap={{ scale: 0.95 }}
             >
               <div className="text-2xl font-bold text-synop-blue-dark">
-                EV-CARE
+                EV CARE
               </div>
             </motion.a>
           </motion.div>

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "antd";
-import { Input } from "antd";
+import { Input, AutoComplete } from "antd";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../services/store/store";
@@ -37,6 +37,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
     address: ""
   });
   const [errors, setErrors] = useState<Partial<RegisterData>>({});
+  const [addressOptions, setAddressOptions] = useState<{ value: string; label: string }[]>([]);
+  const addressDebounceRef = useRef<number | null>(null);
 
   const validateRegisterForm = (): boolean => {
     const newErrors: Partial<RegisterData> = {};
@@ -117,7 +119,30 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
   };
 
   const handleRegisterInputChange = (field: keyof RegisterData, value: string) => {
-    setRegisterData(prev => ({ ...prev, [field]: value }));
+    if (field === "address") {
+      setRegisterData(prev => ({ ...prev, address: value }));
+      if (addressDebounceRef.current) {
+        clearTimeout(addressDebounceRef.current);
+      }
+      addressDebounceRef.current = window.setTimeout(async () => {
+        const query = value.trim();
+        if (!query) {
+          setAddressOptions([]);
+          return;
+        }
+        try {
+          const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=10&q=${encodeURIComponent(query)}`;
+          const res = await fetch(url, { headers: { "Accept-Language": "vi" } });
+          const data: Array<{ display_name: string }> = await res.json();
+          const opts = data.map(item => ({ value: item.display_name, label: item.display_name }));
+          setAddressOptions(opts);
+        } catch (e) {
+          setAddressOptions([]);
+        }
+      }, 400);
+    } else {
+      setRegisterData(prev => ({ ...prev, [field]: value }));
+    }
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
@@ -288,21 +313,27 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
             )}
           </div>
 
-          {/* Address Input */}
+          {/* Address Input with suggestions */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
               <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
               Address
             </label>
-            <Input
-              type="text"
-              placeholder="Enter your address"
+            <AutoComplete
+              options={addressOptions}
               value={registerData.address}
-              onChange={(e) => handleRegisterInputChange("address", e.target.value)}
-              className={`w-full rounded-xl border-2 px-4 py-3 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 ${errors.address ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-gray-800"
-                }`}
-              required
-            />
+              onSelect={(val) => handleRegisterInputChange("address", val)}
+              onSearch={(val) => handleRegisterInputChange("address", val)}
+              className="w-full"
+            >
+              <Input
+                type="text"
+                placeholder="Start typing your address"
+                className={`w-full rounded-xl border-2 px-4 py-3 text-base text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-gray-800/10 hover:border-gray-300 ${errors.address ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-gray-800"
+                  }`}
+                required
+              />
+            </AutoComplete>
             {errors.address && (
               <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
                 <span className="w-1 h-1 bg-red-500 rounded-full"></span>

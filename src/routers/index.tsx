@@ -20,6 +20,11 @@ import ScrollToTop from "@/components/ScrollToTop/ScrollToTop";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/services/store/store";
+import DashboardPage from "@/page/Admin/DashboardPage";
+import UserPage from "@/page/Admin/UserPage";
+import ServicePage from "@/page/Admin/ServicePage";
+import StatisticPage from "@/page/Admin/StatisticPage";
+import SettingPage from "@/page/Admin/SettingPage";
 
 const AppRouter = () => {
     const { isAuthenticated, user, needVerification } = useSelector((state: RootState) => state.auth);
@@ -129,12 +134,11 @@ const AppRouter = () => {
                 {/* Admin Routes - Only accessible when authenticated as admin */}
                 <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
                     <Route path="/admin" element={<AdminLayout />}>
-                        <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Admin Dashboard</h1></div>} />
-                        <Route path="customers" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Customers</h1></div>} />
-                        <Route path="staff" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Staff</h1></div>} />
-                        <Route path="service-centers" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Service Centers</h1></div>} />
-                        <Route path="analytics" element={<div className="p-6"><h1 className="text-2xl font-bold">Analytics</h1></div>} />
-                        <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Admin Settings</h1></div>} />
+                        <Route index element={<DashboardPage />} />
+                        <Route path="users" element={<UserPage />} />
+                        <Route path="services" element={<ServicePage />} />
+                        <Route path="statistics" element={<StatisticPage />} />
+                        <Route path="settings" element={<SettingPage />} />
                     </Route>
                 </Route>
 
