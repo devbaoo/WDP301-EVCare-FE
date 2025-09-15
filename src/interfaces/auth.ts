@@ -53,8 +53,7 @@ export interface ResetPasswordData {
 }
 
 export interface ResetPasswordWithTokenData {
-  email: string;
-  newPassword: string;
+  password: string;
 }
 
 export interface UpdatePasswordData {

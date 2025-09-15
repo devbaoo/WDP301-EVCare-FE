@@ -53,13 +53,12 @@ const AppRouter = () => {
                 {/* Public verification routes */}
                 <Route path="/verify-email/:token" element={<VerifyEmailSuccessPage />} />
                 <Route path="/verify-email" element={<ResendVerificationPage />} />
-
-                {/* Auth Routes - Only accessible when not authenticated */}
-                <Route element={!isAuthenticated ? <AuthLayout /> : <Navigate to={getInitialRoute()} />}>
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/reset-password" element={<ResetPasswordPage />} />
-                </Route>
-
+            {/* Auth Routes - Only accessible when not authenticated */}
+            <Route element={!isAuthenticated ? <AuthLayout /> : <Navigate to={getInitialRoute()} />}>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+            </Route>
                 {/* Home Route - Only accessible for guests and verified customers */}
                 <Route path="/" element={
                     isAuthenticated && user?.role === "customer" && needVerification ?
