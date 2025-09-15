@@ -85,7 +85,8 @@ export default function ResetPasswordPage() {
           </h1>
           <p className="text-gray-600 text-base leading-relaxed">
             {step === "email" && "Enter your email address and we'll send you a reset link"}
-            {step === "password" && "Enter your new password"}
+            {step === "password" && token && "Nếu email tồn tại, chúng tôi đã gửi link đặt lại mật khẩu. Vui lòng nhập mật khẩu mới của bạn."}
+            {step === "password" && !token && "Enter your new password"}
           </p>
         </div>
 
@@ -103,7 +104,8 @@ export default function ResetPasswordPage() {
         <div className="text-center space-y-2">
           <p className="text-sm text-gray-500">
             {step === "email" && "We'll send you a secure link to reset your password"}
-            {step === "password" && "Make sure your password is at least 6 characters long"}
+            {step === "password" && token && "Mật khẩu phải có ít nhất 6 ký tự"}
+            {step === "password" && !token && "Make sure your password is at least 6 characters long"}
           </p>
         </div>
       </div>
