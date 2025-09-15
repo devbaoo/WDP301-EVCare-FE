@@ -11,6 +11,7 @@ import {
   UpdateProfileData,
   ProfileResponse,
 } from "../../../interfaces/auth";
+import { setUser } from "../auth/authSlice";
 
 // Initial state
 interface UserState {
@@ -30,9 +31,14 @@ export const getUserProfile = createAsyncThunk<
   ProfileResponse,
   void,
   { rejectValue: { message: string } }
->("user/getUserProfile", async (_, { rejectWithValue }) => {
+>("user/getUserProfile", async (_, { rejectWithValue, dispatch }) => {
   try {
     const response = await axiosInstance.get(USER_PROFILE_ENDPOINT);
+    // Sync auth slice and localStorage for immediate header update
+    dispatch(setUser(response.data.user));
+    try {
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+    } catch {}
     return response.data;
   } catch (err: unknown) {
     const error = err as any;
@@ -48,28 +54,36 @@ export const updateUserProfile = createAsyncThunk<
   ProfileResponse,
   UpdateProfileData,
   { rejectValue: { message: string } }
->("user/updateUserProfile", async (profileData, { rejectWithValue }) => {
-  try {
-    const response = await axiosInstance.put(
-      USER_UPDATE_PROFILE_ENDPOINT,
-      profileData
-    );
-    return response.data;
-  } catch (err: unknown) {
-    const error = err as any;
-    const message =
-      error.response?.data?.message ||
-      error.message ||
-      "Cập nhật profile thất bại";
-    return rejectWithValue({ message });
+>(
+  "user/updateUserProfile",
+  async (profileData, { rejectWithValue, dispatch }) => {
+    try {
+      const response = await axiosInstance.put(
+        USER_UPDATE_PROFILE_ENDPOINT,
+        profileData
+      );
+      // Sync auth slice and localStorage so header reflects new name
+      dispatch(setUser(response.data.user));
+      try {
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+      } catch {}
+      return response.data;
+    } catch (err: unknown) {
+      const error = err as any;
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Cập nhật profile thất bại";
+      return rejectWithValue({ message });
+    }
   }
-});
+);
 
 export const uploadAvatar = createAsyncThunk<
   ProfileResponse,
   File,
   { rejectValue: { message: string } }
->("user/uploadAvatar", async (file, { rejectWithValue }) => {
+>("user/uploadAvatar", async (file, { rejectWithValue, dispatch }) => {
   try {
     const formData = new FormData();
     formData.append("avatar", file);
@@ -83,6 +97,11 @@ export const uploadAvatar = createAsyncThunk<
         },
       }
     );
+    // Sync auth slice and localStorage for avatar changes
+    dispatch(setUser(response.data.user));
+    try {
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+    } catch {}
     return response.data;
   } catch (err: unknown) {
     const error = err as any;
