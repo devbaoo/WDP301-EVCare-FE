@@ -16,7 +16,7 @@ export default function ServiceCentersPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(12);
+  const [pageSize] = useState(8);
 
   useEffect(() => {
     // Load all service centers for local filtering and pagination
@@ -24,6 +24,8 @@ export default function ServiceCentersPage() {
       page: 1,
       limit: 1000 // Load a large number to get all centers
     }));
+    // Scroll to top when component mounts
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [dispatch]);
 
   const handleSearch = (value: string) => {
@@ -64,11 +66,9 @@ export default function ServiceCentersPage() {
 
   const handleViewDetails = (serviceCenter: any) => {
     navigate(`/service-centers/${serviceCenter._id}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleBookAppointment = (serviceCenter: any) => {
-    navigate(`/service-centers/${serviceCenter._id}?action=book`);
-  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -157,7 +157,6 @@ export default function ServiceCentersPage() {
                     <ServiceCenterCard
                       serviceCenter={serviceCenter}
                       onViewDetails={handleViewDetails}
-                      onBookAppointment={handleBookAppointment}
                     />
                   </div>
                 ))}

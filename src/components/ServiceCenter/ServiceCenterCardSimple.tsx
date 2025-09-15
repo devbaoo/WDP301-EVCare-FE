@@ -1,10 +1,10 @@
 import React from 'react';
 import { Card, Tag, Button, Image } from 'antd';
-import { 
-  MapPin, 
-  Phone, 
-  Star, 
-  Calendar,
+import {
+  MapPin,
+  Phone,
+  Star,
+  Navigation,
   Camera
 } from 'lucide-react';
 import { ServiceCenter } from '../../interfaces/serviceCenter';
@@ -12,12 +12,12 @@ import RealTimeStatus from './RealTimeStatus';
 
 interface ServiceCenterCardSimpleProps {
   serviceCenter: ServiceCenter;
-  onBookAppointment?: (serviceCenter: ServiceCenter) => void;
+  onViewDetails?: (serviceCenter: ServiceCenter) => void;
 }
 
 const ServiceCenterCardSimple: React.FC<ServiceCenterCardSimpleProps> = ({
   serviceCenter,
-  onBookAppointment
+  onViewDetails
 }) => {
   const {
     name,
@@ -49,6 +49,13 @@ const ServiceCenterCardSimple: React.FC<ServiceCenterCardSimpleProps> = ({
     }
   };
 
+  const handleGetDirections = () => {
+    const fullAddress = `${address.street}, ${address.ward}, ${address.district}, ${address.city}`;
+    const encodedAddress = encodeURIComponent(fullAddress);
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
+    window.open(googleMapsUrl, '_blank');
+  };
+
   const primaryImage = images?.find(img => img.isPrimary) || images?.[0];
 
   return (
@@ -77,8 +84,8 @@ const ServiceCenterCardSimple: React.FC<ServiceCenterCardSimpleProps> = ({
           )}
           <div className="absolute top-3 right-3">
             <Tag color={getStatusColor(status)} className="text-xs font-semibold">
-              {status === 'active' ? 'Active' : 
-               status === 'maintenance' ? 'Maintenance' : 'Inactive'}
+              {status === 'active' ? 'Active' :
+                status === 'maintenance' ? 'Maintenance' : 'Inactive'}
             </Tag>
           </div>
           <div className="absolute top-3 left-3">
@@ -98,7 +105,10 @@ const ServiceCenterCardSimple: React.FC<ServiceCenterCardSimpleProps> = ({
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="mb-3">
-          <h3 className="text-lg font-bold text-gray-900 line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors duration-200">
+          <h3
+            className="text-lg font-bold text-gray-900 line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors duration-200 cursor-pointer"
+            onClick={() => onViewDetails?.(serviceCenter)}
+          >
             {name}
           </h3>
         </div>
@@ -120,8 +130,8 @@ const ServiceCenterCardSimple: React.FC<ServiceCenterCardSimpleProps> = ({
 
         {/* Operating Hours */}
         <div className="mb-3">
-          <RealTimeStatus 
-            operatingHours={operatingHours} 
+          <RealTimeStatus
+            operatingHours={operatingHours}
             className="mb-1"
             showNextOpening={false}
           />
@@ -135,17 +145,16 @@ const ServiceCenterCardSimple: React.FC<ServiceCenterCardSimpleProps> = ({
           <span className="text-xs text-gray-500">({rating.count} reviews)</span>
         </div>
 
-        {/* Book Button */}
+        {/* Get Directions Button */}
         <div className="mt-auto">
-          <Button 
-            type="primary" 
-            icon={<Calendar />}
-            onClick={() => onBookAppointment?.(serviceCenter)}
-            className="w-full group-hover:bg-blue-600 transition-colors duration-200"
-            disabled={status !== 'active'}
+          <Button
+            type="primary"
+            icon={<Navigation className="w-5 h-5 -mt-0.5" />}
+            onClick={handleGetDirections}
+            className="w-full h-12 rounded-full flex items-center justify-center gap-2 !bg-blue-600 hover:!bg-blue-700 !border-0"
             size="large"
           >
-            Book Now
+            Get Directions
           </Button>
         </div>
       </div>

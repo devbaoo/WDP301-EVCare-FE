@@ -16,9 +16,11 @@ import {
   CreditCard,
   Calendar,
   ArrowLeft,
-  Camera
+  Camera,
+  Navigation
 } from "lucide-react";
 import { isCurrentlyOpen, getNextOpeningTime } from "@/lib/timeUtils";
+import type { WeeklyOperatingHours } from "@/interfaces/serviceCenter";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -34,6 +36,8 @@ export default function ServiceCenterDetailPage() {
     if (id) {
       dispatch(fetchServiceCenterById(id));
     }
+    // Scroll to top when component mounts
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [dispatch, id]);
 
   useEffect(() => {
@@ -54,14 +58,22 @@ export default function ServiceCenterDetailPage() {
     }, 100);
   };
 
-  const formatOperatingHours = (operatingHours: any) => {
+  const handleGetDirections = () => {
+    const fullAddress = `${address.street}, ${address.ward}, ${address.district}, ${address.city}`;
+    const encodedAddress = encodeURIComponent(fullAddress);
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
+    window.open(googleMapsUrl, '_blank');
+  };
+
+  const formatOperatingHours = (operatingHours: WeeklyOperatingHours) => {
     if (!operatingHours) return null;
 
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
     return days.map((day, index) => {
-      const dayHours = operatingHours[day];
+      const dayKey = day as keyof WeeklyOperatingHours;
+      const dayHours = operatingHours[dayKey];
       return (
         <div key={day} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
           <span className="font-medium">{dayNames[index]}</span>
@@ -216,9 +228,18 @@ export default function ServiceCenterDetailPage() {
                   <Button
                     type="primary"
                     size="large"
+                    icon={<Navigation className="w-5 h-5 -mt-0.5" />}
+                    onClick={handleGetDirections}
+                    className="w-full h-12 rounded-full flex items-center justify-center gap-2 !bg-blue-600 hover:!bg-blue-700 !border-0"
+                  >
+                    Get Directions
+                  </Button>
+
+                  <Button
+                    size="large"
                     icon={<Calendar />}
                     onClick={handleBookAppointment}
-                    className="w-full"
+                    className="w-full h-12 rounded-full"
                     disabled={status !== 'active' || !isCurrentlyOpenNow}
                   >
                     Book Appointment

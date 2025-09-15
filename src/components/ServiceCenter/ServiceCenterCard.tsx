@@ -1,12 +1,13 @@
 import React from 'react';
 import { Card, Tag, Button } from 'antd';
-import { 
-  MapPin, 
-  Phone, 
-  Star, 
+import {
+  MapPin,
+  Phone,
+  Star,
   Wrench,
   CreditCard,
-  Camera
+  Camera,
+  Navigation
 } from 'lucide-react';
 import { ServiceCenter } from '../../interfaces/serviceCenter';
 import RealTimeStatus from './RealTimeStatus';
@@ -14,13 +15,11 @@ import RealTimeStatus from './RealTimeStatus';
 interface ServiceCenterCardProps {
   serviceCenter: ServiceCenter;
   onViewDetails?: (serviceCenter: ServiceCenter) => void;
-  onBookAppointment?: (serviceCenter: ServiceCenter) => void;
 }
 
 const ServiceCenterCard: React.FC<ServiceCenterCardProps> = ({
   serviceCenter,
-  onViewDetails,
-  onBookAppointment
+  onViewDetails
 }) => {
   const {
     name,
@@ -56,6 +55,13 @@ const ServiceCenterCard: React.FC<ServiceCenterCardProps> = ({
     }
   };
 
+  const handleGetDirections = () => {
+    const fullAddress = `${address.street}, ${address.ward}, ${address.district}, ${address.city}`;
+    const encodedAddress = encodeURIComponent(fullAddress);
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
+    window.open(googleMapsUrl, '_blank');
+  };
+
   return (
     <Card
       className="h-full shadow-lg hover:shadow-xl transition-all duration-300 border-0 rounded-xl overflow-hidden flex flex-col group"
@@ -74,8 +80,8 @@ const ServiceCenterCard: React.FC<ServiceCenterCardProps> = ({
           )}
           <div className="absolute top-3 right-3">
             <Tag color={getStatusColor(status)} className="font-semibold text-xs">
-              {status === 'active' ? 'Active' : 
-               status === 'maintenance' ? 'Maintenance' : 'Inactive'}
+              {status === 'active' ? 'Active' :
+                status === 'maintenance' ? 'Maintenance' : 'Inactive'}
             </Tag>
           </div>
           <div className="absolute top-3 left-3">
@@ -90,13 +96,14 @@ const ServiceCenterCard: React.FC<ServiceCenterCardProps> = ({
         </div>
       }
       actions={[
-        <Button 
-          type="primary" 
-          onClick={() => onBookAppointment?.(serviceCenter)}
-          className="w-full h-10"
+        <Button
+          type="primary"
+          icon={<Navigation className="w-5 h-5 -mt-0.5" />}
+          onClick={handleGetDirections}
+          className="w-full h-12 rounded-full flex items-center justify-center gap-2 !bg-blue-600 hover:!bg-blue-700 !border-0"
           size="large"
         >
-          Book Now
+          Get Directions
         </Button>
       ]}
       styles={{
@@ -106,7 +113,7 @@ const ServiceCenterCard: React.FC<ServiceCenterCardProps> = ({
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="mb-4">
-          <h3 
+          <h3
             className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 cursor-pointer hover:text-blue-600 transition-colors duration-200 min-h-[3.5rem]"
             onClick={() => onViewDetails?.(serviceCenter)}
           >
@@ -134,8 +141,8 @@ const ServiceCenterCard: React.FC<ServiceCenterCardProps> = ({
 
         {/* Operating Hours */}
         <div className="mb-3">
-          <RealTimeStatus 
-            operatingHours={operatingHours} 
+          <RealTimeStatus
+            operatingHours={operatingHours}
             className="mb-1"
             showNextOpening={true}
           />
@@ -176,9 +183,9 @@ const ServiceCenterCard: React.FC<ServiceCenterCardProps> = ({
               {paymentMethods.filter(pm => pm.isEnabled).slice(0, 2).map((method) => (
                 <Tag key={method._id} color="green" className="text-xs">
                   {method.type === 'cash' ? 'Cash' :
-                   method.type === 'card' ? 'Card' :
-                   method.type === 'banking' ? 'Bank' :
-                   method.type === 'ewallet' ? 'E-Wallet' : method.type}
+                    method.type === 'card' ? 'Card' :
+                      method.type === 'banking' ? 'Bank' :
+                        method.type === 'ewallet' ? 'E-Wallet' : method.type}
                 </Tag>
               ))}
               {paymentMethods.filter(pm => pm.isEnabled).length > 2 && (

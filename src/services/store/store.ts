@@ -9,7 +9,7 @@ import userReducer from "../features/user/userSlice";
 const presistConfig = {
   key: "root",
   storage,
-  whitelist: ["auth"],
+  whitelist: ["auth", "serviceCenter", "user"],
 };
 
 // Create a hook for using TypedUseSelectorHook

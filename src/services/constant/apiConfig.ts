@@ -4,7 +4,8 @@ export const BASE_URL = "https://dolphin-app-pwai8.ondigitalocean.app";
 export const LOGIN_ENDPOINT = `${BASE_URL}/api/auth/login`;
 export const REGISTER_ENDPOINT = `${BASE_URL}/api/auth/register`;
 export const VERIFY_EMAIL_ENDPOINT = `${BASE_URL}/api/auth/verify-email`;
-export const VERIFY_EMAIL_TOKEN_ENDPOINT = (token: string) => `${BASE_URL}/api/auth/verify-email/${token}`;
+export const VERIFY_EMAIL_TOKEN_ENDPOINT = (token: string) =>
+  `${BASE_URL}/api/auth/verify-email/${token}`;
 export const RESEND_VERIFICATION_ENDPOINT = `${BASE_URL}/api/auth/resend-verification`;
 export const RESET_PASSWORD_ENDPOINT = `${BASE_URL}/api/auth/forgot-password`;
 export const RESET_PASSWORD_WITH_TOKEN_ENDPOINT = (token: string) => `${BASE_URL}/api/auth/reset-password/${token}`;
@@ -23,3 +24,6 @@ export const SERVICE_CENTERS_ENDPOINT = `${BASE_URL}/api/service-centers`;
 export const SERVICE_CENTER_DETAIL_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/service-centers/${id}`;
 export const SERVICE_CENTER_NEARBY_ENDPOINT = `${BASE_URL}/api/service-centers/nearby/search`;
+
+//servicetype
+export const SERVICE_TYPE_POPULAR_ENDPOINT = `${BASE_URL}/api/service-types/popular/list`;
