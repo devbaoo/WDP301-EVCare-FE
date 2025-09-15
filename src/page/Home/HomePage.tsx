@@ -78,12 +78,15 @@ export default function HomePage() {
     }
   };
 
-  const handleBookAppointment = (serviceCenter: any) => {
-    navigate(`/service-centers/${serviceCenter._id}?action=book`);
+
+  const handleViewDetails = (serviceCenter: any) => {
+    navigate(`/service-centers/${serviceCenter._id}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleViewAllServiceCenters = () => {
     navigate('/service-centers');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -508,7 +511,7 @@ export default function HomePage() {
                 <div key={serviceCenter._id} className="h-full">
                   <ServiceCenterCardSimple
                     serviceCenter={serviceCenter}
-                    onBookAppointment={handleBookAppointment}
+                    onViewDetails={handleViewDetails}
                   />
                 </div>
               ))}
