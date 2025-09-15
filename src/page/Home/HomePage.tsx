@@ -21,11 +21,6 @@ export default function HomePage() {
   const [searchRadius, setSearchRadius] = useState(5); // Default 5km radius
   const hasFetched = useRef(false);
 
-  // Scroll to top when component mounts (refresh page)
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
-
   // Get user location
   useEffect(() => {
     const getCurrentLocation = () => {
