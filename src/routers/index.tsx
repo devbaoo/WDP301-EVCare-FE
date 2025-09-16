@@ -7,6 +7,7 @@ import ResetPasswordPage from "../page/Auth/ResetPasswordPage";
 import ServiceCentersPage from "../page/ServiceCenters/ServiceCentersPage";
 import ServiceCenterDetailPage from "../page/ServiceCenterDetail/ServiceCenterDetailPage";
 import ProfileCustomer from "@/page/Customer/ProfileCustomer";
+import BookingPage from "@/page/Booking/BookingPage";
 import UnauthorizedPage from "@/page/Error/UnauthorizedPage";
 import NotFoundPage from "@/page/Error/NotFoundPage";
 import ProtectedRoute from "@/components/ProtectedRoute/ProtectedRoute";
@@ -20,6 +21,11 @@ import ScrollToTop from "@/components/ScrollToTop/ScrollToTop";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/services/store/store";
+import DashboardPage from "@/page/Admin/DashboardPage";
+import UserPage from "@/page/Admin/UserPage";
+import ServicePage from "@/page/Admin/ServicePage";
+import StatisticPage from "@/page/Admin/StatisticPage";
+import SettingPage from "@/page/Admin/SettingPage";
 
 const AppRouter = () => {
     const { isAuthenticated, user, needVerification } = useSelector((state: RootState) => state.auth);
@@ -53,12 +59,12 @@ const AppRouter = () => {
                 {/* Public verification routes */}
                 <Route path="/verify-email/:token" element={<VerifyEmailSuccessPage />} />
                 <Route path="/verify-email" element={<ResendVerificationPage />} />
-            {/* Auth Routes - Only accessible when not authenticated */}
-            <Route element={!isAuthenticated ? <AuthLayout /> : <Navigate to={getInitialRoute()} />}>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-            </Route>
+                {/* Auth Routes - Only accessible when not authenticated */}
+                <Route element={!isAuthenticated ? <AuthLayout /> : <Navigate to={getInitialRoute()} />}>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+                </Route>
                 {/* Home Route - Only accessible for guests and verified customers */}
                 <Route path="/" element={
                     isAuthenticated && user?.role === "customer" && needVerification ?
@@ -102,6 +108,7 @@ const AppRouter = () => {
                         <Route path="/customer/profile" element={<ProfileCustomer />} />
                         <Route path="/customer/service-centers" element={<ServiceCentersPage />} />
                         <Route path="/customer/service-centers/:id" element={<ServiceCenterDetailPage />} />
+                        <Route path="/booking" element={<BookingPage />} />
                     </Route>
                 </Route>
 
@@ -129,12 +136,11 @@ const AppRouter = () => {
                 {/* Admin Routes - Only accessible when authenticated as admin */}
                 <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
                     <Route path="/admin" element={<AdminLayout />}>
-                        <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Admin Dashboard</h1></div>} />
-                        <Route path="customers" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Customers</h1></div>} />
-                        <Route path="staff" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Staff</h1></div>} />
-                        <Route path="service-centers" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Service Centers</h1></div>} />
-                        <Route path="analytics" element={<div className="p-6"><h1 className="text-2xl font-bold">Analytics</h1></div>} />
-                        <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Admin Settings</h1></div>} />
+                        <Route index element={<DashboardPage />} />
+                        <Route path="users" element={<UserPage />} />
+                        <Route path="services" element={<ServicePage />} />
+                        <Route path="statistics" element={<StatisticPage />} />
+                        <Route path="settings" element={<SettingPage />} />
                     </Route>
                 </Route>
 

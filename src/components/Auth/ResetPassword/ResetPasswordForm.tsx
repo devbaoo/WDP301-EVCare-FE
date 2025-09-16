@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "antd";
 import { Input } from "antd";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../services/store/store";
 import { resetPassword, resetPasswordWithToken, updatePassword } from "../../../services/features/auth/authSlice";
@@ -176,7 +176,7 @@ export default function ResetPasswordForm({ step, onStepChange, onSuccess, token
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
             >
-              {showPassword ? "👁️" : "👁️‍🗨️"}
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
         </div>
@@ -200,7 +200,7 @@ export default function ResetPasswordForm({ step, onStepChange, onSuccess, token
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
             >
-              {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
+              {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
         </div>

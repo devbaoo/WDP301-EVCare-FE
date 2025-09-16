@@ -59,7 +59,7 @@ export default function Header() {
               whileTap={{ scale: 0.95 }}
             >
               <div className="text-2xl font-bold text-synop-blue-dark">
-                EV-CARE
+                EV CARE
               </div>
             </motion.a>
           </motion.div>
@@ -74,13 +74,14 @@ export default function Header() {
                 Home
               </button>
             </motion.a>
-            <motion.button
+            <motion.a
+              href="/booking"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="text-synop-blue-dark font-semibold text-sm tracking-wide hover:text-synop-blue-primary transition-colors"
             >
               Booking
-            </motion.button>
+            </motion.a>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
