@@ -2,7 +2,7 @@ import Header from '@/components/Header/Header';
 import { motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/services/store/store';
-import { createVehicle, fetchVehicles } from '@/services/features/booking/bookingSlice';
+import { createVehicle, fetchVehicles, updateVehicle, deleteVehicle } from '@/services/features/booking/bookingSlice';
 import type { CreateVehicleData, Vehicle } from '@/interfaces/vehicle';
 import axiosInstance from '@/services/constant/axiosInstance';
 import { VEHICLE_BRANDS_ENDPOINT } from '@/services/constant/apiConfig';
@@ -32,7 +32,20 @@ function ManageVehiclesCustomer() {
         },
     });
 
+    // Edit form fields (aligned with BE: vehicleInfo fields + currentStatus + notes)
+    const [editPlate, setEditPlate] = useState<string>('');
+    const [editColor, setEditColor] = useState<string>('');
+    const [editYear, setEditYear] = useState<number>(new Date().getFullYear());
+    const [editBrand, setEditBrand] = useState<string>('');
+    const [editModelName, setEditModelName] = useState<string>('');
+    const [editBatteryType, setEditBatteryType] = useState<string>('');
+    const [editBatteryCapacity, setEditBatteryCapacity] = useState<string>('');
+    // Các trường currentStatus (km, %pin, trạng thái) KHÔNG cập nhật vì BE chưa công bố API đó
+    const [editSaving, setEditSaving] = useState<boolean>(false);
+    const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
+
     const [formError, setFormError] = useState<string | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
     useEffect(() => {
@@ -73,8 +86,18 @@ function ManageVehiclesCustomer() {
 
     const validateForm = (): string | null => {
         const v = form.vehicleInfo;
-        if (!v.brand || !v.modelName || !v.licensePlate) return 'Vui lòng nhập hãng xe, dòng xe và biển số.';
-        if (!v.year || Number(v.year) < 1970 || Number(v.year) > new Date().getFullYear() + 1) return 'Năm sản xuất không hợp lệ.';
+        const errors: Record<string, string> = {};
+        if (!v.brand) errors.brand = 'Bắt buộc';
+        if (!v.modelName) errors.modelName = 'Bắt buộc';
+        if (!v.licensePlate) errors.licensePlate = 'Bắt buộc';
+        if (!v.color) errors.color = 'Bắt buộc';
+        if (!v.batteryType) errors.batteryType = 'Bắt buộc';
+        if (!v.batteryCapacity) errors.batteryCapacity = 'Bắt buộc';
+        if (!v.year) errors.year = 'Bắt buộc';
+        const y = Number(v.year);
+        if (v.year && (y < 1970 || y > new Date().getFullYear() + 1)) errors.year = 'Năm không hợp lệ';
+        setFieldErrors(errors);
+        if (Object.keys(errors).length > 0) return 'Vui lòng điền đầy đủ thông tin.';
         return null;
     };
 
@@ -93,6 +116,8 @@ function ManageVehiclesCustomer() {
         } else {
             setSuccessMsg('Thêm xe thành công!');
             setIsAddOpen(false);
+            // Đồng bộ lại danh sách từ BE để tránh trạng thái lệch
+            dispatch(fetchVehicles());
         }
     };
 
@@ -109,6 +134,17 @@ function ManageVehiclesCustomer() {
     };
     const openEdit = (v: Vehicle) => {
         setSelectedVehicle(v);
+        // prefill editable fields from BE model
+        setEditPlate(v.vehicleInfo?.licensePlate || '');
+        setEditColor(v.vehicleInfo?.color || '');
+        setEditYear(v.vehicleInfo?.year || new Date().getFullYear());
+        const vi: any = v.vehicleInfo || {};
+        const vm: any = vi.vehicleModel || {};
+        setEditBrand(vm.brand || vi.brand || '');
+        setEditModelName(vm.modelName || vi.modelName || '');
+        setEditBatteryType(vm.batteryType || vi.batteryType || '');
+        setEditBatteryCapacity(String(vm.batteryCapacity || vi.batteryCapacity || ''));
+        // notes không còn dùng
         setIsEditOpen(true);
     };
     const openDelete = (v: Vehicle) => {
@@ -121,6 +157,52 @@ function ManageVehiclesCustomer() {
         setIsViewOpen(false);
         setIsEditOpen(false);
         setIsDeleteOpen(false);
+    };
+
+    const saveEdit = async () => {
+        if (!selectedVehicle) return;
+        // Basic validation
+        if (!editPlate) {
+            alert('Vui lòng nhập biển số');
+            return;
+        }
+        if (editYear < 1970 || editYear > new Date().getFullYear() + 1) {
+            alert('Năm sản xuất không hợp lệ');
+            return;
+        }
+        setEditSaving(true);
+        const payload = {
+            'vehicleInfo.licensePlate': editPlate,
+            'vehicleInfo.color': editColor,
+            'vehicleInfo.year': editYear,
+            // các trường dưới đây được BE dùng khi tạo model; nếu BE không cho sửa model, có thể bỏ qua
+            'vehicleInfo.brand': editBrand || undefined,
+            'vehicleInfo.modelName': editModelName || undefined,
+            'vehicleInfo.batteryType': editBatteryType || undefined,
+            'vehicleInfo.batteryCapacity': editBatteryCapacity || undefined,
+            // notes không gửi
+        } as Record<string, unknown>;
+        const action = await dispatch(updateVehicle({ vehicleId: selectedVehicle._id, updateData: payload }));
+        setEditSaving(false);
+        if ((action as any).error) {
+            alert((action as any).payload || 'Cập nhật thất bại');
+        } else {
+            setIsEditOpen(false);
+            dispatch(fetchVehicles());
+        }
+    };
+
+    const confirmDelete = async () => {
+        if (!selectedVehicle) return;
+        setDeleteLoading(true);
+        const action = await dispatch(deleteVehicle(selectedVehicle._id));
+        setDeleteLoading(false);
+        if ((action as any).error) {
+            alert((action as any).payload || 'Xóa thất bại');
+        } else {
+            setIsDeleteOpen(false);
+            dispatch(fetchVehicles());
+        }
     };
 
     return (
@@ -144,19 +226,7 @@ function ManageVehiclesCustomer() {
                         <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-red-700">{error}</div>
                     )}
 
-                    {/* Empty state */}
-                    {!loading && vehicles.length === 0 && (
-                        <div className="rounded-3xl border-2 border-dashed border-primary/20 bg-primary/5 p-10 text-center">
-                            <div className="mx-auto w-16 h-16 rounded-2xl bg-white shadow flex items-center justify-center mb-4">
-                                <Car className="w-8 h-8 text-primary" />
-                            </div>
-                            <h3 className="text-lg font-semibold mb-1">Chưa có xe nào</h3>
-                            <p className="text-synop-gray-medium mb-4">Hãy thêm chiếc xe đầu tiên để bắt đầu quản lý và đặt lịch bảo dưỡng.</p>
-                            <button onClick={handleOpenAdd} className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-white hover:opacity-90 transition">
-                                <Car className="w-5 h-5" /> Thêm xe
-                            </button>
-                        </div>
-                    )}
+                    {/* Khi chưa có xe, chỉ hiển thị hero phía trên theo yêu cầu */}
 
                     {/* Vehicles list - single column for premium look */}
                     <div className="grid grid-cols-1 gap-6">
@@ -189,7 +259,7 @@ function ManageVehiclesCustomer() {
                                                 <span className={`text-xs px-3 py-1 rounded-full ${vehicle.currentStatus?.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{status}</span>
                                             </div>
 
-                                            {/* Info rows with green accent */}
+                                            {/* Info rows with green accent (chỉ trường công bố từ BE) */}
                                             <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                                 <div className="rounded-2xl bg-green-50/60 border border-green-100 p-4">
                                                     <div className="text-synop-gray-medium uppercase tracking-wide text-xs">NĂM</div>
@@ -262,7 +332,7 @@ function ManageVehiclesCustomer() {
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Hãng xe</label>
                                     <select
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${fieldErrors.brand ? 'border-red-400' : 'border-gray-300'}`}
                                         value={form.vehicleInfo.brand}
                                         onChange={(e) => handleChange('brand', e.target.value)}
                                     >
@@ -271,67 +341,74 @@ function ManageVehiclesCustomer() {
                                             <option key={b} value={b}>{b}</option>
                                         ))}
                                     </select>
+                                    {fieldErrors.brand && <p className="mt-1 text-xs text-red-600">{fieldErrors.brand}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Dòng xe</label>
                                     <input
                                         type="text"
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${fieldErrors.modelName ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="VD: VF 8"
                                         value={form.vehicleInfo.modelName}
                                         onChange={(e) => handleChange('modelName', e.target.value)}
                                     />
+                                    {fieldErrors.modelName && <p className="mt-1 text-xs text-red-600">{fieldErrors.modelName}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Năm sản xuất</label>
                                     <input
                                         type="number"
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${fieldErrors.year ? 'border-red-400' : 'border-gray-300'}`}
                                         value={form.vehicleInfo.year}
                                         onChange={(e) => handleChange('year', Number(e.target.value))}
                                         min={1970}
                                         max={new Date().getFullYear() + 1}
                                     />
+                                    {fieldErrors.year && <p className="mt-1 text-xs text-red-600">{fieldErrors.year}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Biển số</label>
                                     <input
                                         type="text"
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${fieldErrors.licensePlate ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="VD: 30G-123.45"
                                         value={form.vehicleInfo.licensePlate}
                                         onChange={(e) => handleChange('licensePlate', e.target.value)}
                                     />
+                                    {fieldErrors.licensePlate && <p className="mt-1 text-xs text-red-600">{fieldErrors.licensePlate}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Màu xe</label>
                                     <input
                                         type="text"
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${fieldErrors.color ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="VD: Trắng"
                                         value={form.vehicleInfo.color}
                                         onChange={(e) => handleChange('color', e.target.value)}
                                     />
+                                    {fieldErrors.color && <p className="mt-1 text-xs text-red-600">{fieldErrors.color}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Loại pin</label>
                                     <input
                                         type="text"
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${fieldErrors.batteryType ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="VD: Lithium-ion"
                                         value={form.vehicleInfo.batteryType}
                                         onChange={(e) => handleChange('batteryType', e.target.value)}
                                     />
+                                    {fieldErrors.batteryType && <p className="mt-1 text-xs text-red-600">{fieldErrors.batteryType}</p>}
                                 </div>
                                 <div className="sm:col-span-2">
                                     <label className="block text-sm font-medium mb-1">Dung lượng pin (kWh)</label>
                                     <input
                                         type="text"
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${fieldErrors.batteryCapacity ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="VD: 82"
                                         value={form.vehicleInfo.batteryCapacity}
                                         onChange={(e) => handleChange('batteryCapacity', e.target.value)}
                                     />
+                                    {fieldErrors.batteryCapacity && <p className="mt-1 text-xs text-red-600">{fieldErrors.batteryCapacity}</p>}
                                 </div>
                             </div>
                             <div className="flex items-center justify-end gap-3 pt-2">
@@ -349,7 +426,7 @@ function ManageVehiclesCustomer() {
             {isViewOpen && selectedVehicle && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/50" onClick={closeAllActionModals} />
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-xl rounded-2xl bg-white shadow-xl">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-2xl rounded-2xl bg-white shadow-xl">
                         <div className="p-6 border-b border-gray-100 flex items-center gap-3">
                             <div className="rounded-xl bg-primary/10 p-2">
                                 <Info className="w-5 h-5 text-primary" />
@@ -361,38 +438,21 @@ function ManageVehiclesCustomer() {
                         </div>
                         <div className="p-6 space-y-4">
                             {(() => {
-                                const v = selectedVehicle.vehicleInfo;
+                                const v = selectedVehicle.vehicleInfo as any;
                                 const model = v?.vehicleModel as any;
-                                const brand = model?.brand || (v as any)?.brand || '';
-                                const modelName = model?.modelName || (v as any)?.modelName || '';
-                                const batteryType = model?.batteryType || (v as any)?.batteryType || '';
-                                const batteryCapacity = model?.batteryCapacity || (v as any)?.batteryCapacity || '';
+                                const brand = model?.brand || v?.brand || '';
+                                const modelName = model?.modelName || v?.modelName || '';
+                                const batteryType = model?.batteryType || v?.batteryType || '';
+                                const batteryCapacity = model?.batteryCapacity || v?.batteryCapacity || '';
+                                // status bỏ hiển thị theo yêu cầu
                                 return (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                                        <div className="rounded-lg border p-3">
-                                            <div className="text-synop-gray-medium">Hãng - Dòng</div>
-                                            <div className="font-medium">{brand} {modelName}</div>
-                                        </div>
-                                        <div className="rounded-lg border p-3">
-                                            <div className="text-synop-gray-medium">Biển số</div>
-                                            <div className="font-medium">{v?.licensePlate || '—'}</div>
-                                        </div>
-                                        <div className="rounded-lg border p-3">
-                                            <div className="text-synop-gray-medium">Năm</div>
-                                            <div className="font-medium">{v?.year || '—'}</div>
-                                        </div>
-                                        <div className="rounded-lg border p-3">
-                                            <div className="text-synop-gray-medium">Màu</div>
-                                            <div className="font-medium">{v?.color || '—'}</div>
-                                        </div>
-                                        <div className="rounded-lg border p-3">
-                                            <div className="text-synop-gray-medium">Loại pin</div>
-                                            <div className="font-medium">{batteryType || '—'}</div>
-                                        </div>
-                                        <div className="rounded-lg border p-3">
-                                            <div className="text-synop-gray-medium">PIN (kWh)</div>
-                                            <div className="font-medium">{batteryCapacity || '—'}</div>
-                                        </div>
+                                        <div className="rounded-2xl bg-primary/5 border border-primary/10 p-4"><div className="text-synop-gray-medium">Hãng - Dòng</div><div className="font-medium">{brand} {modelName}</div></div>
+                                        <div className="rounded-2xl bg-primary/5 border border-primary/10 p-4"><div className="text-synop-gray-medium">Biển số</div><div className="font-medium">{v?.licensePlate || '—'}</div></div>
+                                        <div className="rounded-2xl bg-primary/5 border border-primary/10 p-4"><div className="text-synop-gray-medium">Năm</div><div className="font-medium">{v?.year || '—'}</div></div>
+                                        <div className="rounded-2xl bg-primary/5 border border-primary/10 p-4"><div className="text-synop-gray-medium">Màu</div><div className="font-medium">{v?.color || '—'}</div></div>
+                                        <div className="rounded-2xl bg-primary/5 border border-primary/10 p-4"><div className="text-synop-gray-medium">Loại pin</div><div className="font-medium">{batteryType || '—'}</div></div>
+                                        <div className="rounded-2xl bg-primary/5 border border-primary/10 p-4"><div className="text-synop-gray-medium">PIN (kWh)</div><div className="font-medium">{batteryCapacity || '—'}</div></div>
                                     </div>
                                 );
                             })()}
@@ -404,34 +464,71 @@ function ManageVehiclesCustomer() {
                 </div>
             )}
 
-            {/* Edit Modal (UI only) */}
+            {/* Edit Modal */}
             {isEditOpen && selectedVehicle && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/50" onClick={closeAllActionModals} />
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-xl rounded-2xl bg-white shadow-xl">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-2xl rounded-2xl bg-white shadow-xl">
                         <div className="p-6 border-b border-gray-100 flex items-center gap-3">
                             <div className="rounded-xl bg-amber-100 p-2">
                                 <Pencil className="w-5 h-5 text-amber-700" />
                             </div>
                             <div>
                                 <h2 className="text-xl font-semibold">Sửa thông tin xe</h2>
-                                <p className="text-sm text-synop-gray-medium">Tính năng sẽ được kích hoạt khi BE sẵn sàng</p>
+                                <p className="text-sm text-synop-gray-medium">Cập nhật thông tin cơ bản, tình trạng và ghi chú</p>
                             </div>
                         </div>
-                        <div className="p-6 space-y-4">
-                            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-amber-800">
-                                Hiện tại chỉ demo giao diện. Khi có API cập nhật, form này sẽ được nối để sửa trực tiếp.
+                        <div className="p-6 space-y-6">
+                            {/* Thống nhất label/field giống form Add. Tất cả các ô đều chỉnh sửa được theo yêu cầu */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {/* Hãng xe */}
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Hãng xe</label>
+                                    <input value={editBrand} onChange={(e) => setEditBrand(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                </div>
+                                {/* Dòng xe */}
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Dòng xe</label>
+                                    <input value={editModelName} onChange={(e) => setEditModelName(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                </div>
+                                {/* Năm sản xuất */}
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Năm sản xuất</label>
+                                    <input type="number" value={editYear} min={1970} max={new Date().getFullYear() + 1} onChange={(e) => setEditYear(Number(e.target.value))} className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                </div>
+                                {/* Biển số */}
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Biển số</label>
+                                    <input value={editPlate} onChange={(e) => setEditPlate(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                </div>
+                                {/* Màu xe */}
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Màu xe</label>
+                                    <input value={editColor} onChange={(e) => setEditColor(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                </div>
+                                {/* Loại pin */}
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Loại pin</label>
+                                    <input value={editBatteryType} onChange={(e) => setEditBatteryType(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                </div>
+                                {/* Dung lượng pin (kWh) */}
+                                <div className="sm:col-span-2">
+                                    <label className="block text-sm font-medium mb-1">Dung lượng pin (kWh)</label>
+                                    <input value={editBatteryCapacity} onChange={(e) => setEditBatteryCapacity(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                </div>
                             </div>
+                            {/* Các trường currentStatus không cho chỉnh vì BE chưa công bố cập nhật */}
+                            {/* Ghi chú đã bỏ theo yêu cầu */}
                         </div>
                         <div className="p-6 border-t border-gray-100 flex items-center justify-end gap-3">
-                            <button onClick={closeAllActionModals} className="rounded-lg border border-gray-300 px-4 py-2 text-synop-gray-medium hover:bg-gray-50">Đóng</button>
-                            <button disabled className="rounded-lg bg-amber-400/60 px-4 py-2 text-white cursor-not-allowed">Lưu (đang tạm khóa)</button>
+                            <button onClick={closeAllActionModals} className="rounded-lg border border-gray-300 px-4 py-2 text-synop-gray-medium hover:bg-gray-50">Hủy</button>
+                            <button onClick={saveEdit} disabled={editSaving} className="rounded-lg bg-amber-500 px-4 py-2 text-white hover:opacity-90 disabled:opacity-60">{editSaving ? 'Đang lưu...' : 'Lưu'}</button>
                         </div>
                     </motion.div>
                 </div>
             )}
 
-            {/* Delete Confirm (UI only) */}
+            {/* Delete Confirm */}
             {isDeleteOpen && selectedVehicle && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/50" onClick={closeAllActionModals} />
@@ -458,7 +555,7 @@ function ManageVehiclesCustomer() {
                         </div>
                         <div className="p-6 border-t border-gray-100 flex items-center justify-end gap-3">
                             <button onClick={closeAllActionModals} className="rounded-lg border border-gray-300 px-4 py-2 text-synop-gray-medium hover:bg-gray-50">Hủy</button>
-                            <button disabled className="rounded-lg bg-red-500/70 px-4 py-2 text-white cursor-not-allowed">Xóa (đang tạm khóa)</button>
+                            <button onClick={confirmDelete} disabled={deleteLoading} className="rounded-lg bg-red-500 px-4 py-2 text-white hover:opacity-90 disabled:opacity-60">{deleteLoading ? 'Đang xóa...' : 'Xóa'}</button>
                         </div>
                     </motion.div>
                 </div>

@@ -29,6 +29,12 @@ export const SERVICE_CENTER_NEARBY_ENDPOINT = `${BASE_URL}/api/service-centers/n
 // Vehicle endpoints
 export const VEHICLES_ENDPOINT = `${BASE_URL}/api/vehicles`;
 export const CREATE_VEHICLE_ENDPOINT = `${BASE_URL}/api/vehicles`;
+export const VEHICLE_DETAIL_ENDPOINT = (vehicleId: string) =>
+  `${BASE_URL}/api/vehicles/${vehicleId}`;
+export const UPDATE_VEHICLE_ENDPOINT = (vehicleId: string) =>
+  `${BASE_URL}/api/vehicles/${vehicleId}`;
+export const DELETE_VEHICLE_ENDPOINT = (vehicleId: string) =>
+  `${BASE_URL}/api/vehicles/${vehicleId}`;
 
 // Service types endpoints
 export const POPULAR_SERVICE_TYPES_ENDPOINT = `${BASE_URL}/api/service-types/popular/list`;
