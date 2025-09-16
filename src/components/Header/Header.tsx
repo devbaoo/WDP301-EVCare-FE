@@ -1,5 +1,5 @@
 import { Button, Dropdown } from "antd";
-import { UserOutlined, LogoutOutlined } from "@ant-design/icons";
+import { UserOutlined, LogoutOutlined, CarOutlined, HistoryOutlined } from "@ant-design/icons";
 import type { MenuProps } from 'antd';
 import { useAppSelector, useAppDispatch } from "../../services/store/store";
 import { logout } from "../../services/features/auth/authSlice";
@@ -20,12 +20,38 @@ export default function Header() {
     navigate("/customer/profile");
   };
 
+  const handleNavigateToVehicles = () => {
+    navigate("/customer/vehicles");
+  };
+
+  const handleNavigateToBookingHistory = () => {
+    navigate("/customer/bookings");
+  };
+
   const userMenuItems: MenuProps['items'] = [
     {
       key: 'profile',
       icon: <UserOutlined />,
       label: 'Profile',
       onClick: handleNavigateToProfile,
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'manageVehicles',
+      icon: <CarOutlined />,
+      label: 'Manage Vehicles',
+      onClick: handleNavigateToVehicles,
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'history',
+      icon: <HistoryOutlined />,
+      label: 'Booking History',
+      onClick: handleNavigateToBookingHistory,
     },
     {
       type: 'divider',

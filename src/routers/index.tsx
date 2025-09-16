@@ -7,6 +7,8 @@ import ResetPasswordPage from "../page/Auth/ResetPasswordPage";
 import ServiceCentersPage from "../page/ServiceCenters/ServiceCentersPage";
 import ServiceCenterDetailPage from "../page/ServiceCenterDetail/ServiceCenterDetailPage";
 import ProfileCustomer from "@/page/Customer/ProfileCustomer";
+import ManageVehiclesCustomer from "@/page/Customer/ManageVehiclesCustomer";
+import BookingHistory from "@/page/Customer/BookingHistory";
 import BookingPage from "@/page/Booking/BookingPage";
 import UnauthorizedPage from "@/page/Error/UnauthorizedPage";
 import NotFoundPage from "@/page/Error/NotFoundPage";
@@ -106,6 +108,8 @@ const AppRouter = () => {
                 <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
                     <Route element={<CustomerLayout />}>
                         <Route path="/customer/profile" element={<ProfileCustomer />} />
+                        <Route path="/customer/vehicles" element={<ManageVehiclesCustomer />} />
+                        <Route path="/customer/bookings" element={<BookingHistory />} />
                         <Route path="/customer/service-centers" element={<ServiceCentersPage />} />
                         <Route path="/customer/service-centers/:id" element={<ServiceCenterDetailPage />} />
                         <Route path="/booking" element={<BookingPage />} />
