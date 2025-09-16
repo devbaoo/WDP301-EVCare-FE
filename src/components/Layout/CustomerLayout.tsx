@@ -6,7 +6,7 @@ const CustomerLayout = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             <Header />
-            <main className="min-h-screen">
+            <main className="min-h-screen pt-16">
                 <Outlet />
             </main>
             <Footer />
