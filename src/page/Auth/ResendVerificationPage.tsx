@@ -48,6 +48,7 @@ export default function ResendVerificationPage() {
 
     const handleBackToLogin = () => {
         dispatch(logout());
+        localStorage.clear();
         navigate('/login');
     };
 
