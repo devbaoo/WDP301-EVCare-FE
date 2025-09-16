@@ -159,10 +159,10 @@ export default function HomePage() {
               <motion.a
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                href="/login"
+                href="/booking"
                 className="inline-flex items-center justify-center rounded-full bg-[#1a40b8] px-8 py-4 text-lg font-semibold text-white shadow-sm transition hover:bg-[#163494]"
               >
-                Booking
+                Đặt lịch bảo dưỡng
               </motion.a>
             </motion.div>
           </motion.div>
