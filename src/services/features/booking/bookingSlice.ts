@@ -348,6 +348,42 @@ const bookingSlice = createSlice({
       state.availableTimeSlots = [];
       state.error = null;
     },
+    mergeLocalVehicleFields: (
+      state,
+      action: PayloadAction<{
+        vehicleId: string;
+        fields: Partial<{
+          brand: string;
+          modelName: string;
+          batteryType: string;
+          batteryCapacity: number | string;
+        }>;
+      }>
+    ) => {
+      const { vehicleId, fields } = action.payload;
+      const idx = state.vehicles.findIndex((v) => v._id === vehicleId);
+      if (idx !== -1) {
+        const current = state.vehicles[idx];
+        const currentInfo: any = current.vehicleInfo || {};
+        state.vehicles[idx] = {
+          ...current,
+          vehicleInfo: {
+            ...currentInfo,
+            // Store display fields directly to reflect edits on UI
+            brand: fields.brand ?? currentInfo.brand,
+            modelName: fields.modelName ?? currentInfo.modelName,
+            batteryType: fields.batteryType ?? currentInfo.batteryType,
+            batteryCapacity:
+              fields.batteryCapacity !== undefined
+                ? fields.batteryCapacity
+                : currentInfo.batteryCapacity,
+          },
+        } as unknown as Vehicle;
+        if (state.selectedVehicle?._id === vehicleId) {
+          state.selectedVehicle = state.vehicles[idx];
+        }
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -527,6 +563,7 @@ export const {
   updateBookingData,
   clearError,
   resetBooking,
+  mergeLocalVehicleFields,
 } = bookingSlice.actions;
 
 export default bookingSlice.reducer;

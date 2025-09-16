@@ -2,7 +2,7 @@ import Header from '@/components/Header/Header';
 import { motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/services/store/store';
-import { createVehicle, fetchVehicles, updateVehicle, deleteVehicle } from '@/services/features/booking/bookingSlice';
+import { createVehicle, fetchVehicles, updateVehicle, deleteVehicle, mergeLocalVehicleFields } from '@/services/features/vehicle/vehicleSlice';
 import type { CreateVehicleData, Vehicle } from '@/interfaces/vehicle';
 import axiosInstance from '@/services/constant/axiosInstance';
 import { VEHICLE_BRANDS_ENDPOINT } from '@/services/constant/apiConfig';
@@ -10,7 +10,7 @@ import { Car, Badge, Palette, Battery, Hash, Pencil, Trash2, Info } from 'lucide
 
 function ManageVehiclesCustomer() {
     const dispatch = useAppDispatch();
-    const { vehicles, loading, error, createVehicleLoading } = useAppSelector((s) => s.booking);
+    const { vehicles, loading, error, createVehicleLoading } = useAppSelector((s) => s.vehicle);
 
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
@@ -171,24 +171,32 @@ function ManageVehiclesCustomer() {
             return;
         }
         setEditSaving(true);
+        const parsedCapacity = editBatteryCapacity !== '' && !Number.isNaN(Number(editBatteryCapacity))
+            ? Number(editBatteryCapacity)
+            : editBatteryCapacity || undefined;
+        // BE persists licensePlate, color, year directly in vehicleInfo; brand/model/battery fields are tied to vehicleModel when adding
         const payload = {
             'vehicleInfo.licensePlate': editPlate,
             'vehicleInfo.color': editColor,
             'vehicleInfo.year': editYear,
-            // các trường dưới đây được BE dùng khi tạo model; nếu BE không cho sửa model, có thể bỏ qua
-            'vehicleInfo.brand': editBrand || undefined,
-            'vehicleInfo.modelName': editModelName || undefined,
-            'vehicleInfo.batteryType': editBatteryType || undefined,
-            'vehicleInfo.batteryCapacity': editBatteryCapacity || undefined,
-            // notes không gửi
         } as Record<string, unknown>;
         const action = await dispatch(updateVehicle({ vehicleId: selectedVehicle._id, updateData: payload }));
         setEditSaving(false);
         if ((action as any).error) {
             alert((action as any).payload || 'Cập nhật thất bại');
         } else {
+            // Locally merge display fields so list/detail reflect edits without BE changes
+            dispatch(mergeLocalVehicleFields({
+                vehicleId: selectedVehicle._id,
+                fields: {
+                    brand: editBrand,
+                    modelName: editModelName,
+                    batteryType: editBatteryType,
+                    batteryCapacity: parsedCapacity as any,
+                },
+            }));
             setIsEditOpen(false);
-            dispatch(fetchVehicles());
+            // No immediate refetch to avoid overwriting local display fields
         }
     };
 
@@ -236,10 +244,11 @@ function ManageVehiclesCustomer() {
                         {vehicles.map((vehicle: Vehicle) => {
                             const v = vehicle.vehicleInfo;
                             const model = v?.vehicleModel as any;
-                            const brand = model?.brand || (v as any)?.brand || '';
-                            const modelName = model?.modelName || (v as any)?.modelName || '';
-                            const batteryType = model?.batteryType || (v as any)?.batteryType || '';
-                            const batteryCapacity = model?.batteryCapacity || (v as any)?.batteryCapacity || '';
+                            // Ưu tiên các trường lưu trực tiếp trong vehicleInfo để phản ánh cập nhật
+                            const brand = (v as any)?.brand || model?.brand || '';
+                            const modelName = (v as any)?.modelName || model?.modelName || '';
+                            const batteryType = (v as any)?.batteryType || model?.batteryType || '';
+                            const batteryCapacity = (v as any)?.batteryCapacity || model?.batteryCapacity || '';
                             const status = vehicle.currentStatus?.isActive ? 'Đang hoạt động' : 'Không hoạt động';
                             return (
                                 <div key={vehicle._id} className="rounded-3xl border border-primary/10 bg-gradient-to-br from-white via-white to-primary/5 shadow-sm overflow-hidden">
@@ -440,10 +449,10 @@ function ManageVehiclesCustomer() {
                             {(() => {
                                 const v = selectedVehicle.vehicleInfo as any;
                                 const model = v?.vehicleModel as any;
-                                const brand = model?.brand || v?.brand || '';
-                                const modelName = model?.modelName || v?.modelName || '';
-                                const batteryType = model?.batteryType || v?.batteryType || '';
-                                const batteryCapacity = model?.batteryCapacity || v?.batteryCapacity || '';
+                                const brand = v?.brand || model?.brand || '';
+                                const modelName = v?.modelName || model?.modelName || '';
+                                const batteryType = v?.batteryType || model?.batteryType || '';
+                                const batteryCapacity = v?.batteryCapacity || model?.batteryCapacity || '';
                                 // status bỏ hiển thị theo yêu cầu
                                 return (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -484,7 +493,16 @@ function ManageVehiclesCustomer() {
                                 {/* Hãng xe */}
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Hãng xe</label>
-                                    <input value={editBrand} onChange={(e) => setEditBrand(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                    <select
+                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        value={editBrand}
+                                        onChange={(e) => setEditBrand(e.target.value)}
+                                    >
+                                        <option value="">Chọn hãng</option>
+                                        {brands.map((b) => (
+                                            <option key={b} value={b}>{b}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 {/* Dòng xe */}
                                 <div>
@@ -545,10 +563,10 @@ function ManageVehiclesCustomer() {
                         <div className="p-6">
                             <div className="rounded-lg border p-3 text-sm">
                                 {(() => {
-                                    const v = selectedVehicle.vehicleInfo;
+                                    const v = selectedVehicle.vehicleInfo as any;
                                     const model = v?.vehicleModel as any;
-                                    const brand = model?.brand || (v as any)?.brand || '';
-                                    const modelName = model?.modelName || (v as any)?.modelName || '';
+                                    const brand = v?.brand || model?.brand || '';
+                                    const modelName = v?.modelName || model?.modelName || '';
                                     return <div><span className="font-medium">{brand} {modelName}</span> • {v?.licensePlate || ''}</div>;
                                 })()}
                             </div>
