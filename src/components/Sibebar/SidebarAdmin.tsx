@@ -7,9 +7,15 @@ import {
   Users,
   Building2,
   BarChart3,
+  BookPlus,
   Settings,
   LogOut,
   Menu,
+  UsersRound,
+  ChevronDown,
+  Wrench,
+  Package,
+  Car,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -17,24 +23,45 @@ type MenuItem = {
   icon: LucideIcon;
   label: string;
   path: string;
+  children?: MenuItem[];
 };
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
 
   const menuItems: MenuItem[] = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
-    { icon: Users, label: 'Users', path: '/admin/users' },
-    { icon: Building2, label: 'Services', path: '/admin/services' },
+    { 
+      icon: Users, 
+      label: 'Users', 
+      path: '/admin/users',
+      children: [
+        { icon: UsersRound, label: 'Manage Users', path: '/admin/users/all' },
+        { icon: UsersRound, label: 'Manage Staff', path: '/admin/users/staff' },
+      ]
+    },
+    { 
+      icon: BookPlus, 
+      label: 'Services', 
+      path: '/admin/services',
+      children: [
+        { icon: Wrench, label: 'Manage Services', path: '/admin/services/manage' },
+        { icon: Car, label: 'Manage Model', path: '/admin/services/model' },
+        { icon: Package, label: 'Manage Package', path: '/admin/services/package' },
+      ]
+    },
+    { icon: Building2, label: 'Centers', path: '/admin/service-centers' },
     { icon: BarChart3, label: 'Statistics', path: '/admin/statistics' },
     { icon: Settings, label: 'Settings', path: '/admin/settings' },
   ];
 
   const handleLogout = () => {
     dispatch(logout());
+    localStorage.clear();
     navigate('/login');
   };
 
@@ -42,6 +69,16 @@ const Sidebar = () => {
     const isRoot = path === '/admin';
     return isRoot ? location.pathname === '/admin' : location.pathname.startsWith(path);
   };
+
+  const toggleDropdown = (path: string) => {
+    setOpenDropdowns(prev => 
+      prev.includes(path) 
+        ? prev.filter(p => p !== path)
+        : [...prev, path]
+    );
+  };
+
+  const isDropdownOpen = (path: string) => openDropdowns.includes(path);
 
   return (
     <aside
@@ -64,25 +101,64 @@ const Sidebar = () => {
         </div>
       </div>
 
-      <nav className="py-4 ml-3">
-        {menuItems.map((item) => {
-          const active = isActive(item.path);
-          return (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
-                active
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
-            </button>
-          );
-        })}
-      </nav>
+       <nav className="py-4 ml-3">
+         {menuItems.map((item) => {
+           const active = isActive(item.path);
+           const hasChildren = item.children && item.children.length > 0;
+           const isOpen = isDropdownOpen(item.path);
+           
+           return (
+             <div key={item.path}>
+               <button
+                 onClick={() => {
+                   if (hasChildren) {
+                     toggleDropdown(item.path);
+                   } else {
+                     navigate(item.path);
+                   }
+                 }}
+                 className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
+                   active
+                     ? 'bg-gray-100 text-gray-900'
+                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                 }`}
+               >
+                 <item.icon className="w-5 h-5" />
+                 {!collapsed && (
+                   <>
+                     <span className="text-sm font-medium">{item.label}</span>
+                     {hasChildren && (
+                       <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                     )}
+                   </>
+                 )}
+               </button>
+               
+               {hasChildren && !collapsed && isOpen && (
+                 <div className="ml-6 border-l border-gray-200">
+                   {item.children!.map((child) => {
+                     const childActive = isActive(child.path);
+                     return (
+                       <button
+                         key={child.path}
+                         onClick={() => navigate(child.path)}
+                         className={`w-full flex items-center gap-3 px-4 py-2 transition-colors ${
+                           childActive
+                             ? 'bg-gray-100 text-gray-900'
+                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                         }`}
+                       >
+                         <child.icon className="w-4 h-4" />
+                         <span className="text-sm font-medium">{child.label}</span>
+                       </button>
+                     );
+                   })}
+                 </div>
+               )}
+             </div>
+           );
+         })}
+       </nav>
 
       <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 p-4">
         <button

@@ -5,6 +5,7 @@ import storage from "redux-persist/lib/storage";
 import authReducer from "../features/auth/authSlice";
 import serviceCenterReducer from "../features/serviceCenter/serviceCenterSlice";
 import userReducer from "../features/user/userSlice";
+import adminServiceReducer from "../features/admin/seviceSlice";
 import bookingReducer from "../features/booking/bookingSlice";
 import vehicleReducer from "../features/vehicle/vehicleSlice";
 
@@ -19,6 +20,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   serviceCenter: serviceCenterReducer,
   user: userReducer,
+  adminService: adminServiceReducer,
   booking: bookingReducer,
   vehicle: vehicleReducer,
 });
