@@ -5,6 +5,7 @@ export interface VehicleModel {
   yearFrom: number;
   yearTo: number;
   batteryType: string;
+  batteryCapacity?: number;
   maintenanceIntervals: {
     [key: string]: string;
   };
@@ -15,7 +16,23 @@ export interface VehicleInfo {
   year: number;
   color: string;
   licensePlate: string;
+  brand?: string;
+  modelName?: string;
+  batteryType?: string;
+  batteryCapacity?: number | string;
 }
+
+export interface VehicleInfoUpdatableFields {
+  licensePlate?: string;
+  color?: string;
+  year?: number;
+}
+
+export type UpdateVehicleData =
+  | {
+      vehicleInfo?: VehicleInfoUpdatableFields;
+    }
+  | VehicleInfoUpdatableFields;
 
 export interface CurrentStatus {
   mileage: number;
