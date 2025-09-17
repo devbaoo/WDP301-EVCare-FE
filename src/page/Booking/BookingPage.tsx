@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../services/store/store';
-import { resetBooking, fetchVehicles } from '../../services/features/booking/bookingSlice';
+import { resetBooking } from '../../services/features/booking/bookingSlice';
 import Step1VehicleSelection from '../../components/Booking/Step1VehicleSelection';
 import Step2ServiceCenterSelection from '../../components/Booking/Step2ServiceCenterSelection';
 import Step3ServiceSelection from '../../components/Booking/Step3ServiceSelection';
@@ -52,12 +52,6 @@ const BookingPage: React.FC = () => {
     useEffect(() => {
         setCurrentStepIndex(currentStep - 1);
     }, [currentStep]);
-
-    // Refetch vehicles when booking page loads to ensure latest data
-    useEffect(() => {
-        console.log('BookingPage: Refetching vehicles on mount');
-        dispatch(fetchVehicles());
-    }, [dispatch]);
 
     const updateStepStatus = () => {
         return steps.map((step, index) => {
