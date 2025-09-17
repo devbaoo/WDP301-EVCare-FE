@@ -3,6 +3,8 @@ import axiosInstance from "../../constant/axiosInstance";
 import {
   VEHICLES_ENDPOINT,
   CREATE_VEHICLE_ENDPOINT,
+  UPDATE_VEHICLE_ENDPOINT,
+  DELETE_VEHICLE_ENDPOINT,
   POPULAR_SERVICE_TYPES_ENDPOINT,
   COMPATIBLE_SERVICES_ENDPOINT,
   COMPATIBLE_PACKAGES_ENDPOINT,
@@ -19,6 +21,28 @@ import {
   BookingServiceCenter,
   BookingState,
 } from "../../../interfaces/booking";
+
+// Local overrides for display-only fields that BE doesn't persist
+const VEHICLE_OVERRIDES_KEY = "vehicle_overrides_v1";
+type VehicleOverrideFields = Partial<{
+  brand: string;
+  modelName: string;
+  batteryType: string;
+  batteryCapacity: number | string;
+}>;
+function loadVehicleOverrides(): Record<string, VehicleOverrideFields> {
+  try {
+    const raw = localStorage.getItem(VEHICLE_OVERRIDES_KEY);
+    const result = raw
+      ? (JSON.parse(raw) as Record<string, VehicleOverrideFields>)
+      : {};
+    console.log("loadVehicleOverrides result:", result);
+    return result;
+  } catch (e) {
+    console.error("Error loading vehicle overrides:", e);
+    return {};
+  }
+}
 
 // Using BookingState from interfaces/booking.ts
 
@@ -55,6 +79,59 @@ export const fetchVehicles = createAsyncThunk(
       const error = err as any;
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch vehicles"
+      );
+    }
+  }
+);
+
+export const updateVehicle = createAsyncThunk(
+  "booking/updateVehicle",
+  async (
+    {
+      vehicleId,
+      updateData,
+    }: { vehicleId: string; updateData: Record<string, unknown> },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosInstance.put(
+        UPDATE_VEHICLE_ENDPOINT(vehicleId),
+        updateData
+      );
+      if (response.data && response.data.success === false) {
+        return rejectWithValue(
+          response.data.message || "Failed to update vehicle"
+        );
+      }
+      return response.data;
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update vehicle"
+      );
+    }
+  }
+);
+
+export const deleteVehicle = createAsyncThunk(
+  "booking/deleteVehicle",
+  async (vehicleId: string, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.delete(
+        DELETE_VEHICLE_ENDPOINT(vehicleId)
+      );
+      if (response.data && response.data.success === false) {
+        return rejectWithValue(
+          response.data.message || "Failed to delete vehicle"
+        );
+      }
+      return { vehicleId };
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to delete vehicle"
       );
     }
   }
@@ -303,7 +380,38 @@ const bookingSlice = createSlice({
       })
       .addCase(fetchVehicles.fulfilled, (state, action) => {
         state.loading = false;
-        state.vehicles = action.payload;
+        // Apply local overrides if present
+        const overrides = loadVehicleOverrides();
+        console.log("fetchVehicles.fulfilled - overrides:", overrides);
+        state.vehicles = (action.payload as Vehicle[]).map((v) => {
+          const o = overrides[v._id];
+          if (!o) return v;
+          console.log(`Applying overrides for vehicle ${v._id}:`, o);
+          const currentInfo: any = v.vehicleInfo || {};
+          return {
+            ...v,
+            vehicleInfo: {
+              ...currentInfo,
+              brand: o.brand ?? currentInfo.brand,
+              modelName: o.modelName ?? currentInfo.modelName,
+              batteryType: o.batteryType ?? currentInfo.batteryType,
+              batteryCapacity:
+                o.batteryCapacity !== undefined
+                  ? o.batteryCapacity
+                  : currentInfo.batteryCapacity,
+            },
+          } as unknown as Vehicle;
+        });
+        // Update selectedVehicle if it exists in the updated vehicles
+        if (state.selectedVehicle) {
+          const updatedSelectedVehicle = state.vehicles.find(
+            (v) => v._id === state.selectedVehicle?._id
+          );
+          if (updatedSelectedVehicle) {
+            console.log("Updated selectedVehicle:", updatedSelectedVehicle);
+            state.selectedVehicle = updatedSelectedVehicle;
+          }
+        }
       })
       .addCase(fetchVehicles.rejected, (state, action) => {
         state.loading = false;
@@ -322,6 +430,79 @@ const bookingSlice = createSlice({
       })
       .addCase(createVehicle.rejected, (state, action) => {
         state.createVehicleLoading = false;
+        state.error = action.payload as string;
+      })
+      // Update vehicle
+      .addCase(updateVehicle.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateVehicle.fulfilled, (state, action) => {
+        state.loading = false;
+        const updated: Vehicle = action.payload.data;
+        const idx = state.vehicles.findIndex((v) => v._id === updated._id);
+        if (idx !== -1) {
+          // Apply local overrides to maintain display fields
+          const overrides = loadVehicleOverrides();
+          const o = overrides[updated._id];
+          const currentInfo: any = updated.vehicleInfo || {};
+          state.vehicles[idx] = {
+            ...updated,
+            vehicleInfo: o
+              ? {
+                  ...currentInfo,
+                  brand: o.brand ?? currentInfo.brand,
+                  modelName: o.modelName ?? currentInfo.modelName,
+                  batteryType: o.batteryType ?? currentInfo.batteryType,
+                  batteryCapacity:
+                    o.batteryCapacity !== undefined
+                      ? o.batteryCapacity
+                      : currentInfo.batteryCapacity,
+                }
+              : currentInfo,
+          } as unknown as Vehicle;
+        }
+        if (state.selectedVehicle?._id === updated._id) {
+          const overrides = loadVehicleOverrides();
+          const o = overrides[updated._id];
+          const currentInfo: any = updated.vehicleInfo || {};
+          state.selectedVehicle = (o
+            ? {
+                ...updated,
+                vehicleInfo: {
+                  ...currentInfo,
+                  brand: o.brand ?? currentInfo.brand,
+                  modelName: o.modelName ?? currentInfo.modelName,
+                  batteryType: o.batteryType ?? currentInfo.batteryType,
+                  batteryCapacity:
+                    o.batteryCapacity !== undefined
+                      ? o.batteryCapacity
+                      : currentInfo.batteryCapacity,
+                },
+              }
+            : updated) as unknown as Vehicle;
+        }
+      })
+      .addCase(updateVehicle.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Delete vehicle
+      .addCase(deleteVehicle.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteVehicle.fulfilled, (state, action) => {
+        state.loading = false;
+        const id = action.payload.vehicleId;
+        state.vehicles = state.vehicles.filter((v) => v._id !== id);
+        // Đồng bộ thêm: nếu danh sách còn 0 xe, đảm bảo selectedVehicle rỗng
+        if (state.selectedVehicle?._id === id || state.vehicles.length === 0) {
+          state.selectedVehicle = null;
+        }
+      })
+      .addCase(deleteVehicle.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload as string;
       })
       // Fetch booking service centers

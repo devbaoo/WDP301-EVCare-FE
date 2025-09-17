@@ -52,6 +52,7 @@ const Step3ServiceSelection: React.FC<Step3ServiceSelectionProps> = ({ onNext, o
         }
     }, [dispatch, selectedVehicle?._id]);
 
+
     const filteredServices = compatibleServices.filter(service => {
         const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -174,7 +175,7 @@ const Step3ServiceSelection: React.FC<Step3ServiceSelectionProps> = ({ onNext, o
             <div className="text-center">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Chọn dịch vụ</h2>
                 <p className="text-gray-600">
-                    Dịch vụ tương thích với {selectedVehicle?.vehicleInfo.vehicleModel.brand} {selectedVehicle?.vehicleInfo.vehicleModel.modelName}
+                    Dịch vụ tương thích với {(selectedVehicle?.vehicleInfo as any)?.brand || selectedVehicle?.vehicleInfo.vehicleModel.brand} {(selectedVehicle?.vehicleInfo as any)?.modelName || selectedVehicle?.vehicleInfo.vehicleModel.modelName}
                 </p>
             </div>
 
