@@ -91,18 +91,18 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
   const handleFinish = (values: any) => {
     try {
       const days = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"] as const;
-      const operatingHours: Record<string, { open: string; close: string }> = {};
-      days.forEach((d) => {
-        const isOpen = values[`operatingHours_${d}_isOpen`];
+      const operatingHours = days.reduce((acc: any, d) => {
+        const isOpen = !!values[`operatingHours_${d}_isOpen`];
         const range = values[`operatingHours_${d}_range`];
-        if (isOpen && Array.isArray(range) && range.length === 2) {
-          const open = range[0]?.format ? range[0].format('HH:mm') : '';
-          const close = range[1]?.format ? range[1].format('HH:mm') : '';
-          if (open && close) operatingHours[d] = { open, close };
-        }
-      });
+        const open = (Array.isArray(range) && range[0]?.format) ? range[0].format('HH:mm') : '';
+        const close = (Array.isArray(range) && range[1]?.format) ? range[1].format('HH:mm') : '';
+        acc[d] = { open, close, isOpen };
+        return acc;
+      }, {} as any);
       const staff = values.staffJson ? JSON.parse(values.staffJson) : [];
-      const images = Array.isArray(values.imagesUrls) ? (values.imagesUrls as string[]).filter(Boolean) : [];
+      const images = Array.isArray(values.imagesUrls)
+        ? (values.imagesUrls as string[]).filter(Boolean).map((url) => ({ url, caption: '', isPrimary: false }))
+        : [];
       const paymentMethods = Array.isArray(values.paymentMethodsSelection)
         ? (values.paymentMethodsSelection as string[]).map((t) => ({ type: t, isEnabled: true }))
         : [];
@@ -121,6 +121,7 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
           ward: values.addressWard,
           district: values.addressDistrict,
           city: values.addressCity,
+          coordinates: { lat: 0, lng: 0 },
         },
         contact: {
           phone: values.contactPhone,
