@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { Form, Input, Select, Row, Col, Button, Divider } from 'antd';
 import { ServiceCenterCreatePayload, ServiceCenterUpdatePayload, ServiceCenter } from '@/interfaces/serviceCenter';
+import { useAppDispatch, useAppSelector } from '@/services/store/store';
+import { fetchServiceTypes } from '@/services/features/admin/seviceSlice';
 
 type Mode = 'create' | 'edit';
 
@@ -19,8 +21,12 @@ const wrapperCol = { span: 24 } as const;
 
 const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValues, loading, onSubmit, onCancel }) => {
   const [form] = Form.useForm();
+  const dispatch = useAppDispatch();
+  const { items: serviceTypeItems, loading: servicesLoading } = useAppSelector((state) => state.adminService);
 
   useEffect(() => {
+    // Load service types for selection
+    dispatch(fetchServiceTypes({ page: 1, limit: 1000 }));
     if (initialValues) {
       const sc = initialValues as any;
       form.setFieldsValue({
@@ -37,7 +43,11 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
         contactEmail: sc.contact?.email || '',
         contactWebsite: sc.contact?.website || '',
         operatingHoursJson: JSON.stringify(sc.operatingHours || {}, null, 2),
-        servicesCsv: Array.isArray(sc.services) ? (typeof sc.services[0] === 'string' ? (sc.services as string[]).join(',') : (sc.services as any[]).map((s: any) => s._id).join(',')) : '',
+        servicesIds: Array.isArray(sc.services)
+          ? (typeof sc.services[0] === 'string'
+              ? (sc.services as string[])
+              : (sc.services as any[]).map((s: any) => s._id))
+          : [],
         staffJson: JSON.stringify(Array.isArray(sc.staff) ? (sc.staff as any[]).map((s: any) => ({ user: s.user?._id || s.user, role: s.role, isActive: s.isActive })) : [], null, 2),
         imagesJson: JSON.stringify(sc.images || [], null, 2),
         capacityMaxConcurrentServices: sc.capacity?.maxConcurrentServices ?? undefined,
@@ -50,7 +60,7 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
     } else {
       form.resetFields();
     }
-  }, [initialValues, form]);
+  }, [initialValues, form, dispatch]);
 
   const handleFinish = (values: any) => {
     try {
@@ -59,7 +69,7 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
       const images = values.imagesJson ? JSON.parse(values.imagesJson) : [];
       const paymentMethods = values.paymentMethodsJson ? JSON.parse(values.paymentMethodsJson) : [];
       const aiSettings = values.aiSettingsJson ? JSON.parse(values.aiSettingsJson) : {};
-      const services = values.servicesCsv ? (values.servicesCsv as string).split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+      const services = Array.isArray(values.servicesIds) ? values.servicesIds : [];
 
       const basePayload = {
         name: values.name,
@@ -163,8 +173,14 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
 
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item label="Dịch vụ (IDs, cách nhau bằng ,)" name="servicesCsv">
-            <Input placeholder="id1,id2,id3" />
+          <Form.Item label="Dịch vụ" name="servicesIds" rules={[{ required: true, message: 'Chọn ít nhất 1 dịch vụ' }]}>
+            <Select
+              mode="multiple"
+              placeholder="Chọn dịch vụ cung cấp"
+              loading={servicesLoading}
+              optionFilterProp="label"
+              options={(serviceTypeItems || []).map((s: any) => ({ label: s.name, value: s._id }))}
+            />
           </Form.Item>
         </Col>
         <Col span={12}>
