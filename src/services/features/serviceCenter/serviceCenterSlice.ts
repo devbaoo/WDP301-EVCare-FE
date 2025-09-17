@@ -5,11 +5,16 @@ import {
   SERVICE_CENTERS_ENDPOINT,
   SERVICE_CENTER_DETAIL_ENDPOINT,
   SERVICE_CENTER_NEARBY_ENDPOINT,
+  SERVICE_CENTER_CREATE_ENDPOINT,
+  SERVICE_CENTER_UPDATE_ENDPOINT,
+  SERVICE_CENTER_DELETE_ENDPOINT,
 } from "../../constant/apiConfig";
 import {
   ServiceCenterState,
   ServiceCentersResponse,
   ServiceCenter,
+  ServiceCenterCreatePayload,
+  ServiceCenterUpdatePayload,
 } from "../../../interfaces/serviceCenter";
 
 // Initial state
@@ -55,6 +60,50 @@ export const fetchServiceCenters = createAsyncThunk<
   }
 );
 
+export const createServiceCenter = createAsyncThunk<
+  ServiceCenter,
+  ServiceCenterCreatePayload,
+  { rejectValue: { message: string } }
+>("serviceCenter/createServiceCenter", async (serviceCenter, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post(SERVICE_CENTER_CREATE_ENDPOINT, serviceCenter);
+    return response.data.data;
+  } catch (err: unknown) {
+    const error = err as any;
+    const message = error.response?.data?.message || error.message || "Tạo trung tâm dịch vụ thất bại";
+    return rejectWithValue({ message });
+  }
+});
+
+export const updateServiceCenter = createAsyncThunk<
+  ServiceCenter,
+  ServiceCenterUpdatePayload,
+  { rejectValue: { message: string } }
+>("serviceCenter/updateServiceCenter", async (serviceCenter, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.put(SERVICE_CENTER_UPDATE_ENDPOINT(serviceCenter._id), serviceCenter);
+    return response.data.data;
+  } catch (err: unknown) {
+    const error = err as any;
+    const message = error.response?.data?.message || error.message || "Cập nhật trung tâm dịch vụ thất bại";
+    return rejectWithValue({ message });
+  }
+});
+
+export const deleteServiceCenter = createAsyncThunk<
+  ServiceCenter,
+  string,
+  { rejectValue: { message: string } }
+>("serviceCenter/deleteServiceCenter", async (id, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.delete(SERVICE_CENTER_DELETE_ENDPOINT(id));
+    return response.data.data;
+  } catch (err: unknown) {
+    const error = err as any;
+    const message = error.response?.data?.message || error.message || "Xóa trung tâm dịch vụ thất bại";
+    return rejectWithValue({ message });
+  }
+});
 export const fetchServiceCenterById = createAsyncThunk<
   ServiceCenter,
   string,
@@ -205,6 +254,51 @@ const serviceCenterSlice = createSlice({
         state.loading = false;
         state.error =
           action.payload?.message || "Lấy danh sách trung tâm gần đây thất bại";
+        message.error(state.error);
+      })
+      // Create service center cases
+      .addCase(createServiceCenter.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createServiceCenter.fulfilled, (state, action) => {
+        state.loading = false;
+        state.serviceCenters.push(action.payload);
+        state.error = null;
+      })
+      .addCase(createServiceCenter.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Tạo trung tâm dịch vụ thất bại";
+        message.error(state.error);
+      })
+      // Update service center cases
+      .addCase(updateServiceCenter.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateServiceCenter.fulfilled, (state, action) => {
+        state.loading = false;
+        state.serviceCenters = state.serviceCenters.map((serviceCenter) => serviceCenter._id === action.payload._id ? action.payload : serviceCenter);
+        state.error = null;
+      })
+      .addCase(updateServiceCenter.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Cập nhật trung tâm dịch vụ thất bại";
+        message.error(state.error);
+      })
+      // Delete service center cases
+      .addCase(deleteServiceCenter.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteServiceCenter.fulfilled, (state, action) => {
+        state.loading = false;
+        state.serviceCenters = state.serviceCenters.filter((serviceCenter) => serviceCenter._id !== action.payload._id);
+        state.error = null;
+      })
+      .addCase(deleteServiceCenter.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Xóa trung tâm dịch vụ thất bại";
         message.error(state.error);
       });
   },

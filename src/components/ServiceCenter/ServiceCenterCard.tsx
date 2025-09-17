@@ -15,11 +15,13 @@ import RealTimeStatus from './RealTimeStatus';
 interface ServiceCenterCardProps {
   serviceCenter: ServiceCenter;
   onViewDetails?: (serviceCenter: ServiceCenter) => void;
+  actionsBelowStatus?: React.ReactNode;
 }
 
 const ServiceCenterCard: React.FC<ServiceCenterCardProps> = ({
   serviceCenter,
-  onViewDetails
+  onViewDetails,
+  actionsBelowStatus
 }) => {
   const {
     name,
@@ -150,6 +152,13 @@ const ServiceCenterCard: React.FC<ServiceCenterCardProps> = ({
             {formatOperatingHours()}
           </div>
         </div>
+
+        {/* Actions below status */}
+        {actionsBelowStatus && (
+          <div className="mb-3 px-2 flex justify-end">
+            {actionsBelowStatus}
+          </div>
+        )}
 
         {/* Services & Payment - Combined for better balance */}
         <div className="mt-auto space-y-3">

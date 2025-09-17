@@ -25,6 +25,11 @@ export const SERVICE_CENTERS_ENDPOINT = `${BASE_URL}/api/service-centers`;
 export const SERVICE_CENTER_DETAIL_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/service-centers/${id}`;
 export const SERVICE_CENTER_NEARBY_ENDPOINT = `${BASE_URL}/api/service-centers/nearby/search`;
+export const SERVICE_CENTER_CREATE_ENDPOINT = `${BASE_URL}/api/service-centers`;
+export const SERVICE_CENTER_UPDATE_ENDPOINT = (id: string) =>
+  `${BASE_URL}/api/service-centers/${id}`;
+export const SERVICE_CENTER_DELETE_ENDPOINT = (id: string) =>
+  `${BASE_URL}/api/service-centers/${id}`;
 
 // Vehicle endpoints
 export const VEHICLES_ENDPOINT = `${BASE_URL}/api/vehicles`;
@@ -51,3 +56,11 @@ export const BOOKING_TIME_SLOTS_ENDPOINT = (
 
 //servicetype
 export const SERVICE_TYPE_POPULAR_ENDPOINT = `${BASE_URL}/api/service-types/popular/list`;
+export const SERVICE_TYPE_CREATE_ENDPOINT = `${BASE_URL}/api/service-types`;
+export const SERVICE_TYPE_UPDATE_ENDPOINT = (id: string) =>
+  `${BASE_URL}/api/service-types/${id}`;
+export const SERVICE_TYPE_DELETE_ENDPOINT = (id: string) =>
+  `${BASE_URL}/api/service-types/${id}`;
+export const SERVICE_TYPE_ENDPOINT = `${BASE_URL}/api/service-types`;
+
+

@@ -130,3 +130,48 @@ export interface ServiceCenterState {
   error: string | null;
   selectedServiceCenter: ServiceCenter | null;
 }
+
+// Payloads for create/update requests to the API (client-side)
+export interface ServiceCenterCreatePayload {
+  name: string;
+  description: string;
+  address: {
+    street: string;
+    ward: string;
+    district: string;
+    city: string;
+    coordinates: {
+      lat: number;
+      lng: number;
+    };
+  };
+  contact: {
+    phone: string;
+    email: string;
+    website: string;
+  };
+  operatingHours: WeeklyOperatingHours;
+  services: string[]; // array of service ids
+  staff: Array<{
+    user: string; // user id
+    role: string;
+    isActive: boolean;
+  }>;
+  capacity: Capacity;
+  status: string;
+  images: Array<{
+    url: string;
+    caption: string;
+    isPrimary: boolean;
+  }>;
+  rating: Rating;
+  paymentMethods: Array<{
+    type: string;
+    isEnabled: boolean;
+  }>;
+  aiSettings: AISettings;
+}
+
+export interface ServiceCenterUpdatePayload extends ServiceCenterCreatePayload {
+  _id: string;
+}

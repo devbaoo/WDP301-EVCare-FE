@@ -22,10 +22,16 @@ import { Route, Routes, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/services/store/store";
 import DashboardPage from "@/page/Admin/DashboardPage";
-import UserPage from "@/page/Admin/UserPage";
+
+import AllUserPage from "@/page/Admin/AllUserPage";
+import StaffPage from "@/page/Admin/StaffPage";
 import ServicePage from "@/page/Admin/ServicePage";
+
+import ManageModelPage from "@/page/Admin/ManageModelPage";
+import ManagePackagePage from "@/page/Admin/ManagePackagePage";
 import StatisticPage from "@/page/Admin/StatisticPage";
 import SettingPage from "@/page/Admin/SettingPage";
+import ServiceCentersPages from "@/page/Admin/ServiceCentersPages";
 
 const AppRouter = () => {
     const { isAuthenticated, user, needVerification } = useSelector((state: RootState) => state.auth);
@@ -137,8 +143,14 @@ const AppRouter = () => {
                 <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
                     <Route path="/admin" element={<AdminLayout />}>
                         <Route index element={<DashboardPage />} />
-                        <Route path="users" element={<UserPage />} />
-                        <Route path="services" element={<ServicePage />} />
+                       
+                        <Route path="users/all" element={<AllUserPage />} />
+                        <Route path="users/staff" element={<StaffPage />} />
+                        
+                        <Route path="services/manage" element={<ServicePage />} />
+                        <Route path="services/model" element={<ManageModelPage />} />
+                        <Route path="services/package" element={<ManagePackagePage />} />
+                        <Route path="service-centers" element={<ServiceCentersPages />} />
                         <Route path="statistics" element={<StatisticPage />} />
                         <Route path="settings" element={<SettingPage />} />
                     </Route>

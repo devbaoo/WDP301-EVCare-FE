@@ -47,6 +47,7 @@ export default function VerifyEmailSuccessPage() {
     }, [dispatch, navigate, token]);
 
     const handleBackToLogin = () => {
+        localStorage.clear();
         navigate("/login");
     };
 
