@@ -7,6 +7,7 @@ import ResetPasswordPage from "../page/Auth/ResetPasswordPage";
 import ServiceCentersPage from "../page/ServiceCenters/ServiceCentersPage";
 import ServiceCenterDetailPage from "../page/ServiceCenterDetail/ServiceCenterDetailPage";
 import ProfileCustomer from "@/page/Customer/ProfileCustomer";
+import BookingPage from "@/page/Booking/BookingPage";
 import UnauthorizedPage from "@/page/Error/UnauthorizedPage";
 import NotFoundPage from "@/page/Error/NotFoundPage";
 import ProtectedRoute from "@/components/ProtectedRoute/ProtectedRoute";
@@ -64,12 +65,12 @@ const AppRouter = () => {
                 {/* Public verification routes */}
                 <Route path="/verify-email/:token" element={<VerifyEmailSuccessPage />} />
                 <Route path="/verify-email" element={<ResendVerificationPage />} />
-            {/* Auth Routes - Only accessible when not authenticated */}
-            <Route element={!isAuthenticated ? <AuthLayout /> : <Navigate to={getInitialRoute()} />}>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-            </Route>
+                {/* Auth Routes - Only accessible when not authenticated */}
+                <Route element={!isAuthenticated ? <AuthLayout /> : <Navigate to={getInitialRoute()} />}>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+                </Route>
                 {/* Home Route - Only accessible for guests and verified customers */}
                 <Route path="/" element={
                     isAuthenticated && user?.role === "customer" && needVerification ?
@@ -113,6 +114,7 @@ const AppRouter = () => {
                         <Route path="/customer/profile" element={<ProfileCustomer />} />
                         <Route path="/customer/service-centers" element={<ServiceCentersPage />} />
                         <Route path="/customer/service-centers/:id" element={<ServiceCenterDetailPage />} />
+                        <Route path="/booking" element={<BookingPage />} />
                     </Route>
                 </Route>
 

@@ -31,25 +31,34 @@ export const fetchServiceCenters = createAsyncThunk<
   ServiceCentersResponse,
   { page?: number; limit?: number; search?: string },
   { rejectValue: { message: string } }
->("serviceCenter/fetchServiceCenters", async (params = {}, { rejectWithValue }) => {
-  try {
-    const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append("page", params.page.toString());
-    if (params.limit) queryParams.append("limit", params.limit.toString());
-    if (params.search) queryParams.append("search", params.search);
+>(
+  "serviceCenter/fetchServiceCenters",
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params.page) queryParams.append("page", params.page.toString());
+      if (params.limit) queryParams.append("limit", params.limit.toString());
+      if (params.search) queryParams.append("search", params.search);
 
-    const url = queryParams.toString() 
-      ? `${SERVICE_CENTERS_ENDPOINT}?${queryParams.toString()}`
-      : SERVICE_CENTERS_ENDPOINT;
+      const url = queryParams.toString()
+        ? `${SERVICE_CENTERS_ENDPOINT}?${queryParams.toString()}`
+        : SERVICE_CENTERS_ENDPOINT;
 
-    const response = await axiosInstance.get(url);
-    return response.data;
-  } catch (err: unknown) {
-    const error = err as any;
-    const message = error.response?.data?.message || error.message || "Lấy danh sách trung tâm dịch vụ thất bại";
-    return rejectWithValue({ message });
+      const response = await axiosInstance.get(url);
+      return response.data;
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Lấy danh sách trung tâm dịch vụ thất bại";
+      return rejectWithValue({ message });
+    }
   }
-});
+);
 
 export const createServiceCenter = createAsyncThunk<
   ServiceCenter,
@@ -101,11 +110,19 @@ export const fetchServiceCenterById = createAsyncThunk<
   { rejectValue: { message: string } }
 >("serviceCenter/fetchServiceCenterById", async (id, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.get(SERVICE_CENTER_DETAIL_ENDPOINT(id));
+    const response = await axiosInstance.get(
+      SERVICE_CENTER_DETAIL_ENDPOINT(id)
+    );
     return response.data.data;
   } catch (err: unknown) {
-    const error = err as any;
-    const message = error.response?.data?.message || error.message || "Lấy thông tin trung tâm dịch vụ thất bại";
+    const error = err as {
+      response?: { data?: { message?: string } };
+      message?: string;
+    };
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Lấy thông tin trung tâm dịch vụ thất bại";
     return rejectWithValue({ message });
   }
 });
@@ -114,50 +131,61 @@ export const fetchNearbyServiceCenters = createAsyncThunk<
   ServiceCentersResponse,
   { lat: number; lng: number; radius?: number },
   { rejectValue: { message: string } }
->("serviceCenter/fetchNearbyServiceCenters", async (params, { rejectWithValue }) => {
-  try {
-    const queryParams = new URLSearchParams();
-    queryParams.append("lat", params.lat.toString());
-    queryParams.append("lng", params.lng.toString());
-    if (params.radius) queryParams.append("radius", params.radius.toString());
+>(
+  "serviceCenter/fetchNearbyServiceCenters",
+  async (params, { rejectWithValue }) => {
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append("lat", params.lat.toString());
+      queryParams.append("lng", params.lng.toString());
+      if (params.radius) queryParams.append("radius", params.radius.toString());
 
-    // Use fetch for nearby search to avoid CORS issues
-    const response = await fetch(`${SERVICE_CENTER_NEARBY_ENDPOINT}?${queryParams.toString()}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    
-    // API nearby search returns array directly, not wrapped in data object
-    const serviceCenters = Array.isArray(data) ? data : data.data || [];
-    
-    return {
-      success: true,
-      message: "Lấy danh sách trung tâm gần đây thành công",
-      data: {
-        serviceCenters: serviceCenters,
-        pagination: {
-          currentPage: 1,
-          totalPages: 1,
-          totalItems: serviceCenters.length,
-          itemsPerPage: serviceCenters.length
+      // Use fetch for nearby search to avoid CORS issues
+      const response = await fetch(
+        `${SERVICE_CENTER_NEARBY_ENDPOINT}?${queryParams.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
-  } catch (err: unknown) {
-    const error = err as any;
-    const message = error.response?.data?.message || error.message || "Failed to fetch nearby service centers";
-    return rejectWithValue({ message });
+
+      const data = await response.json();
+
+      // API nearby search returns array directly, not wrapped in data object
+      const serviceCenters = Array.isArray(data) ? data : data.data || [];
+
+      return {
+        success: true,
+        message: "Lấy danh sách trung tâm gần đây thành công",
+        data: {
+          serviceCenters: serviceCenters,
+          pagination: {
+            currentPage: 1,
+            totalPages: 1,
+            totalItems: serviceCenters.length,
+            itemsPerPage: serviceCenters.length,
+          },
+        },
+      };
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch nearby service centers";
+      return rejectWithValue({ message });
+    }
   }
-});
+);
 
 // Service Center slice
 const serviceCenterSlice = createSlice({
@@ -190,7 +218,8 @@ const serviceCenterSlice = createSlice({
       })
       .addCase(fetchServiceCenters.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || "Lấy danh sách trung tâm dịch vụ thất bại";
+        state.error =
+          action.payload?.message || "Lấy danh sách trung tâm dịch vụ thất bại";
         message.error(state.error);
       })
       // Fetch service center by ID cases
@@ -205,7 +234,8 @@ const serviceCenterSlice = createSlice({
       })
       .addCase(fetchServiceCenterById.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || "Lấy thông tin trung tâm dịch vụ thất bại";
+        state.error =
+          action.payload?.message || "Lấy thông tin trung tâm dịch vụ thất bại";
         message.error(state.error);
       })
       // Fetch nearby service centers cases
@@ -222,7 +252,8 @@ const serviceCenterSlice = createSlice({
       })
       .addCase(fetchNearbyServiceCenters.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || "Lấy danh sách trung tâm gần đây thất bại";
+        state.error =
+          action.payload?.message || "Lấy danh sách trung tâm gần đây thất bại";
         message.error(state.error);
       })
       // Create service center cases
@@ -273,5 +304,9 @@ const serviceCenterSlice = createSlice({
   },
 });
 
-export const { clearError, setSelectedServiceCenter, clearSelectedServiceCenter } = serviceCenterSlice.actions;
+export const {
+  clearError,
+  setSelectedServiceCenter,
+  clearSelectedServiceCenter,
+} = serviceCenterSlice.actions;
 export default serviceCenterSlice.reducer;
