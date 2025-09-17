@@ -48,7 +48,6 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
     const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
     const [paymentPreference, setPaymentPreference] = useState<'online' | 'offline'>('offline');
 
-
     const priorityOptions = [
         { value: 'low', label: 'Thấp', color: 'green' },
         { value: 'medium', label: 'Trung bình', color: 'blue' },
@@ -343,7 +342,7 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                     <div>
                         <span className="text-gray-600">Xe:</span>
                         <span className="font-medium ml-2">
-                            {(selectedVehicle?.vehicleInfo as any)?.brand || selectedVehicle?.vehicleInfo.vehicleModel.brand} {(selectedVehicle?.vehicleInfo as any)?.modelName || selectedVehicle?.vehicleInfo.vehicleModel.modelName}
+                            {selectedVehicle?.vehicleInfo.vehicleModel.brand} {selectedVehicle?.vehicleInfo.vehicleModel.modelName}
                         </span>
                     </div>
                     <div>

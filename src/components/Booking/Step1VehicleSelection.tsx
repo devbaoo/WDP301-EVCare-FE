@@ -35,34 +35,8 @@ const Step1VehicleSelection: React.FC<Step1VehicleSelectionProps> = ({ onNext })
 
     useEffect(() => {
         if (user?.id) {
-            console.log('Step1VehicleSelection: Initial fetch vehicles');
             dispatch(fetchVehicles());
         }
-    }, [dispatch, user?.id]);
-
-    // Refetch vehicles when component becomes visible (user returns from other pages)
-    useEffect(() => {
-        const handleVisibilityChange = () => {
-            if (!document.hidden && user?.id) {
-                console.log('Refetching vehicles due to visibility change');
-                dispatch(fetchVehicles());
-            }
-        };
-
-        const handleFocus = () => {
-            if (user?.id) {
-                console.log('Refetching vehicles due to window focus');
-                dispatch(fetchVehicles());
-            }
-        };
-
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        window.addEventListener('focus', handleFocus);
-
-        return () => {
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            window.removeEventListener('focus', handleFocus);
-        };
     }, [dispatch, user?.id]);
 
     useEffect(() => {
@@ -168,13 +142,13 @@ const Step1VehicleSelection: React.FC<Step1VehicleSelectionProps> = ({ onNext })
                                         </div>
                                         <div>
                                             <h4 className="font-semibold text-gray-900">
-                                                {(vehicle.vehicleInfo as any)?.brand || vehicle.vehicleInfo.vehicleModel.brand} {(vehicle.vehicleInfo as any)?.modelName || vehicle.vehicleInfo.vehicleModel.modelName}
+                                                {vehicle.vehicleInfo.vehicleModel.brand} {vehicle.vehicleInfo.vehicleModel.modelName}
                                             </h4>
                                             <p className="text-sm text-gray-600">
                                                 {vehicle.vehicleInfo.licensePlate} • {vehicle.vehicleInfo.year}
                                             </p>
                                             <p className="text-xs text-gray-500">
-                                                {vehicle.vehicleInfo.color} • {(vehicle.vehicleInfo as any)?.batteryType || vehicle.vehicleInfo.vehicleModel.batteryType}
+                                                {vehicle.vehicleInfo.color} • {vehicle.vehicleInfo.vehicleModel.batteryType}
                                             </p>
                                         </div>
                                     </div>
