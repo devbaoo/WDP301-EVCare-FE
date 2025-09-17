@@ -2,7 +2,8 @@ import Header from '@/components/Header/Header';
 import { motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/services/store/store';
-import { createVehicle, fetchVehicles, updateVehicle, deleteVehicle, mergeLocalVehicleFields } from '@/services/features/vehicle/vehicleSlice';
+import { createVehicle, fetchVehicles, updateVehicle, deleteVehicle } from '@/services/features/vehicle/vehicleSlice';
+import { fetchVehicles as fetchVehiclesBooking } from '@/services/features/booking/bookingSlice';
 import type { CreateVehicleData, Vehicle } from '@/interfaces/vehicle';
 import axiosInstance from '@/services/constant/axiosInstance';
 import { VEHICLE_BRANDS_ENDPOINT } from '@/services/constant/apiConfig';
@@ -47,6 +48,17 @@ function ManageVehiclesCustomer() {
     const [formError, setFormError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
+    const [editFieldErrors, setEditFieldErrors] = useState<Record<string, string>>({});
+
+    // Local overrides loader (fallback to ensure values persist across reloads)
+    const loadOverrides = () => {
+        try {
+            const raw = localStorage.getItem('vehicle_overrides_v1');
+            return raw ? (JSON.parse(raw) as Record<string, any>) : {};
+        } catch {
+            return {} as Record<string, any>;
+        }
+    };
 
     useEffect(() => {
         dispatch(fetchVehicles());
@@ -140,10 +152,13 @@ function ManageVehiclesCustomer() {
         setEditYear(v.vehicleInfo?.year || new Date().getFullYear());
         const vi: any = v.vehicleInfo || {};
         const vm: any = vi.vehicleModel || {};
-        setEditBrand(vm.brand || vi.brand || '');
-        setEditModelName(vm.modelName || vi.modelName || '');
-        setEditBatteryType(vm.batteryType || vi.batteryType || '');
-        setEditBatteryCapacity(String(vm.batteryCapacity || vi.batteryCapacity || ''));
+        // Prefer local overrides if available, then vehicleInfo, then vehicleModel
+        const overrides = loadOverrides();
+        const o = overrides[v._id] || {};
+        setEditBrand(o.brand ?? vi.brand ?? vm.brand ?? '');
+        setEditModelName(o.modelName ?? vi.modelName ?? vm.modelName ?? '');
+        setEditBatteryType(o.batteryType ?? vi.batteryType ?? vm.batteryType ?? '');
+        setEditBatteryCapacity(String((o.batteryCapacity ?? vi.batteryCapacity ?? vm.batteryCapacity ?? '')));
         // notes không còn dùng
         setIsEditOpen(true);
     };
@@ -161,15 +176,23 @@ function ManageVehiclesCustomer() {
 
     const saveEdit = async () => {
         if (!selectedVehicle) return;
-        // Basic validation
-        if (!editPlate) {
-            alert('Vui lòng nhập biển số');
-            return;
-        }
+        // Validation giống như add form
+        const errors: Record<string, string> = {};
+        if (!editBrand) errors.brand = 'Bắt buộc';
+        if (!editModelName) errors.modelName = 'Bắt buộc';
+        if (!editPlate) errors.licensePlate = 'Bắt buộc';
+        if (!editColor) errors.color = 'Bắt buộc';
+        if (!editBatteryType) errors.batteryType = 'Bắt buộc';
+        if (!editBatteryCapacity) errors.batteryCapacity = 'Bắt buộc';
         if (editYear < 1970 || editYear > new Date().getFullYear() + 1) {
-            alert('Năm sản xuất không hợp lệ');
+            errors.year = 'Năm không hợp lệ';
+        }
+
+        if (Object.keys(errors).length > 0) {
+            setEditFieldErrors(errors);
             return;
         }
+        setEditFieldErrors({});
         setEditSaving(true);
         const parsedCapacity = editBatteryCapacity !== '' && !Number.isNaN(Number(editBatteryCapacity))
             ? Number(editBatteryCapacity)
@@ -185,18 +208,32 @@ function ManageVehiclesCustomer() {
         if ((action as any).error) {
             alert((action as any).payload || 'Cập nhật thất bại');
         } else {
-            // Locally merge display fields so list/detail reflect edits without BE changes
-            dispatch(mergeLocalVehicleFields({
-                vehicleId: selectedVehicle._id,
-                fields: {
+            // Save display fields to localStorage for persistence
+            try {
+                const key = 'vehicle_overrides_v1';
+                const raw = localStorage.getItem(key);
+                const overrides = raw ? JSON.parse(raw) : {};
+                overrides[selectedVehicle._id] = {
+                    ...(overrides[selectedVehicle._id] || {}),
                     brand: editBrand,
                     modelName: editModelName,
                     batteryType: editBatteryType,
-                    batteryCapacity: parsedCapacity as any,
-                },
-            }));
+                    batteryCapacity: parsedCapacity,
+                };
+                console.log('Saving overrides to localStorage:', overrides);
+                localStorage.setItem(key, JSON.stringify(overrides));
+            } catch (e) {
+                console.error('Error saving overrides:', e);
+            }
             setIsEditOpen(false);
-            // No immediate refetch to avoid overwriting local display fields
+            // Refetch both slices to apply overrides
+            console.log('Refetching vehicleSlice...');
+            dispatch(fetchVehicles());
+            // Add small delay to avoid conflicts
+            setTimeout(() => {
+                console.log('Refetching bookingSlice...');
+                dispatch(fetchVehiclesBooking());
+            }, 100);
         }
     };
 
@@ -244,11 +281,13 @@ function ManageVehiclesCustomer() {
                         {vehicles.map((vehicle: Vehicle) => {
                             const v = vehicle.vehicleInfo;
                             const model = v?.vehicleModel as any;
-                            // Ưu tiên các trường lưu trực tiếp trong vehicleInfo để phản ánh cập nhật
-                            const brand = (v as any)?.brand || model?.brand || '';
-                            const modelName = (v as any)?.modelName || model?.modelName || '';
-                            const batteryType = (v as any)?.batteryType || model?.batteryType || '';
-                            const batteryCapacity = (v as any)?.batteryCapacity || model?.batteryCapacity || '';
+                            // Merge local overrides (if any) to ensure persistence across reloads
+                            const overrides = loadOverrides();
+                            const o = overrides[vehicle._id] || {};
+                            const brand = o.brand ?? (v as any)?.brand ?? model?.brand ?? '';
+                            const modelName = o.modelName ?? (v as any)?.modelName ?? model?.modelName ?? '';
+                            const batteryType = o.batteryType ?? (v as any)?.batteryType ?? model?.batteryType ?? '';
+                            const batteryCapacity = o.batteryCapacity ?? (v as any)?.batteryCapacity ?? model?.batteryCapacity ?? '';
                             const status = vehicle.currentStatus?.isActive ? 'Đang hoạt động' : 'Không hoạt động';
                             return (
                                 <div key={vehicle._id} className="rounded-3xl border border-primary/10 bg-gradient-to-br from-white via-white to-primary/5 shadow-sm overflow-hidden">
@@ -488,13 +527,18 @@ function ManageVehiclesCustomer() {
                             </div>
                         </div>
                         <div className="p-6 space-y-6">
+                            {Object.keys(editFieldErrors).length > 0 && (
+                                <div className="rounded-md border border-red-200 bg-red-50 px-4 py-2 text-red-700">
+                                    Vui lòng điền đầy đủ thông tin bắt buộc
+                                </div>
+                            )}
                             {/* Thống nhất label/field giống form Add. Tất cả các ô đều chỉnh sửa được theo yêu cầu */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {/* Hãng xe */}
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Hãng xe</label>
                                     <select
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${editFieldErrors.brand ? 'border-red-400' : 'border-gray-300'}`}
                                         value={editBrand}
                                         onChange={(e) => setEditBrand(e.target.value)}
                                     >
@@ -503,36 +547,70 @@ function ManageVehiclesCustomer() {
                                             <option key={b} value={b}>{b}</option>
                                         ))}
                                     </select>
+                                    {editFieldErrors.brand && <p className="mt-1 text-xs text-red-600">{editFieldErrors.brand}</p>}
                                 </div>
                                 {/* Dòng xe */}
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Dòng xe</label>
-                                    <input value={editModelName} onChange={(e) => setEditModelName(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                    <input
+                                        value={editModelName}
+                                        onChange={(e) => setEditModelName(e.target.value)}
+                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${editFieldErrors.modelName ? 'border-red-400' : 'border-gray-300'}`}
+                                    />
+                                    {editFieldErrors.modelName && <p className="mt-1 text-xs text-red-600">{editFieldErrors.modelName}</p>}
                                 </div>
                                 {/* Năm sản xuất */}
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Năm sản xuất</label>
-                                    <input type="number" value={editYear} min={1970} max={new Date().getFullYear() + 1} onChange={(e) => setEditYear(Number(e.target.value))} className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                    <input
+                                        type="number"
+                                        value={editYear}
+                                        min={1970}
+                                        max={new Date().getFullYear() + 1}
+                                        onChange={(e) => setEditYear(Number(e.target.value))}
+                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${editFieldErrors.year ? 'border-red-400' : 'border-gray-300'}`}
+                                    />
+                                    {editFieldErrors.year && <p className="mt-1 text-xs text-red-600">{editFieldErrors.year}</p>}
                                 </div>
                                 {/* Biển số */}
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Biển số</label>
-                                    <input value={editPlate} onChange={(e) => setEditPlate(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                    <input
+                                        value={editPlate}
+                                        onChange={(e) => setEditPlate(e.target.value)}
+                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${editFieldErrors.licensePlate ? 'border-red-400' : 'border-gray-300'}`}
+                                    />
+                                    {editFieldErrors.licensePlate && <p className="mt-1 text-xs text-red-600">{editFieldErrors.licensePlate}</p>}
                                 </div>
                                 {/* Màu xe */}
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Màu xe</label>
-                                    <input value={editColor} onChange={(e) => setEditColor(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                    <input
+                                        value={editColor}
+                                        onChange={(e) => setEditColor(e.target.value)}
+                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${editFieldErrors.color ? 'border-red-400' : 'border-gray-300'}`}
+                                    />
+                                    {editFieldErrors.color && <p className="mt-1 text-xs text-red-600">{editFieldErrors.color}</p>}
                                 </div>
                                 {/* Loại pin */}
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Loại pin</label>
-                                    <input value={editBatteryType} onChange={(e) => setEditBatteryType(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                    <input
+                                        value={editBatteryType}
+                                        onChange={(e) => setEditBatteryType(e.target.value)}
+                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${editFieldErrors.batteryType ? 'border-red-400' : 'border-gray-300'}`}
+                                    />
+                                    {editFieldErrors.batteryType && <p className="mt-1 text-xs text-red-600">{editFieldErrors.batteryType}</p>}
                                 </div>
                                 {/* Dung lượng pin (kWh) */}
                                 <div className="sm:col-span-2">
                                     <label className="block text-sm font-medium mb-1">Dung lượng pin (kWh)</label>
-                                    <input value={editBatteryCapacity} onChange={(e) => setEditBatteryCapacity(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                    <input
+                                        value={editBatteryCapacity}
+                                        onChange={(e) => setEditBatteryCapacity(e.target.value)}
+                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${editFieldErrors.batteryCapacity ? 'border-red-400' : 'border-gray-300'}`}
+                                    />
+                                    {editFieldErrors.batteryCapacity && <p className="mt-1 text-xs text-red-600">{editFieldErrors.batteryCapacity}</p>}
                                 </div>
                             </div>
                             {/* Các trường currentStatus không cho chỉnh vì BE chưa công bố cập nhật */}

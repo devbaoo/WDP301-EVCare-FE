@@ -8,6 +8,26 @@ import {
 } from "../../constant/apiConfig";
 import type { Vehicle } from "../../../interfaces/vehicle";
 
+// Local overrides for display-only fields that BE doesn't persist
+const VEHICLE_OVERRIDES_KEY = "vehicle_overrides_v1";
+type VehicleOverrideFields = Partial<{
+  brand: string;
+  modelName: string;
+  batteryType: string;
+  batteryCapacity: number | string;
+}>;
+
+function loadVehicleOverrides(): Record<string, VehicleOverrideFields> {
+  try {
+    const raw = localStorage.getItem(VEHICLE_OVERRIDES_KEY);
+    return raw
+      ? (JSON.parse(raw) as Record<string, VehicleOverrideFields>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
 interface VehicleState {
   vehicles: Vehicle[];
   selectedVehicle: Vehicle | null;
@@ -156,7 +176,35 @@ const vehicleSlice = createSlice({
       })
       .addCase(fetchVehicles.fulfilled, (state, action) => {
         state.loading = false;
-        state.vehicles = action.payload;
+        // Apply local overrides if present
+        const overrides = loadVehicleOverrides();
+        state.vehicles = (action.payload as Vehicle[]).map((v) => {
+          const o = overrides[v._id];
+          if (!o) return v;
+          const currentInfo: any = v.vehicleInfo || {};
+          return {
+            ...v,
+            vehicleInfo: {
+              ...currentInfo,
+              brand: o.brand ?? currentInfo.brand,
+              modelName: o.modelName ?? currentInfo.modelName,
+              batteryType: o.batteryType ?? currentInfo.batteryType,
+              batteryCapacity:
+                o.batteryCapacity !== undefined
+                  ? o.batteryCapacity
+                  : currentInfo.batteryCapacity,
+            },
+          } as unknown as Vehicle;
+        });
+        // Update selectedVehicle if it exists in the updated vehicles
+        if (state.selectedVehicle) {
+          const updatedSelectedVehicle = state.vehicles.find(
+            (v) => v._id === state.selectedVehicle?._id
+          );
+          if (updatedSelectedVehicle) {
+            state.selectedVehicle = updatedSelectedVehicle;
+          }
+        }
       })
       .addCase(fetchVehicles.rejected, (state, action) => {
         state.loading = false;
@@ -183,9 +231,46 @@ const vehicleSlice = createSlice({
         state.loading = false;
         const updated: Vehicle = action.payload.data;
         const idx = state.vehicles.findIndex((v) => v._id === updated._id);
-        if (idx !== -1) state.vehicles[idx] = updated;
+        if (idx !== -1) {
+          // Apply local overrides to maintain display fields
+          const overrides = loadVehicleOverrides();
+          const o = overrides[updated._id];
+          const currentInfo: any = updated.vehicleInfo || {};
+          state.vehicles[idx] = {
+            ...updated,
+            vehicleInfo: o
+              ? {
+                  ...currentInfo,
+                  brand: o.brand ?? currentInfo.brand,
+                  modelName: o.modelName ?? currentInfo.modelName,
+                  batteryType: o.batteryType ?? currentInfo.batteryType,
+                  batteryCapacity:
+                    o.batteryCapacity !== undefined
+                      ? o.batteryCapacity
+                      : currentInfo.batteryCapacity,
+                }
+              : currentInfo,
+          } as unknown as Vehicle;
+        }
         if (state.selectedVehicle?._id === updated._id) {
-          state.selectedVehicle = updated;
+          const overrides = loadVehicleOverrides();
+          const o = overrides[updated._id];
+          const currentInfo: any = updated.vehicleInfo || {};
+          state.selectedVehicle = (o
+            ? {
+                ...updated,
+                vehicleInfo: {
+                  ...currentInfo,
+                  brand: o.brand ?? currentInfo.brand,
+                  modelName: o.modelName ?? currentInfo.modelName,
+                  batteryType: o.batteryType ?? currentInfo.batteryType,
+                  batteryCapacity:
+                    o.batteryCapacity !== undefined
+                      ? o.batteryCapacity
+                      : currentInfo.batteryCapacity,
+                },
+              }
+            : updated) as unknown as Vehicle;
         }
       })
       .addCase(updateVehicle.rejected, (state, action) => {

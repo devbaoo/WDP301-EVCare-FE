@@ -22,6 +22,28 @@ import {
   BookingState,
 } from "../../../interfaces/booking";
 
+// Local overrides for display-only fields that BE doesn't persist
+const VEHICLE_OVERRIDES_KEY = "vehicle_overrides_v1";
+type VehicleOverrideFields = Partial<{
+  brand: string;
+  modelName: string;
+  batteryType: string;
+  batteryCapacity: number | string;
+}>;
+function loadVehicleOverrides(): Record<string, VehicleOverrideFields> {
+  try {
+    const raw = localStorage.getItem(VEHICLE_OVERRIDES_KEY);
+    const result = raw
+      ? (JSON.parse(raw) as Record<string, VehicleOverrideFields>)
+      : {};
+    console.log("loadVehicleOverrides result:", result);
+    return result;
+  } catch (e) {
+    console.error("Error loading vehicle overrides:", e);
+    return {};
+  }
+}
+
 // Using BookingState from interfaces/booking.ts
 
 // Using any for error handling like other slices in the project
@@ -348,42 +370,6 @@ const bookingSlice = createSlice({
       state.availableTimeSlots = [];
       state.error = null;
     },
-    mergeLocalVehicleFields: (
-      state,
-      action: PayloadAction<{
-        vehicleId: string;
-        fields: Partial<{
-          brand: string;
-          modelName: string;
-          batteryType: string;
-          batteryCapacity: number | string;
-        }>;
-      }>
-    ) => {
-      const { vehicleId, fields } = action.payload;
-      const idx = state.vehicles.findIndex((v) => v._id === vehicleId);
-      if (idx !== -1) {
-        const current = state.vehicles[idx];
-        const currentInfo: any = current.vehicleInfo || {};
-        state.vehicles[idx] = {
-          ...current,
-          vehicleInfo: {
-            ...currentInfo,
-            // Store display fields directly to reflect edits on UI
-            brand: fields.brand ?? currentInfo.brand,
-            modelName: fields.modelName ?? currentInfo.modelName,
-            batteryType: fields.batteryType ?? currentInfo.batteryType,
-            batteryCapacity:
-              fields.batteryCapacity !== undefined
-                ? fields.batteryCapacity
-                : currentInfo.batteryCapacity,
-          },
-        } as unknown as Vehicle;
-        if (state.selectedVehicle?._id === vehicleId) {
-          state.selectedVehicle = state.vehicles[idx];
-        }
-      }
-    },
   },
   extraReducers: (builder) => {
     builder
@@ -394,7 +380,38 @@ const bookingSlice = createSlice({
       })
       .addCase(fetchVehicles.fulfilled, (state, action) => {
         state.loading = false;
-        state.vehicles = action.payload;
+        // Apply local overrides if present
+        const overrides = loadVehicleOverrides();
+        console.log("fetchVehicles.fulfilled - overrides:", overrides);
+        state.vehicles = (action.payload as Vehicle[]).map((v) => {
+          const o = overrides[v._id];
+          if (!o) return v;
+          console.log(`Applying overrides for vehicle ${v._id}:`, o);
+          const currentInfo: any = v.vehicleInfo || {};
+          return {
+            ...v,
+            vehicleInfo: {
+              ...currentInfo,
+              brand: o.brand ?? currentInfo.brand,
+              modelName: o.modelName ?? currentInfo.modelName,
+              batteryType: o.batteryType ?? currentInfo.batteryType,
+              batteryCapacity:
+                o.batteryCapacity !== undefined
+                  ? o.batteryCapacity
+                  : currentInfo.batteryCapacity,
+            },
+          } as unknown as Vehicle;
+        });
+        // Update selectedVehicle if it exists in the updated vehicles
+        if (state.selectedVehicle) {
+          const updatedSelectedVehicle = state.vehicles.find(
+            (v) => v._id === state.selectedVehicle?._id
+          );
+          if (updatedSelectedVehicle) {
+            console.log("Updated selectedVehicle:", updatedSelectedVehicle);
+            state.selectedVehicle = updatedSelectedVehicle;
+          }
+        }
       })
       .addCase(fetchVehicles.rejected, (state, action) => {
         state.loading = false;
@@ -424,9 +441,46 @@ const bookingSlice = createSlice({
         state.loading = false;
         const updated: Vehicle = action.payload.data;
         const idx = state.vehicles.findIndex((v) => v._id === updated._id);
-        if (idx !== -1) state.vehicles[idx] = updated;
+        if (idx !== -1) {
+          // Apply local overrides to maintain display fields
+          const overrides = loadVehicleOverrides();
+          const o = overrides[updated._id];
+          const currentInfo: any = updated.vehicleInfo || {};
+          state.vehicles[idx] = {
+            ...updated,
+            vehicleInfo: o
+              ? {
+                  ...currentInfo,
+                  brand: o.brand ?? currentInfo.brand,
+                  modelName: o.modelName ?? currentInfo.modelName,
+                  batteryType: o.batteryType ?? currentInfo.batteryType,
+                  batteryCapacity:
+                    o.batteryCapacity !== undefined
+                      ? o.batteryCapacity
+                      : currentInfo.batteryCapacity,
+                }
+              : currentInfo,
+          } as unknown as Vehicle;
+        }
         if (state.selectedVehicle?._id === updated._id) {
-          state.selectedVehicle = updated;
+          const overrides = loadVehicleOverrides();
+          const o = overrides[updated._id];
+          const currentInfo: any = updated.vehicleInfo || {};
+          state.selectedVehicle = (o
+            ? {
+                ...updated,
+                vehicleInfo: {
+                  ...currentInfo,
+                  brand: o.brand ?? currentInfo.brand,
+                  modelName: o.modelName ?? currentInfo.modelName,
+                  batteryType: o.batteryType ?? currentInfo.batteryType,
+                  batteryCapacity:
+                    o.batteryCapacity !== undefined
+                      ? o.batteryCapacity
+                      : currentInfo.batteryCapacity,
+                },
+              }
+            : updated) as unknown as Vehicle;
         }
       })
       .addCase(updateVehicle.rejected, (state, action) => {
@@ -563,7 +617,6 @@ export const {
   updateBookingData,
   clearError,
   resetBooking,
-  mergeLocalVehicleFields,
 } = bookingSlice.actions;
 
 export default bookingSlice.reducer;
