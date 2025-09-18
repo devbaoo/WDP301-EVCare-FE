@@ -59,6 +59,9 @@ export const BOOKING_TIME_SLOTS_ENDPOINT = (
   date: string
 ) =>
   `${BASE_URL}/api/booking/service-centers/${serviceCenterId}/slots?date=${date}`;
+export const MY_BOOKINGS_ENDPOINT = `${BASE_URL}/api/booking/my-bookings`;
+export const BOOKING_DETAILS_ENDPOINT = (bookingId: string) =>
+  `${BASE_URL}/api/booking/${bookingId}`;
 
 //servicetype
 export const SERVICE_TYPE_POPULAR_ENDPOINT = `${BASE_URL}/api/service-types/popular/list`;
@@ -68,5 +71,3 @@ export const SERVICE_TYPE_UPDATE_ENDPOINT = (id: string) =>
 export const SERVICE_TYPE_DELETE_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/service-types/${id}`;
 export const SERVICE_TYPE_ENDPOINT = `${BASE_URL}/api/service-types`;
-
-

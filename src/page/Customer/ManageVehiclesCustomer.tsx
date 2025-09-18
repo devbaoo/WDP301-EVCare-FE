@@ -2,12 +2,13 @@ import Header from '@/components/Header/Header';
 import { motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/services/store/store';
-import { createVehicle, fetchVehicles, updateVehicle, deleteVehicle } from '@/services/features/vehicle/vehicleSlice';
-import { fetchVehicles as fetchVehiclesBooking } from '@/services/features/booking/bookingSlice';
+import { fetchVehicles, createVehicle } from '@/services/features/booking/bookingSlice';
+import { updateVehicle, deleteVehicle } from '@/services/features/vehicle/vehicleSlice';
 import type { CreateVehicleData, Vehicle } from '@/interfaces/vehicle';
 import axiosInstance from '@/services/constant/axiosInstance';
 import { VEHICLE_BRANDS_ENDPOINT } from '@/services/constant/apiConfig';
 import { Car, Badge, Palette, Battery, Hash, Pencil, Trash2, Info } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 function ManageVehiclesCustomer() {
     const dispatch = useAppDispatch();
@@ -33,15 +34,9 @@ function ManageVehiclesCustomer() {
         },
     });
 
-    // Edit form fields (aligned with BE: vehicleInfo fields + currentStatus + notes)
     const [editPlate, setEditPlate] = useState<string>('');
     const [editColor, setEditColor] = useState<string>('');
     const [editYear, setEditYear] = useState<number>(new Date().getFullYear());
-    const [editBrand, setEditBrand] = useState<string>('');
-    const [editModelName, setEditModelName] = useState<string>('');
-    const [editBatteryType, setEditBatteryType] = useState<string>('');
-    const [editBatteryCapacity, setEditBatteryCapacity] = useState<string>('');
-    // Các trường currentStatus (km, %pin, trạng thái) KHÔNG cập nhật vì BE chưa công bố API đó
     const [editSaving, setEditSaving] = useState<boolean>(false);
     const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
 
@@ -49,16 +44,6 @@ function ManageVehiclesCustomer() {
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
     const [editFieldErrors, setEditFieldErrors] = useState<Record<string, string>>({});
-
-    // Local overrides loader (fallback to ensure values persist across reloads)
-    const loadOverrides = () => {
-        try {
-            const raw = localStorage.getItem('vehicle_overrides_v1');
-            return raw ? (JSON.parse(raw) as Record<string, any>) : {};
-        } catch {
-            return {} as Record<string, any>;
-        }
-    };
 
     useEffect(() => {
         dispatch(fetchVehicles());
@@ -71,7 +56,6 @@ function ManageVehiclesCustomer() {
                 const data = res?.data?.data ?? [];
                 if (Array.isArray(data)) setBrands(data as string[]);
             } catch (e) {
-                // silent fail; keep free-text entry
             }
         };
         fetchBrands();
@@ -124,11 +108,14 @@ function ManageVehiclesCustomer() {
         setSuccessMsg(null);
         const action = await dispatch(createVehicle(form));
         if ((action as any).error) {
-            setFormError((action as any).payload || 'Không thể thêm xe.');
+            const msg = (action as any).payload || 'Không thể thêm xe.';
+            setFormError(msg);
+            toast.error(msg);
         } else {
-            setSuccessMsg('Thêm xe thành công!');
+            const msg = 'Thêm xe thành công!';
+            setSuccessMsg(msg);
+            toast.success(msg);
             setIsAddOpen(false);
-            // Đồng bộ lại danh sách từ BE để tránh trạng thái lệch
             dispatch(fetchVehicles());
         }
     };
@@ -146,20 +133,9 @@ function ManageVehiclesCustomer() {
     };
     const openEdit = (v: Vehicle) => {
         setSelectedVehicle(v);
-        // prefill editable fields from BE model
         setEditPlate(v.vehicleInfo?.licensePlate || '');
         setEditColor(v.vehicleInfo?.color || '');
         setEditYear(v.vehicleInfo?.year || new Date().getFullYear());
-        const vi: any = v.vehicleInfo || {};
-        const vm: any = vi.vehicleModel || {};
-        // Prefer local overrides if available, then vehicleInfo, then vehicleModel
-        const overrides = loadOverrides();
-        const o = overrides[v._id] || {};
-        setEditBrand(o.brand ?? vi.brand ?? vm.brand ?? '');
-        setEditModelName(o.modelName ?? vi.modelName ?? vm.modelName ?? '');
-        setEditBatteryType(o.batteryType ?? vi.batteryType ?? vm.batteryType ?? '');
-        setEditBatteryCapacity(String((o.batteryCapacity ?? vi.batteryCapacity ?? vm.batteryCapacity ?? '')));
-        // notes không còn dùng
         setIsEditOpen(true);
     };
     const openDelete = (v: Vehicle) => {
@@ -176,14 +152,9 @@ function ManageVehiclesCustomer() {
 
     const saveEdit = async () => {
         if (!selectedVehicle) return;
-        // Validation giống như add form
         const errors: Record<string, string> = {};
-        if (!editBrand) errors.brand = 'Bắt buộc';
-        if (!editModelName) errors.modelName = 'Bắt buộc';
         if (!editPlate) errors.licensePlate = 'Bắt buộc';
         if (!editColor) errors.color = 'Bắt buộc';
-        if (!editBatteryType) errors.batteryType = 'Bắt buộc';
-        if (!editBatteryCapacity) errors.batteryCapacity = 'Bắt buộc';
         if (editYear < 1970 || editYear > new Date().getFullYear() + 1) {
             errors.year = 'Năm không hợp lệ';
         }
@@ -194,57 +165,33 @@ function ManageVehiclesCustomer() {
         }
         setEditFieldErrors({});
         setEditSaving(true);
-        const parsedCapacity = editBatteryCapacity !== '' && !Number.isNaN(Number(editBatteryCapacity))
-            ? Number(editBatteryCapacity)
-            : editBatteryCapacity || undefined;
-        // BE persists licensePlate, color, year directly in vehicleInfo; brand/model/battery fields are tied to vehicleModel when adding
         const payload = {
-            'vehicleInfo.licensePlate': editPlate,
-            'vehicleInfo.color': editColor,
-            'vehicleInfo.year': editYear,
-        } as Record<string, unknown>;
+            vehicleInfo: {
+                licensePlate: editPlate,
+                color: editColor,
+                year: editYear,
+            },
+        };
         const action = await dispatch(updateVehicle({ vehicleId: selectedVehicle._id, updateData: payload }));
         setEditSaving(false);
         if ((action as any).error) {
-            alert((action as any).payload || 'Cập nhật thất bại');
+            toast.error((action as any).payload || 'Cập nhật thất bại');
         } else {
-            // Save display fields to localStorage for persistence
-            try {
-                const key = 'vehicle_overrides_v1';
-                const raw = localStorage.getItem(key);
-                const overrides = raw ? JSON.parse(raw) : {};
-                overrides[selectedVehicle._id] = {
-                    ...(overrides[selectedVehicle._id] || {}),
-                    brand: editBrand,
-                    modelName: editModelName,
-                    batteryType: editBatteryType,
-                    batteryCapacity: parsedCapacity,
-                };
-                console.log('Saving overrides to localStorage:', overrides);
-                localStorage.setItem(key, JSON.stringify(overrides));
-            } catch (e) {
-                console.error('Error saving overrides:', e);
-            }
+            toast.success('Cập nhật xe thành công');
             setIsEditOpen(false);
-            // Refetch both slices to apply overrides
-            console.log('Refetching vehicleSlice...');
             dispatch(fetchVehicles());
-            // Add small delay to avoid conflicts
-            setTimeout(() => {
-                console.log('Refetching bookingSlice...');
-                dispatch(fetchVehiclesBooking());
-            }, 100);
         }
     };
 
     const confirmDelete = async () => {
         if (!selectedVehicle) return;
         setDeleteLoading(true);
-        const action = await dispatch(deleteVehicle(selectedVehicle._id));
+        const action = await dispatch(deleteVehicle(selectedVehicle._id)); // Delete từ vehicleSlice
         setDeleteLoading(false);
         if ((action as any).error) {
-            alert((action as any).payload || 'Xóa thất bại');
+            toast.error((action as any).payload || 'Xóa thất bại');
         } else {
+            toast.success('Đã xóa xe');
             setIsDeleteOpen(false);
             dispatch(fetchVehicles());
         }
@@ -271,24 +218,18 @@ function ManageVehiclesCustomer() {
                         <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-red-700">{error}</div>
                     )}
 
-                    {/* Khi chưa có xe, chỉ hiển thị hero phía trên theo yêu cầu */}
-
-                    {/* Vehicles list - single column for premium look */}
+                    {/* Vehicles list */}
                     <div className="grid grid-cols-1 gap-6">
                         {loading && vehicles.length === 0 && (
                             <div className="col-span-full text-center text-synop-gray-medium">Đang tải danh sách xe...</div>
                         )}
                         {vehicles.map((vehicle: Vehicle) => {
                             const v = vehicle.vehicleInfo;
-                            const model = v?.vehicleModel as any;
-                            // Merge local overrides (if any) to ensure persistence across reloads
-                            const overrides = loadOverrides();
-                            const o = overrides[vehicle._id] || {};
-                            const brand = o.brand ?? (v as any)?.brand ?? model?.brand ?? '';
-                            const modelName = o.modelName ?? (v as any)?.modelName ?? model?.modelName ?? '';
-                            const batteryType = o.batteryType ?? (v as any)?.batteryType ?? model?.batteryType ?? '';
-                            const batteryCapacity = o.batteryCapacity ?? (v as any)?.batteryCapacity ?? model?.batteryCapacity ?? '';
-                            const status = vehicle.currentStatus?.isActive ? 'Đang hoạt động' : 'Không hoạt động';
+                            const model = v?.vehicleModel;
+                            const brand = v?.brand ?? model?.brand ?? '';
+                            const modelName = v?.modelName ?? model?.modelName ?? '';
+                            const batteryType = v?.batteryType ?? model?.batteryType ?? '';
+                            const batteryCapacity = v?.batteryCapacity ?? model?.batteryCapacity ?? '';
                             return (
                                 <div key={vehicle._id} className="rounded-3xl border border-primary/10 bg-gradient-to-br from-white via-white to-primary/5 shadow-sm overflow-hidden">
                                     <div className="flex items-start gap-4 p-6">
@@ -304,10 +245,9 @@ function ManageVehiclesCustomer() {
                                                         Biển số • {v?.licensePlate || 'N/A'}
                                                     </p>
                                                 </div>
-                                                <span className={`text-xs px-3 py-1 rounded-full ${vehicle.currentStatus?.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{status}</span>
                                             </div>
 
-                                            {/* Info rows with green accent (chỉ trường công bố từ BE) */}
+                                            {/* Info rows with green accent */}
                                             <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                                 <div className="rounded-2xl bg-green-50/60 border border-green-100 p-4">
                                                     <div className="text-synop-gray-medium uppercase tracking-wide text-xs">NĂM</div>
@@ -462,7 +402,7 @@ function ManageVehiclesCustomer() {
                             <div className="flex items-center justify-end gap-3 pt-2">
                                 <button type="button" onClick={handleCloseAdd} className="rounded-lg border border-gray-300 px-4 py-2 text-synop-gray-medium hover:bg-gray-50">Hủy</button>
                                 <button type="submit" disabled={createVehicleLoading} className="rounded-lg bg-primary px-4 py-2 text-white hover:opacity-90 disabled:opacity-60">
-                                    {createVehicleLoading ? 'Đang lưu...' : 'Lưu xe'}
+                                    {createVehicleLoading ? 'Đang lưu...' : 'Thêm xe'}
                                 </button>
                             </div>
                         </form>
@@ -486,13 +426,12 @@ function ManageVehiclesCustomer() {
                         </div>
                         <div className="p-6 space-y-4">
                             {(() => {
-                                const v = selectedVehicle.vehicleInfo as any;
-                                const model = v?.vehicleModel as any;
+                                const v = selectedVehicle.vehicleInfo;
+                                const model = v?.vehicleModel;
                                 const brand = v?.brand || model?.brand || '';
                                 const modelName = v?.modelName || model?.modelName || '';
                                 const batteryType = v?.batteryType || model?.batteryType || '';
                                 const batteryCapacity = v?.batteryCapacity || model?.batteryCapacity || '';
-                                // status bỏ hiển thị theo yêu cầu
                                 return (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                         <div className="rounded-2xl bg-primary/5 border border-primary/10 p-4"><div className="text-synop-gray-medium">Hãng - Dòng</div><div className="font-medium">{brand} {modelName}</div></div>
@@ -532,35 +471,32 @@ function ManageVehiclesCustomer() {
                                     Vui lòng điền đầy đủ thông tin bắt buộc
                                 </div>
                             )}
-                            {/* Thống nhất label/field giống form Add. Tất cả các ô đều chỉnh sửa được theo yêu cầu */}
+                            {/* Form sửa chỉ hiển thị các trường BE cho phép cập nhật */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {/* Hãng xe */}
+                                {/* Biển số */}
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">Hãng xe</label>
-                                    <select
-                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${editFieldErrors.brand ? 'border-red-400' : 'border-gray-300'}`}
-                                        value={editBrand}
-                                        onChange={(e) => setEditBrand(e.target.value)}
-                                    >
-                                        <option value="">Chọn hãng</option>
-                                        {brands.map((b) => (
-                                            <option key={b} value={b}>{b}</option>
-                                        ))}
-                                    </select>
-                                    {editFieldErrors.brand && <p className="mt-1 text-xs text-red-600">{editFieldErrors.brand}</p>}
-                                </div>
-                                {/* Dòng xe */}
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Dòng xe</label>
+                                    <label className="block text-sm font-medium mb-1">Biển số</label>
                                     <input
-                                        value={editModelName}
-                                        onChange={(e) => setEditModelName(e.target.value)}
-                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${editFieldErrors.modelName ? 'border-red-400' : 'border-gray-300'}`}
+                                        value={editPlate}
+                                        onChange={(e) => setEditPlate(e.target.value)}
+                                        placeholder="VD: 30G-123.45"
+                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${editFieldErrors.licensePlate ? 'border-red-400' : 'border-gray-300'}`}
                                     />
-                                    {editFieldErrors.modelName && <p className="mt-1 text-xs text-red-600">{editFieldErrors.modelName}</p>}
+                                    {editFieldErrors.licensePlate && <p className="mt-1 text-xs text-red-600">{editFieldErrors.licensePlate}</p>}
+                                </div>
+                                {/* Màu xe */}
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Màu xe</label>
+                                    <input
+                                        value={editColor}
+                                        onChange={(e) => setEditColor(e.target.value)}
+                                        placeholder="VD: Trắng"
+                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${editFieldErrors.color ? 'border-red-400' : 'border-gray-300'}`}
+                                    />
+                                    {editFieldErrors.color && <p className="mt-1 text-xs text-red-600">{editFieldErrors.color}</p>}
                                 </div>
                                 {/* Năm sản xuất */}
-                                <div>
+                                <div className="sm:col-span-2">
                                     <label className="block text-sm font-medium mb-1">Năm sản xuất</label>
                                     <input
                                         type="number"
@@ -572,53 +508,13 @@ function ManageVehiclesCustomer() {
                                     />
                                     {editFieldErrors.year && <p className="mt-1 text-xs text-red-600">{editFieldErrors.year}</p>}
                                 </div>
-                                {/* Biển số */}
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Biển số</label>
-                                    <input
-                                        value={editPlate}
-                                        onChange={(e) => setEditPlate(e.target.value)}
-                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${editFieldErrors.licensePlate ? 'border-red-400' : 'border-gray-300'}`}
-                                    />
-                                    {editFieldErrors.licensePlate && <p className="mt-1 text-xs text-red-600">{editFieldErrors.licensePlate}</p>}
-                                </div>
-                                {/* Màu xe */}
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Màu xe</label>
-                                    <input
-                                        value={editColor}
-                                        onChange={(e) => setEditColor(e.target.value)}
-                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${editFieldErrors.color ? 'border-red-400' : 'border-gray-300'}`}
-                                    />
-                                    {editFieldErrors.color && <p className="mt-1 text-xs text-red-600">{editFieldErrors.color}</p>}
-                                </div>
-                                {/* Loại pin */}
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Loại pin</label>
-                                    <input
-                                        value={editBatteryType}
-                                        onChange={(e) => setEditBatteryType(e.target.value)}
-                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${editFieldErrors.batteryType ? 'border-red-400' : 'border-gray-300'}`}
-                                    />
-                                    {editFieldErrors.batteryType && <p className="mt-1 text-xs text-red-600">{editFieldErrors.batteryType}</p>}
-                                </div>
-                                {/* Dung lượng pin (kWh) */}
-                                <div className="sm:col-span-2">
-                                    <label className="block text-sm font-medium mb-1">Dung lượng pin (kWh)</label>
-                                    <input
-                                        value={editBatteryCapacity}
-                                        onChange={(e) => setEditBatteryCapacity(e.target.value)}
-                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${editFieldErrors.batteryCapacity ? 'border-red-400' : 'border-gray-300'}`}
-                                    />
-                                    {editFieldErrors.batteryCapacity && <p className="mt-1 text-xs text-red-600">{editFieldErrors.batteryCapacity}</p>}
-                                </div>
                             </div>
-                            {/* Các trường currentStatus không cho chỉnh vì BE chưa công bố cập nhật */}
-                            {/* Ghi chú đã bỏ theo yêu cầu */}
                         </div>
                         <div className="p-6 border-t border-gray-100 flex items-center justify-end gap-3">
                             <button onClick={closeAllActionModals} className="rounded-lg border border-gray-300 px-4 py-2 text-synop-gray-medium hover:bg-gray-50">Hủy</button>
-                            <button onClick={saveEdit} disabled={editSaving} className="rounded-lg bg-amber-500 px-4 py-2 text-white hover:opacity-90 disabled:opacity-60">{editSaving ? 'Đang lưu...' : 'Lưu'}</button>
+                            <button onClick={saveEdit} disabled={editSaving} className="rounded-lg bg-amber-500 px-4 py-2 text-white hover:opacity-90 disabled:opacity-60">
+                                {editSaving ? 'Đang lưu...' : 'Lưu'}
+                            </button>
                         </div>
                     </motion.div>
                 </div>

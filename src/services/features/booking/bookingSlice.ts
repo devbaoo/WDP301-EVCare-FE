@@ -10,6 +10,8 @@ import {
   BOOKING_TIME_SLOTS_ENDPOINT,
   BOOKING_SERVICE_CENTERS_ENDPOINT,
   SERVICE_CENTER_NEARBY_ENDPOINT,
+  MY_BOOKINGS_ENDPOINT,
+  BOOKING_DETAILS_ENDPOINT,
 } from "../../constant/apiConfig";
 import { Vehicle, CreateVehicleData } from "../../../interfaces/vehicle";
 import {
@@ -41,6 +43,8 @@ const initialState: BookingState = {
   error: null,
   createVehicleLoading: false,
   createBookingLoading: false,
+  myBookings: [],
+  bookingDetails: null,
 };
 
 // Async thunks
@@ -232,6 +236,40 @@ export const createBooking = createAsyncThunk(
   }
 );
 
+// Async thunk for fetching my bookings
+export const fetchMyBookings = createAsyncThunk(
+  "booking/fetchMyBookings",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(MY_BOOKINGS_ENDPOINT);
+      return response.data.data; // Assuming the API returns bookings in `data`
+    } catch (err: unknown) {
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch bookings"
+      );
+    }
+  }
+);
+
+// Async thunk for fetching booking details
+export const fetchBookingDetails = createAsyncThunk(
+  "booking/fetchBookingDetails",
+  async (bookingId: string, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(
+        BOOKING_DETAILS_ENDPOINT(bookingId)
+      );
+      return response.data.data; // Assuming the API returns booking details in `data`
+    } catch (err: unknown) {
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch booking details"
+      );
+    }
+  }
+);
+
 const bookingSlice = createSlice({
   name: "booking",
   initialState,
@@ -407,7 +445,7 @@ const bookingSlice = createSlice({
         state.createBookingLoading = true;
         state.error = null;
       })
-      .addCase(createBooking.fulfilled, (state) => {
+      .addCase(createBooking.fulfilled, (state, action) => {
         state.createBookingLoading = false;
         // Reset booking state after successful creation
         state.currentStep = 1;
@@ -417,9 +455,37 @@ const bookingSlice = createSlice({
         state.selectedService = null;
         state.selectedServicePackage = null;
         state.availableTimeSlots = [];
+        // Fetch updated bookings
+        state.myBookings = action.payload.data.myBookings || state.myBookings;
       })
       .addCase(createBooking.rejected, (state, action) => {
         state.createBookingLoading = false;
+        state.error = action.payload as string;
+      })
+      // Fetch my bookings
+      .addCase(fetchMyBookings.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchMyBookings.fulfilled, (state, action) => {
+        state.loading = false;
+        state.myBookings = action.payload; // Assuming `myBookings` is part of the state
+      })
+      .addCase(fetchMyBookings.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Fetch booking details
+      .addCase(fetchBookingDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchBookingDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        state.bookingDetails = action.payload; // Assuming `bookingDetails` is part of the state
+      })
+      .addCase(fetchBookingDetails.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload as string;
       });
   },

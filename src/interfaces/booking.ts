@@ -150,6 +150,8 @@ export interface BookingState {
   error: string | null;
   createVehicleLoading: boolean;
   createBookingLoading: boolean;
+  myBookings: BookingData[];
+  bookingDetails: BookingData | null;
 }
 
 export interface TimeSlot {
@@ -246,4 +248,19 @@ export interface BookingServiceCenter {
   createdAt: string;
   updatedAt: string;
   __v: number;
+}
+
+// Added Booking interface
+export interface Booking {
+  _id: string;
+  appointmentTime: {
+    date: string;
+  };
+  serviceType?: {
+    name: string;
+  };
+  status: string;
+  serviceDetails?: {
+    description: string;
+  };
 }
