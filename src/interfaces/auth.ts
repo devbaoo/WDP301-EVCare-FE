@@ -62,6 +62,11 @@ export interface UpdatePasswordData {
   newPassword: string;
 }
 
+export interface ChangePasswordData {
+  oldPassword: string;
+  newPassword: string;
+}
+
 export interface UpdateProfileData {
   username?: string;
   fullName?: string;
