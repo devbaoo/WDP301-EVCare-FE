@@ -9,6 +9,7 @@ import {
   RESET_PASSWORD_ENDPOINT,
   RESET_PASSWORD_WITH_TOKEN_ENDPOINT,
   UPDATE_PASSWORD_ENDPOINT,
+  CHANGE_PASSWORD_ENDPOINT,
   VERIFY_RESET_CODE_ENDPOINT,
   LOGOUT_ENDPOINT,
   REFRESH_TOKEN_ENDPOINT,
@@ -22,6 +23,7 @@ import {
   ResetPasswordData,
   ResetPasswordWithTokenData,
   UpdatePasswordData,
+  ChangePasswordData,
 } from "../../../interfaces/auth";
 
 // Initial state
@@ -186,6 +188,24 @@ export const updatePassword = createAsyncThunk<
   }
 });
 
+export const changePassword = createAsyncThunk<
+  { success: boolean; message: string },
+  ChangePasswordData,
+  { rejectValue: { message: string } }
+>("auth/changePassword", async (data, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post(CHANGE_PASSWORD_ENDPOINT, data);
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as any;
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Đổi mật khẩu thất bại";
+    return rejectWithValue({ message });
+  }
+});
+
 export const refreshToken = createAsyncThunk<
   { accessToken: string; refreshToken: string },
   void,
@@ -206,9 +226,9 @@ export const refreshToken = createAsyncThunk<
 
 export const logoutUser = createAsyncThunk<
   { success: boolean; message: string },
-  void,
-  { rejectValue: { message: string } }
->("auth/logoutUser", async (_, { rejectWithValue }) => {
+  { silent?: boolean } | void,
+  { rejectValue: { message: string; silent?: boolean } }
+>("auth/logoutUser", async (options = {}, { rejectWithValue }) => {
   try {
     const response = await axiosInstance.post(LOGOUT_ENDPOINT);
     return response.data;
@@ -216,7 +236,7 @@ export const logoutUser = createAsyncThunk<
     const error = err as any;
     const message =
       error.response?.data?.message || error.message || "Đăng xuất thất bại";
-    return rejectWithValue({ message });
+    return rejectWithValue({ message, silent: (options as any).silent });
   }
 });
 
@@ -398,6 +418,20 @@ const authSlice = createSlice({
         state.error = action.payload?.message || "Cập nhật mật khẩu thất bại";
         message.error(state.error);
       })
+      // Change password cases
+      .addCase(changePassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(changePassword.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(changePassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Đổi mật khẩu thất bại";
+        message.error(state.error);
+      })
       // Refresh token cases
       .addCase(refreshToken.pending, (state) => {
         state.loading = true;
@@ -436,7 +470,7 @@ const authSlice = createSlice({
         localStorage.removeItem("user");
         message.success(action.payload.message);
       })
-      .addCase(logoutUser.rejected, (state) => {
+      .addCase(logoutUser.rejected, (state, action) => {
         state.loading = false;
         // Still logout locally even if API call fails
         state.user = null;
@@ -448,7 +482,9 @@ const authSlice = createSlice({
         localStorage.removeItem("token");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
-        message.error("Đăng xuất thất bại");
+        if (!action.payload?.silent) {
+          message.error("Đăng xuất thất bại");
+        }
       });
   },
 });

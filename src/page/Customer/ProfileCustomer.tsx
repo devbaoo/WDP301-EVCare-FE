@@ -12,7 +12,8 @@ import {
     ExclamationCircleOutlined,
     CrownOutlined,
     TeamOutlined,
-    ToolOutlined
+    ToolOutlined,
+    KeyOutlined
 } from '@ant-design/icons';
 import {
     Card,
@@ -40,6 +41,7 @@ import {
     clearError
 } from '../../services/features/user/userSlice';
 import Header from '../../components/Header/Header';
+import ChangePasswordModal from '../../components/Auth/ChangePasswordModal/ChangePasswordModal';
 
 const { Title, Text } = Typography;
 
@@ -50,6 +52,7 @@ function ProfileCustomer() {
     const [isEditing, setIsEditing] = useState(false);
     const [form] = Form.useForm();
     const [uploading, setUploading] = useState(false);
+    const [changePasswordVisible, setChangePasswordVisible] = useState(false);
 
     useEffect(() => {
         // Load user profile when component mounts
@@ -112,6 +115,14 @@ function ProfileCustomer() {
             setUploading(false);
         }
         return false; // Prevent default upload behavior
+    };
+
+    const handleChangePassword = () => {
+        setChangePasswordVisible(true);
+    };
+
+    const handleChangePasswordSuccess = () => {
+        setChangePasswordVisible(false);
     };
 
     const getRoleColor = (role: string) => {
@@ -352,14 +363,23 @@ function ProfileCustomer() {
                                     }
                                     extra={
                                         !isEditing ? (
-                                            <Button
-                                                type="primary"
-                                                icon={<EditOutlined />}
-                                                onClick={handleEdit}
-                                                className="bg-synop-blue-primary hover:bg-synop-blue-dark border-0 rounded-full px-6 h-10 font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                                            >
-                                                Chỉnh sửa
-                                            </Button>
+                                            <Space>
+                                                <Button
+                                                    icon={<KeyOutlined />}
+                                                    onClick={handleChangePassword}
+                                                    className="bg-orange-500 hover:bg-orange-600 border-0 rounded-full px-6 h-10 font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                                                >
+                                                    Đổi mật khẩu
+                                                </Button>
+                                                <Button
+                                                    type="primary"
+                                                    icon={<EditOutlined />}
+                                                    onClick={handleEdit}
+                                                    className="bg-synop-blue-primary hover:bg-synop-blue-dark border-0 rounded-full px-6 h-10 font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                                                >
+                                                    Chỉnh sửa
+                                                </Button>
+                                            </Space>
                                         ) : (
                                             <Space>
                                                 <Button
@@ -483,6 +503,13 @@ function ProfileCustomer() {
                     </motion.div>
                 </div>
             </div>
+
+            {/* Change Password Modal */}
+            <ChangePasswordModal
+                visible={changePasswordVisible}
+                onCancel={() => setChangePasswordVisible(false)}
+                onSuccess={handleChangePasswordSuccess}
+            />
         </motion.div>
     );
 }
