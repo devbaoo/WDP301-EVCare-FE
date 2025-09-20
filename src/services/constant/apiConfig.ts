@@ -11,6 +11,7 @@ export const RESET_PASSWORD_ENDPOINT = `${BASE_URL}/api/auth/forgot-password`;
 export const RESET_PASSWORD_WITH_TOKEN_ENDPOINT = (token: string) =>
   `${BASE_URL}/api/auth/reset-password/${token}`;
 export const UPDATE_PASSWORD_ENDPOINT = `${BASE_URL}/api/auth/update-password`;
+export const CHANGE_PASSWORD_ENDPOINT = `${BASE_URL}/api/auth/change-password`;
 export const VERIFY_RESET_CODE_ENDPOINT = `${BASE_URL}/api/auth/verify-reset-code`;
 export const LOGOUT_ENDPOINT = `${BASE_URL}/api/auth/logout`;
 export const REFRESH_TOKEN_ENDPOINT = `${BASE_URL}/api/auth/refresh`;
