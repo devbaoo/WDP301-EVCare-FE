@@ -1,4 +1,5 @@
 export const BASE_URL = "https://dolphin-app-pwai8.ondigitalocean.app";
+// export const BASE_URL = "http://localhost:8080";
 
 // Auth endpoints
 export const LOGIN_ENDPOINT = `${BASE_URL}/api/auth/login`;
@@ -72,3 +73,19 @@ export const SERVICE_TYPE_UPDATE_ENDPOINT = (id: string) =>
 export const SERVICE_TYPE_DELETE_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/service-types/${id}`;
 export const SERVICE_TYPE_ENDPOINT = `${BASE_URL}/api/service-types`;
+
+// Payment endpoints
+export const PAYMENT_CREATE_ENDPOINT = (appointmentId: string) =>
+  `${BASE_URL}/api/payment/booking/${appointmentId}`;
+export const PAYMENT_STATUS_ENDPOINT = (paymentId: string) =>
+  `${BASE_URL}/api/payment/${paymentId}/status`;
+export const PAYMENT_SYNC_ENDPOINT = (orderCode: string) =>
+  `${BASE_URL}/api/payment/sync/${orderCode}`;
+export const PAYMENT_CANCEL_ENDPOINT = (paymentId: string) =>
+  `${BASE_URL}/api/payment/${paymentId}/cancel`;
+export const MY_PAYMENTS_ENDPOINT = `${BASE_URL}/api/payment/my-payments`;
+export const PAYMENT_WEBHOOK_ENDPOINT = `${BASE_URL}/api/payment/webhook`;
+export const PAYOS_PAYMENT_INFO_ENDPOINT = (orderCode: string) =>
+  `${BASE_URL}/api/payment/${orderCode}`;
+export const PAYOS_CANCEL_ENDPOINT = (orderCode: string) =>
+  `${BASE_URL}/api/payment/${orderCode}/cancel`;

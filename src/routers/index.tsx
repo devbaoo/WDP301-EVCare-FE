@@ -34,6 +34,9 @@ import ManagePackagePage from "@/page/Admin/ManagePackagePage";
 import StatisticPage from "@/page/Admin/StatisticPage";
 import SettingPage from "@/page/Admin/SettingPage";
 import ServiceCentersPages from "@/page/Admin/ServiceCentersPages";
+import PaymentSuccessPage from "@/page/Payment/PaymentSuccessPage";
+import PaymentFailurePage from "@/page/Payment/PaymentFailurePage";
+import PaymentHistory from "@/components/Payment/PaymentHistory";
 
 const AppRouter = () => {
     const { isAuthenticated, user, needVerification } = useSelector((state: RootState) => state.auth);
@@ -116,6 +119,7 @@ const AppRouter = () => {
                         <Route path="/customer/profile" element={<ProfileCustomer />} />
                         <Route path="/customer/vehicles" element={<ManageVehiclesCustomer />} />
                         <Route path="/customer/bookings" element={<BookingHistory />} />
+                        <Route path="/customer/payments" element={<PaymentHistory />} />
                         <Route path="/customer/service-centers" element={<ServiceCentersPage />} />
                         <Route path="/customer/service-centers/:id" element={<ServiceCenterDetailPage />} />
                         <Route path="/booking" element={<BookingPage />} />
@@ -159,6 +163,10 @@ const AppRouter = () => {
                         <Route path="settings" element={<SettingPage />} />
                     </Route>
                 </Route>
+
+                {/* Payment Routes - Public access for payment callbacks */}
+                <Route path="/payment/success" element={<PaymentSuccessPage />} />
+                <Route path="/payment/cancel" element={<PaymentFailurePage />} />
 
                 {/* Error Routes */}
                 <Route path="/unauthorized" element={<UnauthorizedPage />} />

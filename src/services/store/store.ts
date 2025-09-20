@@ -8,11 +8,12 @@ import userReducer from "../features/user/userSlice";
 import adminServiceReducer from "../features/admin/seviceSlice";
 import bookingReducer from "../features/booking/bookingSlice";
 import vehicleReducer from "../features/vehicle/vehicleSlice";
+import paymentReducer from "../features/payment/paymentSlice";
 
 const presistConfig = {
   key: "root",
   storage,
-  whitelist: ["auth", "serviceCenter", "user", "booking", "vehicle"],
+  whitelist: ["auth", "serviceCenter", "user", "booking", "vehicle", "payment"],
 };
 
 // Create a hook for using TypedUseSelectorHook
@@ -23,6 +24,7 @@ const rootReducer = combineReducers({
   adminService: adminServiceReducer,
   booking: bookingReducer,
   vehicle: vehicleReducer,
+  payment: paymentReducer,
 });
 
 const persistedReducer = persistReducer(presistConfig, rootReducer);
