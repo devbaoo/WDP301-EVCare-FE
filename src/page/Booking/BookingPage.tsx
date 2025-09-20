@@ -10,6 +10,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../services/store/store';
 import { resetBooking } from '../../services/features/booking/bookingSlice';
+import { clearCurrentPayment } from '../../services/features/payment/paymentSlice';
 import Step1VehicleSelection from '../../components/Booking/Step1VehicleSelection';
 import Step2ServiceCenterSelection from '../../components/Booking/Step2ServiceCenterSelection';
 import Step3ServiceSelection from '../../components/Booking/Step3ServiceSelection';
@@ -21,6 +22,11 @@ const BookingPage: React.FC = () => {
     const { currentStep, selectedVehicle, selectedServiceCenter, selectedService } = useAppSelector((state) => state.booking);
 
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
+
+    // Clear payment state when starting new booking
+    useEffect(() => {
+        dispatch(clearCurrentPayment());
+    }, [dispatch]);
 
     const steps = [
         {
@@ -90,6 +96,7 @@ const BookingPage: React.FC = () => {
     };
 
     const handleBackToHome = () => {
+        dispatch(clearCurrentPayment()); // Clear payment state
         dispatch(resetBooking());
         navigate('/');
     };

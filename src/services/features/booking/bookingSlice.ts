@@ -447,16 +447,23 @@ const bookingSlice = createSlice({
       })
       .addCase(createBooking.fulfilled, (state, action) => {
         state.createBookingLoading = false;
-        // Reset booking state after successful creation
-        state.currentStep = 1;
-        state.bookingData = {};
-        state.selectedVehicle = null;
-        state.selectedServiceCenter = null;
-        state.selectedService = null;
-        state.selectedServicePackage = null;
-        state.availableTimeSlots = [];
-        // Fetch updated bookings
-        state.myBookings = action.payload.data.myBookings || state.myBookings;
+        
+        // Store booking and payment data for payment flow
+        state.bookingDetails = action.payload.data.appointment;
+        
+        // Only reset state if no payment is required
+        if (!action.payload.data.requiresPayment) {
+          // Reset booking state after successful creation
+          state.currentStep = 1;
+          state.bookingData = {};
+          state.selectedVehicle = null;
+          state.selectedServiceCenter = null;
+          state.selectedService = null;
+          state.selectedServicePackage = null;
+          state.availableTimeSlots = [];
+          // Fetch updated bookings
+          state.myBookings = action.payload.data.myBookings || state.myBookings;
+        }
       })
       .addCase(createBooking.rejected, (state, action) => {
         state.createBookingLoading = false;

@@ -16,6 +16,8 @@ import {
     createBooking,
     resetBooking
 } from '../../services/features/booking/bookingSlice';
+import { clearCurrentPayment } from '../../services/features/payment/paymentSlice';
+import PaymentModal from '../Payment/PaymentModal';
 import { TimeSlot } from '../../interfaces/booking';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
@@ -36,7 +38,8 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
         availableTimeSlots,
         loading,
         createBookingLoading,
-        error
+        error,
+        bookingData
     } = useAppSelector((state) => state.booking);
     // Read selected service center from serviceCenter slice
     const selectedServiceCenter = useAppSelector((state) => state.serviceCenter.selectedServiceCenter);
@@ -47,6 +50,10 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
     const [serviceDescription, setServiceDescription] = useState<string>('');
     const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
     const [paymentPreference, setPaymentPreference] = useState<'online' | 'offline'>('offline');
+    
+    // Payment modal state
+    const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+    const [bookingResponse, setBookingResponse] = useState<any>(null);
 
     const priorityOptions = [
         { value: 'low', label: 'Thấp', color: 'green' },
@@ -75,16 +82,27 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
         }
     }, [dispatch, selectedDate, selectedServiceCenter?._id]);
 
-    // Update booking data when form changes
+    // Update booking data when form changes - avoid infinite loops by checking if values actually changed
     useEffect(() => {
-        dispatch(updateBookingData({
+        const newBookingData = {
             appointmentDate: selectedDate,
             appointmentTime: selectedTime,
             serviceDescription,
             priority,
             paymentPreference,
-        }));
-    }, [dispatch, selectedDate, selectedTime, serviceDescription, priority, paymentPreference]);
+        };
+        
+        // Only dispatch if any value has actually changed
+        const hasChanges = Object.keys(newBookingData).some(key => {
+            const currentValue = newBookingData[key as keyof typeof newBookingData];
+            const existingValue = bookingData[key as keyof typeof bookingData];
+            return currentValue !== existingValue;
+        });
+        
+        if (hasChanges) {
+            dispatch(updateBookingData(newBookingData));
+        }
+    }, [dispatch, selectedDate, selectedTime, serviceDescription, priority, paymentPreference, bookingData]);
 
     const handleDateChange = (date: dayjs.Dayjs | null) => {
         if (date) {
@@ -143,13 +161,37 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
         };
 
         try {
-            await dispatch(createBooking(finalBookingData)).unwrap();
-            message.success('Đặt lịch thành công!');
-            dispatch(resetBooking());
-            navigate('/customer/profile');
+            const response = await dispatch(createBooking(finalBookingData)).unwrap();
+            
+            // Check if payment is required
+            if (response.data.requiresPayment && response.data.payment) {
+                // Store booking response for payment modal
+                setBookingResponse(response.data);
+                setPaymentModalVisible(true);
+                message.info('Vui lòng thanh toán để xác nhận đặt lịch');
+            } else {
+                // No payment required, booking is complete
+                message.success('Đặt lịch thành công!');
+                dispatch(resetBooking());
+                navigate('/customer/profile');
+            }
         } catch (error: unknown) {
             message.error((error as string) || 'Có lỗi xảy ra khi đặt lịch');
         }
+    };
+
+    const handlePaymentSuccess = (_paymentData: any) => {
+        message.success('Thanh toán thành công! Đặt lịch đã được xác nhận.');
+        setPaymentModalVisible(false);
+        dispatch(clearCurrentPayment()); // Clear payment state
+        dispatch(resetBooking());
+        navigate('/payment/success');
+    };
+
+    const handlePaymentModalCancel = () => {
+        setPaymentModalVisible(false);
+        // Optionally redirect to booking history or home
+        navigate('/customer/bookings');
     };
 
     const isDateDisabled = (current: dayjs.Dayjs) => {
@@ -412,6 +454,25 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                     Hoàn thành đặt lịch
                 </Button>
             </div>
+
+            {/* Payment Modal */}
+            {bookingResponse?.payment && (
+                <PaymentModal
+                    visible={paymentModalVisible}
+                    onCancel={handlePaymentModalCancel}
+                    paymentData={{
+                        paymentId: bookingResponse.payment.paymentId,
+                        orderCode: bookingResponse.payment.orderCode,
+                        paymentLink: bookingResponse.payment.paymentLink,
+                        qrCode: bookingResponse.payment.qrCode,
+                        checkoutUrl: bookingResponse.payment.checkoutUrl,
+                        amount: bookingResponse.payment.amount,
+                        expiresAt: bookingResponse.payment.expiresAt
+                    }}
+                    description={`Thanh toán booking #${bookingResponse.appointment._id} - ${selectedService?.name || selectedServicePackage?.packageName || 'Kiểm tra xe'}`}
+                    onPaymentSuccess={handlePaymentSuccess}
+                />
+            )}
         </div>
     );
 };
