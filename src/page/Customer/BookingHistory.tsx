@@ -70,108 +70,211 @@ function BookingHistory() {
         setSelectedBooking(null);
     };
 
-    // Hàm lấy màu sắc dựa trên status
     const getStatusColor = (status: string) => {
         switch (status) {
             case "pending_confirmation":
-                return "bg-yellow-500 text-white rounded-full text-xs px-2 py-0.5";
+                return "bg-yellow-100 text-yellow-800";
             case "confirmed":
-                return "bg-blue-500 text-white rounded-full text-xs px-2 py-0.5";
+                return "bg-blue-100 text-blue-800";
+            case "in_progress":
+                return "bg-indigo-100 text-indigo-800";
+            case "inspection_completed":
+                return "bg-purple-100 text-purple-800";
+            case "quote_provided":
+                return "bg-cyan-100 text-cyan-800";
+            case "quote_approved":
+                return "bg-green-100 text-green-800";
+            case "quote_rejected":
+                return "bg-red-100 text-red-800";
+            case "maintenance_in_progress":
+                return "bg-blue-100 text-blue-800";
+            case "maintenance_completed":
+                return "bg-green-100 text-green-800";
+            case "payment_pending":
+                return "bg-yellow-100 text-yellow-800";
             case "completed":
-                return "bg-green-600 text-white rounded-full text-xs px-2 py-0.5";
+                return "bg-green-700 text-white";
             case "cancelled":
-                return "bg-red-600 text-white rounded-full text-xs px-2 py-0.5";
+                return "bg-red-100 text-red-800";
+            case "rescheduled":
+                return "bg-orange-100 text-orange-800";
+            case "no_show":
+                return "bg-gray-300 text-gray-800";
             default:
-                return "bg-gray-500 text-white rounded-full text-xs px-2 py-0.5";
+                return "bg-gray-100 text-gray-800";
         }
     };
 
+    const formatDate = (dateString: string) => {
+        const options: Intl.DateTimeFormatOptions = {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            weekday: 'short'
+        };
+        return new Date(dateString).toLocaleDateString('en-US', options);
+    };
+
     return (
-        <div className="bg-gray-100 min-h-screen p-6">
-            <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6">
-                <h1 className="text-4xl font-bold text-center text-blue-600 mb-4">Booking History</h1>
-                <div className="flex justify-center mb-6">
-                    <input
-                        type="date"
-                        className="border border-gray-300 rounded px-4 py-2 mr-2"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        placeholder="Start Date"
-                    />
-                    <input
-                        type="date"
-                        className="border border-gray-300 rounded px-4 py-2 mr-2"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        placeholder="End Date"
-                    />
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4 md:p-6">
+            <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
+                    <h1 className="text-3xl md:text-4xl font-bold">Booking History</h1>
+                    <p className="mt-2 opacity-90">View and manage your appointment history</p>
                 </div>
 
-                {loading && <p className="text-center text-blue-500">Loading...</p>}
-                {error && <p className="text-center text-red-500">{error}</p>}
-
-                {!loading && !error && (
-                    <div className="overflow-x-auto">
-                        <table className="table-auto w-full border-collapse border border-gray-300">
-                            <thead>
-                                <tr className="bg-blue-500 text-white">
-                                    <th className="px-4 py-2 border border-gray-300">#</th>
-                                    <th className="px-4 py-2 border border-gray-300">Date</th>
-                                    <th className="px-4 py-2 border border-gray-300">Service</th>
-                                    <th className="px-4 py-2 border border-gray-300">Status</th>
-                                    <th className="px-4 py-2 border border-gray-300">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredBookings.map((booking, index) => (
-                                    <tr key={booking._id} className="hover:bg-gray-100">
-                                        <td className="px-4 py-2 border border-gray-300 text-center">{index + 1}</td>
-                                        <td className="px-4 py-2 border border-gray-300 text-center">{new Date(booking.appointmentTime.date).toLocaleDateString()}</td>
-                                        <td className="px-4 py-2 border border-gray-300 text-center">{booking.serviceType?.name || "N/A"}</td>
-                                        <td className="px-4 py-2 border border-gray-300 text-center">
-                                            <span className={`inline-block font-medium ${getStatusColor(booking.status)}`}>
-                                                {booking.status.replace("_", " ").toUpperCase()}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-2 border border-gray-300 text-center">
-                                            <button
-                                                className="text-blue-500 hover:underline"
-                                                onClick={() => fetchBookingDetails(booking._id)}
-                                            >
-                                                View Details
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                <div className="p-6">
+                    <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                        <h2 className="text-lg font-semibold text-blue-800 mb-3">Filter by Date</h2>
+                        <div className="flex flex-col md:flex-row gap-4">
+                            <div className="flex-1">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                                <input
+                                    type="date"
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                />
+                            </div>
+                            <div className="flex-1">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                                <input
+                                    type="date"
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                />
+                            </div>
+                        </div>
                     </div>
-                )}
 
-                {isModalOpen && selectedBooking && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                        <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                            <h2 className="text-xl font-bold text-blue-600 mb-4">Booking Details</h2>
-                            <p><strong>Date:</strong> {new Date(selectedBooking.appointmentTime.date).toLocaleDateString()}</p>
-                            <p><strong>Service:</strong> {selectedBooking.serviceType?.name || "N/A"}</p>
-                            <p><strong>Status:</strong>
-                                <span className={`inline-block ${getStatusColor(selectedBooking.status)}`}>
-                                    {selectedBooking.status.replace("_", " ").toUpperCase()}
-                                </span>
-                            </p>
-                            <p><strong>Description:</strong> {selectedBooking.serviceDetails?.description || "N/A"}</p>
+                    {loading && (
+                        <div className="flex justify-center items-center py-12">
+                            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                        </div>
+                    )}
+
+                    {error && (
+                        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm text-red-700">{error}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {!loading && !error && (
+                        <div className="bg-white rounded-lg shadow overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {filteredBookings.map((booking, index) => (
+                                            <tr key={booking._id} className="hover:bg-gray-50 transition-colors duration-150">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{index + 1}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                                    {formatDate(booking.appointmentTime.date)}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                                    {booking.serviceType?.name || "N/A"}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(booking.status)}`}>
+                                                        {booking.status.replace("_", " ").toUpperCase()}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                    <button
+                                                        className="text-blue-600 hover:text-blue-900 font-medium transition-colors duration-150"
+                                                        onClick={() => fetchBookingDetails(booking._id)}
+                                                    >
+                                                        View Details
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {filteredBookings.length === 0 && !loading && (
+                                <div className="text-center py-12">
+                                    <svg className="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                    <h3 className="mt-2 text-sm font-medium text-gray-900">No bookings found</h3>
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        Get started by scheduling a new appointment.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Modal */}
+            {isModalOpen && selectedBooking && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+                        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
+                            <h2 className="text-2xl font-bold">Booking Details</h2>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <p className="text-sm font-medium text-gray-500">Date</p>
+                                <p className="text-lg font-semibold">{formatDate(selectedBooking.appointmentTime.date)}</p>
+                            </div>
+
+                            <div>
+                                <p className="text-sm font-medium text-gray-500">Service</p>
+                                <p className="text-lg font-semibold">{selectedBooking.serviceType?.name || "N/A"}</p>
+                            </div>
+
+                            <div>
+                                <p className="text-sm font-medium text-gray-500">Status</p>
+                                <p className="mt-1">
+                                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(selectedBooking.status)}`}>
+                                        {selectedBooking.status.replace("_", " ").toUpperCase()}
+                                    </span>
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="text-sm font-medium text-gray-500">Description</p>
+                                <p className="text-lg">{selectedBooking.serviceDetails?.description || "N/A"}</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-gray-50 px-6 py-4 flex justify-end">
                             <button
-                                className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                 onClick={closeModal}
                             >
                                 Close
                             </button>
                         </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 }
 
 export default BookingHistory;
+
