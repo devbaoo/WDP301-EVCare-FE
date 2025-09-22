@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Input, DatePicker, Radio, message, Spin, Alert } from 'antd';
+import { Card, Button, Input, DatePicker, Radio, message, Spin } from 'antd';
 import {
     Calendar,
     Clock,
@@ -21,6 +21,7 @@ import PaymentModal from '../Payment/PaymentModal';
 import { TimeSlot } from '../../interfaces/booking';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
+import { getNextOpeningTime } from '../../lib/timeUtils';
 
 const { TextArea } = Input;
 
@@ -38,7 +39,6 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
         availableTimeSlots,
         loading,
         createBookingLoading,
-        error,
         bookingData
     } = useAppSelector((state) => state.booking);
     // Read selected service center from serviceCenter slice
@@ -50,16 +50,31 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
     const [serviceDescription, setServiceDescription] = useState<string>('');
     const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
     const [paymentPreference, setPaymentPreference] = useState<'online' | 'offline'>('offline');
-    
+
     // Payment modal state
     const [paymentModalVisible, setPaymentModalVisible] = useState(false);
-    const [bookingResponse, setBookingResponse] = useState<any>(null);
+    const [bookingResponse, setBookingResponse] = useState<{
+        data: {
+            requiresPayment: boolean;
+            payment?: {
+                paymentId: string;
+                orderCode: string;
+                paymentLink: string;
+                qrCode: string;
+                checkoutUrl: string;
+                amount: number | string;
+                expiresAt: string;
+            };
+            appointment: {
+                _id: string;
+            };
+        };
+    } | null>(null);
 
     const priorityOptions = [
         { value: 'low', label: 'Thấp', color: 'green' },
-        { value: 'medium', label: 'Trung bình', color: 'blue' },
-        { value: 'high', label: 'Cao', color: 'orange' },
-        { value: 'critical', label: 'Khẩn cấp', color: 'red' },
+        { value: 'medium', label: 'Trung bình', color: 'orange' },
+        { value: 'high', label: 'Cao', color: 'red' },
     ];
 
     const getPriorityColor = (priority: string) => {
@@ -91,14 +106,14 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
             priority,
             paymentPreference,
         };
-        
+
         // Only dispatch if any value has actually changed
         const hasChanges = Object.keys(newBookingData).some(key => {
             const currentValue = newBookingData[key as keyof typeof newBookingData];
             const existingValue = bookingData[key as keyof typeof bookingData];
             return currentValue !== existingValue;
         });
-        
+
         if (hasChanges) {
             dispatch(updateBookingData(newBookingData));
         }
@@ -136,6 +151,7 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
             return;
         }
 
+
         if (!serviceDescription.trim()) {
             message.error('Vui lòng nhập mô tả dịch vụ');
             return;
@@ -162,7 +178,7 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
 
         try {
             const response = await dispatch(createBooking(finalBookingData)).unwrap();
-            
+
             // Check if payment is required
             if (response.data.requiresPayment && response.data.payment) {
                 // Store booking response for payment modal
@@ -180,7 +196,7 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
         }
     };
 
-    const handlePaymentSuccess = (_paymentData: any) => {
+    const handlePaymentSuccess = () => {
         message.success('Thanh toán thành công! Đặt lịch đã được xác nhận.');
         setPaymentModalVisible(false);
         dispatch(clearCurrentPayment()); // Clear payment state
@@ -214,6 +230,39 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
         return `${slot.availableTechnicians.length} kỹ thuật viên khả dụng`;
     };
 
+    // Check if service center is open on selected date
+    const isServiceCenterOpenOnDate = (date: string) => {
+        if (!selectedServiceCenter?.operatingHours || !date) {
+            return false;
+        }
+
+        const selectedDay = dayjs(date).day(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+        const dayMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dayName = dayMap[selectedDay] as keyof typeof selectedServiceCenter.operatingHours;
+        const dayHours = selectedServiceCenter.operatingHours[dayName];
+
+        return dayHours && dayHours.isOpen;
+    };
+
+    // Get next opening time for selected date
+    const getNextOpeningForDate = (date: string) => {
+        if (!selectedServiceCenter?.operatingHours || !date) {
+            return null;
+        }
+
+        const selectedDay = dayjs(date).day();
+        const dayMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dayName = dayMap[selectedDay] as keyof typeof selectedServiceCenter.operatingHours;
+        const dayHours = selectedServiceCenter.operatingHours[dayName];
+
+        if (dayHours && dayHours.isOpen) {
+            return `Mở cửa từ ${dayHours.open} - ${dayHours.close}`;
+        }
+
+        // Find next opening day
+        return getNextOpeningTime(selectedServiceCenter.operatingHours);
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -222,17 +271,6 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                 <p className="text-gray-600">Chọn ngày giờ và cung cấp thông tin bổ sung</p>
             </div>
 
-            {/* Error Alert */}
-            {error && (
-                <Alert
-                    message="Lỗi"
-                    description={error}
-                    type="error"
-                    showIcon
-                    closable
-                    onClose={() => dispatch({ type: 'booking/clearError' })}
-                />
-            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left Column - Date & Time Selection */}
@@ -260,7 +298,28 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                                 <Clock className="w-5 h-5 text-green-500" />
                                 <span>Chọn giờ</span>
                             </h3>
-                            {loading ? (
+
+                            {/* Check if service center is open on selected date */}
+                            {!isServiceCenterOpenOnDate(selectedDate) ? (
+                                <div className="text-center py-8">
+                                    <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                                        <Clock className="w-8 h-8 text-red-500" />
+                                    </div>
+                                    <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                                        Trung tâm không hoạt động
+                                    </h4>
+                                    <p className="text-gray-600 mb-4">
+                                        Trung tâm đóng cửa vào ngày {dayjs(selectedDate).format('DD/MM/YYYY')}
+                                    </p>
+                                    {getNextOpeningForDate(selectedDate) && (
+                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                            <p className="text-blue-800 font-medium">
+                                                {getNextOpeningForDate(selectedDate)}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : loading ? (
                                 <div className="flex justify-center py-8">
                                     <Spin />
                                 </div>
@@ -290,7 +349,9 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                                     ))}
                                 </div>
                             )}
-                            {availableTimeSlots.length === 0 && !loading && (
+
+                            {/* Show message when no time slots available but center is open */}
+                            {isServiceCenterOpenOnDate(selectedDate) && availableTimeSlots.length === 0 && !loading && (
                                 <div className="text-center py-8 text-gray-500">
                                     <Clock className="w-12 h-12 mx-auto mb-2 text-gray-300" />
                                     <p>Không có khung giờ trống trong ngày này</p>
@@ -448,7 +509,7 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                     icon={<CheckCircle className="w-5 h-5" />}
                     onClick={handleSubmit}
                     loading={createBookingLoading}
-                    disabled={!selectedDate || !selectedTime || !serviceDescription.trim()}
+                    disabled={!selectedDate || !selectedTime || !serviceDescription.trim() || (selectedDate ? !isServiceCenterOpenOnDate(selectedDate) : false)}
                     className="bg-green-600 hover:bg-green-700"
                 >
                     Hoàn thành đặt lịch
@@ -456,20 +517,24 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
             </div>
 
             {/* Payment Modal */}
-            {bookingResponse?.payment && (
+            {bookingResponse?.data?.payment && (
                 <PaymentModal
                     visible={paymentModalVisible}
                     onCancel={handlePaymentModalCancel}
                     paymentData={{
-                        paymentId: bookingResponse.payment.paymentId,
-                        orderCode: bookingResponse.payment.orderCode,
-                        paymentLink: bookingResponse.payment.paymentLink,
-                        qrCode: bookingResponse.payment.qrCode,
-                        checkoutUrl: bookingResponse.payment.checkoutUrl,
-                        amount: bookingResponse.payment.amount,
-                        expiresAt: bookingResponse.payment.expiresAt
+                        paymentId: bookingResponse.data.payment.paymentId,
+                        orderCode: typeof bookingResponse.data.payment.orderCode === 'string'
+                            ? parseInt(bookingResponse.data.payment.orderCode)
+                            : bookingResponse.data.payment.orderCode,
+                        paymentLink: bookingResponse.data.payment.paymentLink,
+                        qrCode: bookingResponse.data.payment.qrCode,
+                        checkoutUrl: bookingResponse.data.payment.checkoutUrl,
+                        amount: typeof bookingResponse.data.payment.amount === 'string'
+                            ? parseFloat(bookingResponse.data.payment.amount)
+                            : bookingResponse.data.payment.amount,
+                        expiresAt: bookingResponse.data.payment.expiresAt
                     }}
-                    description={`Thanh toán booking #${bookingResponse.appointment._id} - ${selectedService?.name || selectedServicePackage?.packageName || 'Kiểm tra xe'}`}
+                    description={`Thanh toán booking #${bookingResponse.data.appointment._id} - ${selectedService?.name || selectedServicePackage?.packageName || 'Kiểm tra xe'}`}
                     onPaymentSuccess={handlePaymentSuccess}
                 />
             )}
