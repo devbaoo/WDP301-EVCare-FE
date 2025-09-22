@@ -489,14 +489,17 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                             {paymentPreference === 'online' ? 'Trực tuyến' : 'Tại trung tâm'}
                         </span>
                     </div>
-                    <div>
-                        <span className="text-gray-600">Tổng tiền ước tính:</span>
-                        <span className="font-medium ml-2 text-blue-600">
-                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
-                                selectedServicePackage ? selectedServicePackage.price : (selectedService?.pricing.basePrice || 0)
-                            )}
-                        </span>
-                    </div>
+                    {/* Show deposit amount when service/package is selected, hide when inspection only */}
+                    {!isInspectionOnlyFromState && (selectedService || selectedServicePackage) && (
+                        <div>
+                            <span className="text-gray-600">Tiền ước tính:</span>
+                            <span className="font-medium ml-2 text-blue-600">
+                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
+                                    selectedServicePackage ? selectedServicePackage.price : (selectedService?.pricing.basePrice || 0)
+                                )}
+                            </span>
+                        </div>
+                    )}
                 </div>
             </Card>
 

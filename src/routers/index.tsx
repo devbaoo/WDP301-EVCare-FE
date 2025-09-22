@@ -37,6 +37,9 @@ import PaymentSuccessPage from "@/page/Payment/PaymentSuccessPage";
 import PaymentFailurePage from "@/page/Payment/PaymentFailurePage";
 import PaymentHistory from "@/components/Payment/PaymentHistory";
 import BookingManagePages from "@/page/Admin/BookingManagePages";
+import StaffBookingManagePage from "@/page/Staff/StaffBookingManagePage";
+import StaffTechnicianPage from "@/page/Staff/StaffTechnicianPage";
+import StaffSchedulesTechnicianPage from "@/page/Staff/StaffSchedulesTechnicianPage";
 
 const AppRouter = () => {
     const { isAuthenticated, user, needVerification } = useSelector((state: RootState) => state.auth);
@@ -127,14 +130,14 @@ const AppRouter = () => {
                 </Route>
 
                 {/* Staff Routes - Only accessible when authenticated as staff */}
-                <Route element={<ProtectedRoute allowedRoles={["staff"]} />}>
+                {/* <Route element={<ProtectedRoute allowedRoles={["staff"]} />}>
                     <Route path="/staff" element={<StaffLayout />}>
                         <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Dashboard</h1></div>} />
                         <Route path="service-centers" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Service Centers</h1></div>} />
                         <Route path="technicians" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Technicians</h1></div>} />
                         <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Settings</h1></div>} />
                     </Route>
-                </Route>
+                </Route> */}
 
                 {/* Technician Routes - Only accessible when authenticated as technician */}
                 <Route element={<ProtectedRoute allowedRoles={["technician"]} />}>
@@ -144,6 +147,17 @@ const AppRouter = () => {
                         <Route path="services" element={<div className="p-6"><h1 className="text-2xl font-bold">My Services</h1></div>} />
                         <Route path="history" element={<div className="p-6"><h1 className="text-2xl font-bold">Service History</h1></div>} />
                         <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Technician Settings</h1></div>} />
+                    </Route>
+                </Route>
+
+                {/* Staff Routes - Only accessible when authenticated as staff */}
+                <Route element={<ProtectedRoute allowedRoles={["staff"]} />}>
+                    <Route path="/staff" element={<StaffLayout />}>
+                        <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Dashboard</h1></div>} />
+                        <Route path="booking" element={<StaffBookingManagePage />} />
+                        <Route path="technicians" element={<StaffTechnicianPage />} />
+                        <Route path="schedules" element={<StaffSchedulesTechnicianPage />} />
+                        <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Settings</h1></div>} />
                     </Route>
                 </Route>
 
