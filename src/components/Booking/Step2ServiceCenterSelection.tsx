@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '../../services/store/store';
 import { fetchServiceCenters, fetchNearbyServiceCenters, setSelectedServiceCenter } from '../../services/features/serviceCenter/serviceCenterSlice';
 import { ServiceCenter } from '../../interfaces/serviceCenter';
 import RealTimeStatus from '../ServiceCenter/RealTimeStatus';
+import { isCurrentlyOpen } from '../../lib/timeUtils';
 
 interface Step2ServiceCenterSelectionProps {
     onNext: () => void;
@@ -48,6 +49,11 @@ const Step2ServiceCenterSelection: React.FC<Step2ServiceCenterSelectionProps> = 
     );
 
     const handleSelectServiceCenter = (center: ServiceCenter) => {
+        // Don't allow selection of closed centers
+        if (!canSelectServiceCenter(center)) {
+            return;
+        }
+
         if (selectedServiceCenter?._id === center._id) {
             dispatch(setSelectedServiceCenter(null));
         } else {
@@ -60,6 +66,12 @@ const Step2ServiceCenterSelection: React.FC<Step2ServiceCenterSelectionProps> = 
             message.error('Vui lòng chọn trung tâm dịch vụ');
             return;
         }
+
+        if (!canSelectServiceCenter(selectedServiceCenter)) {
+            message.error('Trung tâm đã chọn hiện không hoạt động. Vui lòng chọn trung tâm khác.');
+            return;
+        }
+
         onNext();
     };
 
@@ -79,6 +91,17 @@ const Step2ServiceCenterSelection: React.FC<Step2ServiceCenterSelectionProps> = 
             case 'inactive': return 'Tạm dừng';
             default: return status;
         }
+    };
+
+    // Check if service center is currently open
+    const isServiceCenterOpen = (center: ServiceCenter) => {
+        if (!center.operatingHours) return false;
+        return isCurrentlyOpen(center.operatingHours);
+    };
+
+    // Check if service center can be selected (open and active status)
+    const canSelectServiceCenter = (center: ServiceCenter) => {
+        return center.status === 'active' && isServiceCenterOpen(center);
     };
 
     if (loading) {
@@ -178,86 +201,108 @@ const Step2ServiceCenterSelection: React.FC<Step2ServiceCenterSelectionProps> = 
                 ) : (
                     <>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            {paginatedServiceCenters.map((center) => (
-                                <Card
-                                    key={center._id}
-                                    hoverable
-                                    className={`cursor-pointer transition-all duration-200 ${selectedServiceCenter?._id === center._id
-                                        ? 'ring-2 ring-blue-500 bg-blue-50'
-                                        : 'hover:shadow-lg'
-                                        }`}
-                                    onClick={() => handleSelectServiceCenter(center)}
-                                >
-                                    <div className="space-y-4">
-                                        {/* Header */}
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                                                    {center.name}
-                                                </h3>
-                                                <p className="text-sm text-gray-600 line-clamp-2">
-                                                    {center.description}
-                                                </p>
+                            {paginatedServiceCenters.map((center) => {
+                                const canSelect = canSelectServiceCenter(center);
+                                const isSelected = selectedServiceCenter?._id === center._id;
+
+                                return (
+                                    <Card
+                                        key={center._id}
+                                        hoverable={canSelect}
+                                        className={`transition-all duration-200 ${canSelect
+                                                ? `cursor-pointer ${isSelected
+                                                    ? 'ring-2 ring-blue-500 bg-blue-50'
+                                                    : 'hover:shadow-lg'
+                                                }`
+                                                : 'cursor-not-allowed opacity-60'
+                                            }`}
+                                        onClick={() => canSelect && handleSelectServiceCenter(center)}
+                                    >
+                                        <div className="space-y-4">
+                                            {/* Header */}
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex-1">
+                                                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                                                        {center.name}
+                                                    </h3>
+                                                    <p className="text-sm text-gray-600 line-clamp-2">
+                                                        {center.description}
+                                                    </p>
+                                                </div>
+                                                <Tag color={getStatusColor(center.status)} className="ml-2">
+                                                    {getStatusText(center.status)}
+                                                </Tag>
                                             </div>
-                                            <Tag color={getStatusColor(center.status)} className="ml-2">
-                                                {getStatusText(center.status)}
-                                            </Tag>
-                                        </div>
 
-                                        {/* Address */}
-                                        <div className="flex items-start space-x-2">
-                                            <MapPin className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                                            <div className="text-sm text-gray-600">
-                                                <p className="font-medium">{center.address.street}</p>
-                                                <p>{center.address.ward}, {center.address.district}, {center.address.city}</p>
+                                            {/* Address */}
+                                            <div className="flex items-start space-x-2">
+                                                <MapPin className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                                                <div className="text-sm text-gray-600">
+                                                    <p className="font-medium">{center.address.street}</p>
+                                                    <p>{center.address.ward}, {center.address.district}, {center.address.city}</p>
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        {/* Contact */}
-                                        <div className="flex items-center space-x-2">
-                                            <Phone className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                            <span className="text-sm text-gray-600">{center.contact.phone}</span>
-                                        </div>
-
-                                        {/* Rating */}
-                                        <div className="flex items-center space-x-2">
-                                            <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                                            <span className="text-sm font-medium text-gray-700">
-                                                {center.rating.average.toFixed(1)}
-                                            </span>
-                                            <span className="text-sm text-gray-500">
-                                                ({center.rating.count} đánh giá)
-                                            </span>
-                                        </div>
-
-                                        {/* Operating Hours */}
-                                        <div className="flex items-center space-x-2">
-
-                                            <RealTimeStatus
-                                                operatingHours={center.operatingHours}
-                                                className="text-sm"
-                                                showNextOpening={true}
-                                            />
-                                        </div>
-
-                                        {/* Services Preview */}
-                                        <div className="pt-2 border-t border-gray-100">
-                                            <div className="flex flex-wrap gap-1">
-                                                {center.services.slice(0, 3).map((service) => (
-                                                    <Tag key={service._id} color="blue" className="text-xs">
-                                                        {service.name}
-                                                    </Tag>
-                                                ))}
-                                                {center.services.length > 3 && (
-                                                    <Tag color="default" className="text-xs">
-                                                        +{center.services.length - 3}
-                                                    </Tag>
-                                                )}
+                                            {/* Contact */}
+                                            <div className="flex items-center space-x-2">
+                                                <Phone className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                                <span className="text-sm text-gray-600">{center.contact.phone}</span>
                                             </div>
+
+                                            {/* Rating */}
+                                            <div className="flex items-center space-x-2">
+                                                <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                                                <span className="text-sm font-medium text-gray-700">
+                                                    {center.rating.average.toFixed(1)}
+                                                </span>
+                                                <span className="text-sm text-gray-500">
+                                                    ({center.rating.count} đánh giá)
+                                                </span>
+                                            </div>
+
+                                            {/* Operating Hours */}
+                                            <div className="flex items-center space-x-2">
+
+                                                <RealTimeStatus
+                                                    operatingHours={center.operatingHours}
+                                                    className="text-sm"
+                                                    showNextOpening={true}
+                                                />
+                                            </div>
+
+                                            {/* Services Preview */}
+                                            <div className="pt-2 border-t border-gray-100">
+                                                <div className="flex flex-wrap gap-1">
+                                                    {center.services.slice(0, 3).map((service) => (
+                                                        <Tag key={service._id} color="blue" className="text-xs">
+                                                            {service.name}
+                                                        </Tag>
+                                                    ))}
+                                                    {center.services.length > 3 && (
+                                                        <Tag color="default" className="text-xs">
+                                                            +{center.services.length - 3}
+                                                        </Tag>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Disabled message for closed centers */}
+                                            {!canSelect && (
+                                                <div className="pt-2 border-t border-gray-100">
+                                                    <div className="text-center py-2">
+                                                        <div className="text-sm text-red-600 font-medium">
+                                                            {center.status !== 'active'
+                                                                ? 'Trung tâm tạm dừng hoạt động'
+                                                                : 'Trung tâm đang đóng cửa'
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-                                </Card>
-                            ))}
+                                    </Card>
+                                );
+                            })}
                         </div>
                         <div className="flex justify-center pt-4">
                             <Pagination
