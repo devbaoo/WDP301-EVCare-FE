@@ -240,6 +240,15 @@ function BookingHistory() {
         return new Date(dateString).toLocaleDateString('en-US', options);
     };
 
+    const formatTime = (timeString: string) => {
+        if (!timeString) return "N/A";
+        const [hours, minutes] = timeString.split(':');
+        const hour = parseInt(hours, 10);
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const formattedHour = hour % 12 || 12;
+        return `${formattedHour}:${minutes} ${period}`;
+    };
+
     const canModifyBooking = (status: string) => {
         return status !== "cancelled";
     };
@@ -307,7 +316,6 @@ function BookingHistory() {
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                         </tr>
@@ -321,11 +329,6 @@ function BookingHistory() {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                                     {booking.serviceType?.name || "N/A"}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                                    {booking.appointmentTime?.startTime && booking.appointmentTime?.endTime
-                                                        ? `${booking.appointmentTime.startTime} - ${booking.appointmentTime.endTime}`
-                                                        : "N/A"}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(booking.status)}`}>
@@ -393,6 +396,15 @@ function BookingHistory() {
                             </div>
 
                             <div>
+                                <p className="text-sm font-medium text-gray-500">Time</p>
+                                <p className="text-lg font-semibold">
+                                    {selectedBooking.appointmentTime?.startTime && selectedBooking.appointmentTime?.endTime
+                                        ? `${formatTime(selectedBooking.appointmentTime.startTime)} - ${formatTime(selectedBooking.appointmentTime.endTime)}`
+                                        : "N/A"}
+                                </p>
+                            </div>
+
+                            <div>
                                 <p className="text-sm font-medium text-gray-500">Service</p>
                                 <p className="text-lg font-semibold">{selectedBooking.serviceType?.name || "N/A"}</p>
                             </div>
@@ -456,7 +468,7 @@ function BookingHistory() {
                                     </option>
                                     {availableSlots.map((slot, idx) => (
                                         <option key={`${slot.startTime}-${idx}`} value={slot.startTime}>
-                                            {slot.startTime} - {slot.endTime}
+                                            {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
                                         </option>
                                     ))}
                                 </select>
