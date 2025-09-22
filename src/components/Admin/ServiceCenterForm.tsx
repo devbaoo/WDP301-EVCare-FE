@@ -1,5 +1,15 @@
 import React, { useEffect } from 'react';
-import { Form, Input, Select, Row, Col, Button, Divider, TimePicker, Switch } from 'antd';
+import { Form, Input, Select, Row, Col, Button, TimePicker, Switch, Card, Typography } from 'antd';
+import { 
+  FileTextOutlined,
+  HomeOutlined,
+  PhoneOutlined,
+  FieldTimeOutlined,
+  AppstoreOutlined,
+  PictureOutlined,
+  SettingOutlined,
+  StarOutlined
+} from '@ant-design/icons';
 import { ServiceCenterCreatePayload, ServiceCenterUpdatePayload, ServiceCenter } from '@/interfaces/serviceCenter';
 import { useAppDispatch, useAppSelector } from '@/services/store/store';
 import { fetchServiceTypes } from '@/services/features/admin/seviceSlice';
@@ -16,6 +26,7 @@ interface ServiceCenterFormProps {
 }
 
 const { Option } = Select;
+const { Title, Text } = Typography;
 
 const labelCol = { span: 24 } as const;
 const wrapperCol = { span: 24 } as const;
@@ -158,189 +169,226 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
   };
 
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      labelCol={labelCol}
-      wrapperCol={wrapperCol}
-      onFinish={handleFinish}
-      disabled={loading}
-    >
-      <Row gutter={16}>
-        <Col span={16}>
-          <Form.Item label="Tên trung tâm" name="name" rules={[{ required: true, message: 'Nhập tên trung tâm' }]}>
-            <Input placeholder="EVCare HCM Center" />
-          </Form.Item>
-        </Col>
-        <Col span={8}>
-          <Form.Item label="Trạng thái" name="status" initialValue="active" rules={[{ required: true }]}>
-            <Select>
-              <Option value="active">Hoạt động</Option>
-              <Option value="maintenance">Bảo trì</Option>
-              <Option value="inactive">Ngưng</Option>
-            </Select>
-          </Form.Item>
-        </Col>
-      </Row>
-
-      <Form.Item label="Mô tả" name="description">
-        <Input.TextArea rows={3} placeholder="Mô tả ngắn..." />
-      </Form.Item>
-
-      <Divider>Địa chỉ</Divider>
-      <Row gutter={16}>
-        <Col span={12}><Form.Item label="Đường" name="addressStreet" rules={[{ required: true }]}><Input placeholder="123 Lê Lợi" /></Form.Item></Col>
-        <Col span={12}><Form.Item label="Phường/Xã" name="addressWard" rules={[{ required: true }]}><Input placeholder="Bến Thành" /></Form.Item></Col>
-      </Row>
-      <Row gutter={16}>
-        <Col span={12}><Form.Item label="Quận/Huyện" name="addressDistrict" rules={[{ required: true }]}><Input placeholder="Quận 1" /></Form.Item></Col>
-        <Col span={12}><Form.Item label="Tỉnh/Thành" name="addressCity" rules={[{ required: true }]}><Input placeholder="Hồ Chí Minh" /></Form.Item></Col>
-      </Row>
-      
-
-      <Divider>Liên hệ</Divider>
-      <Row gutter={16}>
-        <Col span={8}><Form.Item label="SĐT" name="contactPhone" rules={[{ required: true }]}><Input placeholder="02839123456" /></Form.Item></Col>
-        <Col span={8}><Form.Item label="Email" name="contactEmail" rules={[{ required: true, type: 'email' }]}><Input placeholder="hcmcenter@evcare.vn" /></Form.Item></Col>
-        <Col span={8}><Form.Item label="Website" name="contactWebsite"><Input placeholder="https://hcm.evcare.vn" /></Form.Item></Col>
-      </Row>
-
-      <Divider>Cấu hình chi tiết</Divider>
-      <Row gutter={16}>
-        {[
-          { key: 'monday', label: 'Thứ 2' },
-          { key: 'tuesday', label: 'Thứ 3' },
-          { key: 'wednesday', label: 'Thứ 4' },
-          { key: 'thursday', label: 'Thứ 5' },
-          { key: 'friday', label: 'Thứ 6' },
-          { key: 'saturday', label: 'Thứ 7' },
-          { key: 'sunday', label: 'Chủ nhật' },
-        ].map((d) => (
-          <Col span={12} key={d.key}>
-            <div className="border rounded-md p-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-medium">{d.label}</span>
-                <Form.Item name={`operatingHours_${d.key}_isOpen`} valuePropName="checked" noStyle>
-                  <Switch />
-                </Form.Item>
-              </div>
-              <Form.Item name={`operatingHours_${d.key}_range`}>
-                <TimePicker.RangePicker format="HH:mm" minuteStep={15} className="w-full" />
+    <div className="w-full max-h-[70vh] overflow-y-auto">
+      <Form
+        form={form}
+        layout="vertical"
+        labelCol={labelCol}
+        wrapperCol={wrapperCol}
+        onFinish={handleFinish}
+        disabled={loading}
+        className="space-y-4"
+      >
+        <Card 
+          title={<Title level={4} className="mb-0"><FileTextOutlined className="mr-2" />Thông tin cơ bản</Title>} 
+          size="small"
+          className="shadow-sm"
+        >
+          <Row gutter={[12, 12]}>
+            <Col span={16}>
+              <Form.Item label={<Text strong>Tên trung tâm</Text>} name="name" rules={[{ required: true, message: 'Nhập tên trung tâm' }]}> 
+                <Input placeholder="EVCare HCM Center" />
               </Form.Item>
-            </div>
-          </Col>
-        ))}
-      </Row>
+            </Col>
+            <Col span={8}>
+              <Form.Item label={<Text strong>Trạng thái</Text>} name="status" initialValue="active" rules={[{ required: true }]}> 
+                <Select>
+                  <Option value="active">Hoạt động</Option>
+                  <Option value="maintenance">Bảo trì</Option>
+                  <Option value="inactive">Ngưng</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+              <Form.Item label={<Text strong>Mô tả</Text>} name="description">
+                <Input.TextArea rows={3} placeholder="Mô tả ngắn..." />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Card>
 
-      <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item label="Dịch vụ" name="servicesIds" rules={[{ required: true, message: 'Chọn ít nhất 1 dịch vụ' }]}>
-            <Select
-              mode="multiple"
-              placeholder="Chọn dịch vụ cung cấp"
-              loading={servicesLoading}
-              optionFilterProp="label"
-              options={(serviceTypeItems || []).map((s: any) => ({ label: s.name, value: s._id }))}
-            />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item label="Nhân sự (JSON)" name="staffJson">
-            <Input.TextArea rows={4} spellCheck={false} placeholder='[{"user":"id","role":"staff","isActive":true}]' />
-          </Form.Item>
-        </Col>
-      </Row>
+        <Card 
+          title={<Title level={4} className="mb-0"><HomeOutlined className="mr-2" />Địa chỉ</Title>} 
+          size="small"
+          className="shadow-sm"
+        >
+          <Row gutter={[12, 12]}>
+            <Col span={12}><Form.Item label={<Text strong>Đường</Text>} name="addressStreet" rules={[{ required: true }]}><Input placeholder="123 Lê Lợi" /></Form.Item></Col>
+            <Col span={12}><Form.Item label={<Text strong>Phường/Xã</Text>} name="addressWard" rules={[{ required: true }]}><Input placeholder="Bến Thành" /></Form.Item></Col>
+            <Col span={12}><Form.Item label={<Text strong>Quận/Huyện</Text>} name="addressDistrict" rules={[{ required: true }]}><Input placeholder="Quận 1" /></Form.Item></Col>
+            <Col span={12}><Form.Item label={<Text strong>Tỉnh/Thành</Text>} name="addressCity" rules={[{ required: true }]}><Input placeholder="Hồ Chí Minh" /></Form.Item></Col>
+          </Row>
+        </Card>
 
-      <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item label="Hình ảnh (URL)">
-            <Form.List name="imagesUrls">
-              {(fields, { add, remove }) => (
-                <div>
-                  <Button type="dashed" onClick={() => add('')} className="mb-2">Thêm URL</Button>
-                  {fields.map((field) => (
-                    <div key={field.key} className="flex gap-2 mb-2">
-                      <Form.Item {...field} name={[field.name]} className="flex-1" rules={[{ required: true, message: 'Nhập URL hình ảnh' }]}>
-                        <Input placeholder="https://.../image.jpg" />
-                      </Form.Item>
-                      <Button danger onClick={() => remove(field.name)}>Xóa</Button>
-                    </div>
-                  ))}
+        <Card 
+          title={<Title level={4} className="mb-0"><PhoneOutlined className="mr-2" />Liên hệ</Title>} 
+          size="small"
+          className="shadow-sm"
+        >
+          <Row gutter={[12, 12]}>
+            <Col span={8}><Form.Item label={<Text strong>SĐT</Text>} name="contactPhone" rules={[{ required: true }]}><Input placeholder="02839123456" /></Form.Item></Col>
+            <Col span={8}><Form.Item label={<Text strong>Email</Text>} name="contactEmail" rules={[{ required: true, type: 'email' }]}><Input placeholder="hcmcenter@evcare.vn" /></Form.Item></Col>
+            <Col span={8}><Form.Item label={<Text strong>Website</Text>} name="contactWebsite"><Input placeholder="https://hcm.evcare.vn" /></Form.Item></Col>
+          </Row>
+        </Card>
+
+        <Card 
+          title={<Title level={4} className="mb-0"><FieldTimeOutlined className="mr-2" />Giờ hoạt động</Title>} 
+          size="small"
+          className="shadow-sm"
+        >
+          <Row gutter={[12, 12]}>
+            {[
+              { key: 'monday', label: 'Thứ 2' },
+              { key: 'tuesday', label: 'Thứ 3' },
+              { key: 'wednesday', label: 'Thứ 4' },
+              { key: 'thursday', label: 'Thứ 5' },
+              { key: 'friday', label: 'Thứ 6' },
+              { key: 'saturday', label: 'Thứ 7' },
+              { key: 'sunday', label: 'Chủ nhật' },
+            ].map((d) => (
+              <Col span={12} key={d.key}>
+                <div className="border rounded-md p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium">{d.label}</span>
+                    <Form.Item name={`operatingHours_${d.key}_isOpen`} valuePropName="checked" noStyle>
+                      <Switch />
+                    </Form.Item>
+                  </div>
+                  <Form.Item name={`operatingHours_${d.key}_range`}>
+                    <TimePicker.RangePicker format="HH:mm" minuteStep={15} className="w-full" />
+                  </Form.Item>
                 </div>
-              )}
-            </Form.List>
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item label="Phương thức thanh toán" name="paymentMethodsSelection" rules={[{ required: true, message: 'Chọn ít nhất 1 phương thức' }]}>
-            <Row gutter={[12, 12]}>
-              {PAYMENT_OPTIONS.map((opt) => {
-                const selected: string[] = Form.useWatch?.("paymentMethodsSelection", form) || [];
-                const isActive = selected.includes(opt.value as any);
-                const toggle = (checked: boolean) => {
-                  const next = checked ? [...selected, opt.value] : selected.filter((v) => v !== opt.value);
-                  form.setFieldsValue({ paymentMethodsSelection: Array.from(new Set(next)) });
-                };
-                return (
-                  <Col span={12} key={opt.value}>
-                    <div className={`border rounded-md p-3 flex items-center justify-between ${isActive ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-white'}`}>
-                      <span className="font-medium">{opt.label}</span>
-                      <Switch checked={isActive} onChange={toggle} />
+              </Col>
+            ))}
+          </Row>
+        </Card>
+
+        <Card 
+          title={<Title level={4} className="mb-0"><AppstoreOutlined className="mr-2" />Dịch vụ & Nhân sự</Title>} 
+          size="small"
+          className="shadow-sm"
+        >
+          <Row gutter={[12, 12]}>
+            <Col span={12}>
+              <Form.Item label={<Text strong>Dịch vụ</Text>} name="servicesIds" rules={[{ required: true, message: 'Chọn ít nhất 1 dịch vụ' }]}> 
+                <Select
+                  mode="multiple"
+                  placeholder="Chọn dịch vụ cung cấp"
+                  loading={servicesLoading}
+                  optionFilterProp="label"
+                  options={(serviceTypeItems || []).map((s: any) => ({ label: s.name, value: s._id }))}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label={<Text strong>Nhân sự (JSON)</Text>} name="staffJson">
+                <Input.TextArea rows={4} spellCheck={false} placeholder='[{"user":"id","role":"staff","isActive":true}]' />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Card>
+
+        <Card 
+          title={<Title level={4} className="mb-0"><PictureOutlined className="mr-2" />Hình ảnh & Thanh toán</Title>} 
+          size="small"
+          className="shadow-sm"
+        >
+          <Row gutter={[12, 12]}>
+            <Col span={12}>
+              <Form.Item label={<Text strong>Hình ảnh (URL)</Text>}>
+                <Form.List name="imagesUrls">
+                  {(fields, { add, remove }) => (
+                    <div>
+                      <Button type="dashed" size="small" onClick={() => add('')} className="mb-2 min-w-[120px]">Thêm URL</Button>
+                      {fields.map((field) => (
+                        <div key={field.key} className="flex gap-2 mb-2">
+                          <Form.Item {...field} name={[field.name]} className="flex-1" rules={[{ required: true, message: 'Nhập URL hình ảnh' }]}>
+                            <Input placeholder="https://.../image.jpg" />
+                          </Form.Item>
+                          <Button danger size="small" className="min-w-[120px]" onClick={() => remove(field.name)}>Xóa URL</Button>
+                        </div>
+                      ))}
                     </div>
-                  </Col>
-                );
-              })}
+                  )}
+                </Form.List>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label={<Text strong>Phương thức thanh toán</Text>} name="paymentMethodsSelection" rules={[{ required: true, message: 'Chọn ít nhất 1 phương thức' }]}> 
+                <Row gutter={[12, 12]}>
+                  {PAYMENT_OPTIONS.map((opt) => {
+                    const selected: string[] = Form.useWatch?.("paymentMethodsSelection", form) || [];
+                    const isActive = selected.includes(opt.value as any);
+                    const toggle = (checked: boolean) => {
+                      const next = checked ? [...selected, opt.value] : selected.filter((v) => v !== opt.value);
+                      form.setFieldsValue({ paymentMethodsSelection: Array.from(new Set(next)) });
+                    };
+                    return (
+                      <Col span={12} key={opt.value}>
+                        <div className={`border rounded-md p-3 flex items-center justify-between ${isActive ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-white'}`}>
+                          <span className="font-medium">{opt.label}</span>
+                          <Switch checked={isActive} onChange={toggle} />
+                        </div>
+                      </Col>
+                    );
+                  })}
+                </Row>
+              </Form.Item>
+            </Col>
+          </Row>
+        </Card>
+
+        <Card 
+          title={<Title level={4} className="mb-0"><SettingOutlined className="mr-2" />Sức chứa & AI</Title>} 
+          size="small"
+          className="shadow-sm"
+        >
+          <Row gutter={[12, 12]}>
+            <Col span={12}>
+              <Form.Item label={<Text strong>Sức chứa - Dịch vụ đồng thời</Text>} name="capacityMaxConcurrentServices" rules={[{ required: true }]}> 
+                <Input type="number" placeholder="15" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label={<Text strong>Sức chứa - Lịch/ngày</Text>} name="capacityMaxDailyAppointments" rules={[{ required: true }]}> 
+                <Input type="number" placeholder="80" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={[12, 12]}>
+            <Col span={8}>
+              <Form.Item label={<Text strong>Dự đoán tồn kho</Text>} name="ai_enableInventoryPrediction" valuePropName="checked"> 
+                <Switch />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label={<Text strong>Dự đoán bảo trì</Text>} name="ai_enableMaintenancePrediction" valuePropName="checked"> 
+                <Switch />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label={<Text strong>Dự báo nhu cầu</Text>} name="ai_enableDemandForecasting" valuePropName="checked"> 
+                <Switch />
+              </Form.Item>
+            </Col>
+          </Row>
+          {mode === 'edit' && (
+            <Row gutter={[12, 12]}>
+              <Col span={12}><Form.Item label={<Text strong><StarOutlined className="mr-1" />Rating Average</Text>} name="ratingAverage"><Input type="number" step="0.1" placeholder="4.7" /></Form.Item></Col>
+              <Col span={12}><Form.Item label={<Text strong><StarOutlined className="mr-1" />Rating Count</Text>} name="ratingCount"><Input type="number" placeholder="128" /></Form.Item></Col>
             </Row>
-          </Form.Item>
-        </Col>
-      </Row>
+          )}
+        </Card>
 
-      <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item label="Sức chứa - Dịch vụ đồng thời" name="capacityMaxConcurrentServices" rules={[{ required: true }]}>
-            <Input type="number" placeholder="15" />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item label="Sức chứa - Lịch/ngày" name="capacityMaxDailyAppointments" rules={[{ required: true }]}>
-            <Input type="number" placeholder="80" />
-          </Form.Item>
-        </Col>
-      </Row>
-
-      <Row gutter={16}>
-        <Col span={12}>
-          <Divider>AI Settings</Divider>
-          <div className="grid grid-cols-1 gap-3">
-            <Form.Item label="Dự đoán tồn kho" name="ai_enableInventoryPrediction" valuePropName="checked">
-              <Switch />
-            </Form.Item>
-            <Form.Item label="Dự đoán bảo trì" name="ai_enableMaintenancePrediction" valuePropName="checked">
-              <Switch />
-            </Form.Item>
-            <Form.Item label="Dự báo nhu cầu" name="ai_enableDemandForecasting" valuePropName="checked">
-              <Switch />
-            </Form.Item>
-          </div>
-        </Col>
-        {mode === 'edit' && (
-          <Col span={12}>
-            <Row gutter={8}>
-              <Col span={12}><Form.Item label="Rating Average" name="ratingAverage"><Input type="number" step="0.1" placeholder="4.7" /></Form.Item></Col>
-              <Col span={12}><Form.Item label="Rating Count" name="ratingCount"><Input type="number" placeholder="128" /></Form.Item></Col>
-            </Row>
-          </Col>
-        )}
-      </Row>
-
-      <Divider />
-      <div className="flex justify-end gap-2">
-        <Button onClick={onCancel}>Hủy</Button>
-        <Button type="primary" htmlType="submit" loading={loading}>
-          {mode === 'edit' ? 'Cập nhật' : 'Tạo mới'}
-        </Button>
-      </div>
-    </Form>
+        <div className="flex justify-end gap-2">
+          <Button onClick={onCancel} size="small" className="min-w-[120px]">Hủy</Button>
+          <Button type="primary" size="small" htmlType="submit" loading={loading} className="min-w-[120px]"> 
+            {mode === 'edit' ? 'Cập nhật' : 'Tạo mới'}
+          </Button>
+        </div>
+      </Form>
+    </div>
   );
 };
 
