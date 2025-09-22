@@ -1,6 +1,6 @@
 import React from "react";
 
-const StatisticPage: React.FC = () => {
+const BookingPages: React.FC = () => {
     return (
         <div className="p-6">
             <h1 className="text-2xl font-bold">Thống kê</h1>
@@ -9,6 +9,6 @@ const StatisticPage: React.FC = () => {
     );
 };
 
-export default StatisticPage;
+export default BookingPages;
 
 

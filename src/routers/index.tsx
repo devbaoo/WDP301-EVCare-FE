@@ -31,7 +31,7 @@ import ServicePage from "@/page/Admin/ServicePage";
 
 import ManageModelPage from "@/page/Admin/ManageModelPage";
 import ManagePackagePage from "@/page/Admin/ManagePackagePage";
-import StatisticPage from "@/page/Admin/StatisticPage";
+import BookingPages from "@/page/Admin/BookingPages";
 import SettingPage from "@/page/Admin/SettingPage";
 import ServiceCentersPages from "@/page/Admin/ServiceCentersPages";
 import PaymentSuccessPage from "@/page/Payment/PaymentSuccessPage";
@@ -159,7 +159,7 @@ const AppRouter = () => {
                         <Route path="services/model" element={<ManageModelPage />} />
                         <Route path="services/package" element={<ManagePackagePage />} />
                         <Route path="service-centers" element={<ServiceCentersPages />} />
-                        <Route path="booking" element={<StatisticPage />} />
+                        <Route path="booking" element={<BookingPages />} />
                         <Route path="settings" element={<SettingPage />} />
                     </Route>
                 </Route>
