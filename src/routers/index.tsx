@@ -31,12 +31,12 @@ import ServicePage from "@/page/Admin/ServicePage";
 
 import ManageModelPage from "@/page/Admin/ManageModelPage";
 import ManagePackagePage from "@/page/Admin/ManagePackagePage";
-import BookingPages from "@/page/Admin/BookingPages";
 import SettingPage from "@/page/Admin/SettingPage";
 import ServiceCentersPages from "@/page/Admin/ServiceCentersPages";
 import PaymentSuccessPage from "@/page/Payment/PaymentSuccessPage";
 import PaymentFailurePage from "@/page/Payment/PaymentFailurePage";
 import PaymentHistory from "@/components/Payment/PaymentHistory";
+import BookingManagePages from "@/page/Admin/BookingManagePages";
 
 const AppRouter = () => {
     const { isAuthenticated, user, needVerification } = useSelector((state: RootState) => state.auth);
@@ -157,7 +157,7 @@ const AppRouter = () => {
                         <Route path="services/model" element={<ManageModelPage />} />
                         <Route path="services/package" element={<ManagePackagePage />} />
                         <Route path="service-centers" element={<ServiceCentersPages />} />
-                        <Route path="booking" element={<BookingPages />} />
+                        <Route path="booking" element={<BookingManagePages />} />
                         <Route path="settings" element={<SettingPage />} />
                     </Route>
                 </Route>
