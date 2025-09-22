@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Card, Alert, QRCode, message } from 'antd';
-import { 
-  CreditCard, 
-  Smartphone, 
-  Copy, 
-  ExternalLink, 
+import {
+  CreditCard,
+  Smartphone,
+  Copy,
+  ExternalLink,
   Clock,
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../services/store/store';
-import { cancelPayOSPayment, syncPaymentStatus, pollPaymentStatusByOrderCode, clearCurrentPayment } from '../../services/features/payment/paymentSlice';
+import { cancelPayOSPayment, getPaymentStatus, pollPaymentStatus, clearCurrentPayment } from '../../services/features/payment/paymentSlice';
 import { formatPaymentAmount } from '../../lib/paymentUtils';
 
 interface PaymentModalProps {
@@ -39,7 +40,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const { currentPayment } = useAppSelector((state) => state.payment);
-  
+  const navigate = useNavigate();
+
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [copied, setCopied] = useState(false);
   const [paymentSuccessHandled, setPaymentSuccessHandled] = useState(false);
@@ -50,10 +52,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       const expiresAt = new Date(initialPaymentData.expiresAt);
       const now = new Date();
       const diffMs = expiresAt.getTime() - now.getTime();
-      
+
       if (diffMs > 0) {
         setTimeLeft(Math.floor(diffMs / 1000));
-        
+
         const timer = setInterval(() => {
           setTimeLeft(prev => {
             if (prev <= 1) {
@@ -73,32 +75,32 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
   // Start polling for payment status when modal opens
   useEffect(() => {
-    if (visible && initialPaymentData?.orderCode) {
+    if (visible && initialPaymentData?.paymentId) {
       // Reset payment success handled flag when modal opens
       setPaymentSuccessHandled(false);
-      // Use the new sync API with orderCode
-      dispatch(syncPaymentStatus(initialPaymentData.orderCode.toString()));
+      // Use status API with paymentId
+      dispatch(getPaymentStatus(initialPaymentData.paymentId));
     } else if (!visible) {
       // Clear current payment when modal closes
       dispatch(clearCurrentPayment());
     }
-  }, [visible, initialPaymentData?.orderCode, dispatch]);
+  }, [visible, initialPaymentData?.paymentId, dispatch]);
 
   // Polling logic with proper cleanup
   useEffect(() => {
-    if (!visible || !initialPaymentData?.orderCode) return;
+    if (!visible || !initialPaymentData?.paymentId) return;
 
     // Only poll if we don't have currentPayment yet or payment is still pending
     // Also stop polling if payment success has been handled
     if ((!currentPayment || (currentPayment.status === 'pending' && !currentPayment.isExpired)) && !paymentSuccessHandled) {
       const interval = setInterval(() => {
-        // Use the new sync API with orderCode for polling
-        dispatch(pollPaymentStatusByOrderCode(initialPaymentData.orderCode.toString()));
+        // Use status API with paymentId for polling
+        dispatch(pollPaymentStatus(initialPaymentData.paymentId));
       }, 5000); // Poll every 5 seconds
 
       return () => clearInterval(interval);
     }
-  }, [visible, initialPaymentData?.orderCode, currentPayment?.status, currentPayment?.isExpired, paymentSuccessHandled, dispatch]);
+  }, [visible, initialPaymentData?.paymentId, currentPayment?.status, currentPayment?.isExpired, paymentSuccessHandled, dispatch]);
 
   // Handle payment success
   useEffect(() => {
@@ -133,6 +135,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         await dispatch(cancelPayOSPayment(initialPaymentData.orderCode.toString())).unwrap();
         message.success('Đã hủy thanh toán');
         onCancel();
+        navigate('/payment/cancel');
       } catch (error) {
         message.error('Không thể hủy thanh toán');
       }
@@ -189,121 +192,121 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
     // Default payment interface (when no currentPayment or status is pending)
     return (
-          <div className="space-y-6">
-            {/* Payment Info */}
-            <Card className="border-blue-200 bg-blue-50">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-blue-800">
-                  Thông tin thanh toán
-                </h3>
-                <div className="text-right">
-                  <p className="text-sm text-blue-600">Số tiền</p>
-                  <p className="text-xl font-bold text-blue-800">
-                    {formatPaymentAmount(initialPaymentData.amount)} VND
-                  </p>
-                </div>
-              </div>
-              <p className="text-blue-700">{description}</p>
-            </Card>
-
-            {/* Timer */}
-            {timeLeft > 0 && (
-              <Alert
-                message={`Link thanh toán hết hạn sau: ${formatTime(timeLeft)}`}
-                type="warning"
-                icon={<Clock className="w-4 h-4" />}
-              />
-            )}
-
-            {timeLeft === 0 && (
-              <Alert
-                message="Link thanh toán đã hết hạn"
-                type="error"
-                icon={<AlertCircle className="w-4 h-4" />}
-                action={
-                  <Button size="small" onClick={onCancel}>
-                    Đóng
-                  </Button>
-                }
-              />
-            )}
-
-            {/* Payment Methods */}
-            <div className="space-y-4">
-              <h4 className="font-semibold text-gray-900">Phương thức thanh toán</h4>
-              
-              {/* QR Code */}
-              {initialPaymentData?.qrCode && (
-                <Card className="text-center">
-                  <h5 className="font-medium mb-3">Quét mã QR</h5>
-                  <div className="flex justify-center mb-3">
-                    <QRCode 
-                      value={initialPaymentData.qrCode} 
-                      size={200}
-                      errorLevel="M"
-                    />
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Sử dụng ứng dụng ngân hàng để quét mã QR
-                  </p>
-                </Card>
-              )}
-
-              {/* Payment Link */}
-              <Card>
-                <h5 className="font-medium mb-3">Thanh toán online</h5>
-                <div className="flex gap-2 mb-3">
-                  <Button
-                    icon={<ExternalLink className="w-4 h-4" />}
-                    onClick={handleOpenPayment}
-                    className="flex-1"
-                    type="primary"
-                  >
-                    Mở trang thanh toán
-                  </Button>
-                  <Button
-                    icon={<Copy className="w-4 h-4" />}
-                    onClick={handleCopyLink}
-                    className={copied ? 'bg-green-500 border-green-500' : ''}
-                  >
-                    {copied ? 'Đã sao chép' : 'Sao chép link'}
-                  </Button>
-                </div>
-                <p className="text-sm text-gray-600">
-                  Click để mở trang thanh toán PayOS
-                </p>
-              </Card>
-
-              {/* Mobile App */}
-              <Card>
-                <h5 className="font-medium mb-3 flex items-center">
-                  <Smartphone className="w-4 h-4 mr-2" />
-                  Ứng dụng di động
-                </h5>
-                {initialPaymentData?.paymentLink && (
-                  <Button
-                    onClick={() => window.open(initialPaymentData.paymentLink, '_blank')}
-                    className="w-full"
-                    icon={<Smartphone className="w-4 h-4" />}
-                  >
-                    Mở trong app ngân hàng
-                  </Button>
-                )}
-              </Card>
+      <div className="space-y-6">
+        {/* Payment Info */}
+        <Card className="border-blue-200 bg-blue-50">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-blue-800">
+              Thông tin thanh toán
+            </h3>
+            <div className="text-right">
+              <p className="text-sm text-blue-600">Số tiền</p>
+              <p className="text-xl font-bold text-blue-800">
+                {formatPaymentAmount(initialPaymentData.amount)} VND
+              </p>
             </div>
-
-            {/* Payment Instructions */}
-            <Card className="border-gray-200 bg-gray-50">
-              <h5 className="font-medium mb-3">Hướng dẫn thanh toán</h5>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Chọn một trong các phương thức thanh toán trên</li>
-                <li>• Thanh toán bằng thẻ ngân hàng hoặc ví điện tử</li>
-                <li>• Sau khi thanh toán thành công, lịch hẹn sẽ được xác nhận tự động</li>
-                <li>• Bạn sẽ nhận được email xác nhận trong vòng 5 phút</li>
-              </ul>
-            </Card>
           </div>
-        );
+          <p className="text-blue-700">{description}</p>
+        </Card>
+
+        {/* Timer */}
+        {timeLeft > 0 && (
+          <Alert
+            message={`Link thanh toán hết hạn sau: ${formatTime(timeLeft)}`}
+            type="warning"
+            icon={<Clock className="w-4 h-4" />}
+          />
+        )}
+
+        {timeLeft === 0 && (
+          <Alert
+            message="Link thanh toán đã hết hạn"
+            type="error"
+            icon={<AlertCircle className="w-4 h-4" />}
+            action={
+              <Button size="small" onClick={onCancel}>
+                Đóng
+              </Button>
+            }
+          />
+        )}
+
+        {/* Payment Methods */}
+        <div className="space-y-4">
+          <h4 className="font-semibold text-gray-900">Phương thức thanh toán</h4>
+
+          {/* QR Code */}
+          {initialPaymentData?.qrCode && (
+            <Card className="text-center">
+              <h5 className="font-medium mb-3">Quét mã QR</h5>
+              <div className="flex justify-center mb-3">
+                <QRCode
+                  value={initialPaymentData.qrCode}
+                  size={200}
+                  errorLevel="M"
+                />
+              </div>
+              <p className="text-sm text-gray-600">
+                Sử dụng ứng dụng ngân hàng để quét mã QR
+              </p>
+            </Card>
+          )}
+
+          {/* Payment Link */}
+          <Card>
+            <h5 className="font-medium mb-3">Thanh toán online</h5>
+            <div className="flex gap-2 mb-3">
+              <Button
+                icon={<ExternalLink className="w-4 h-4" />}
+                onClick={handleOpenPayment}
+                className="flex-1"
+                type="primary"
+              >
+                Mở trang thanh toán
+              </Button>
+              <Button
+                icon={<Copy className="w-4 h-4" />}
+                onClick={handleCopyLink}
+                className={copied ? 'bg-green-500 border-green-500' : ''}
+              >
+                {copied ? 'Đã sao chép' : 'Sao chép link'}
+              </Button>
+            </div>
+            <p className="text-sm text-gray-600">
+              Click để mở trang thanh toán PayOS
+            </p>
+          </Card>
+
+          {/* Mobile App */}
+          <Card>
+            <h5 className="font-medium mb-3 flex items-center">
+              <Smartphone className="w-4 h-4 mr-2" />
+              Ứng dụng di động
+            </h5>
+            {initialPaymentData?.paymentLink && (
+              <Button
+                onClick={() => window.open(initialPaymentData.paymentLink, '_blank')}
+                className="w-full"
+                icon={<Smartphone className="w-4 h-4" />}
+              >
+                Mở trong app ngân hàng
+              </Button>
+            )}
+          </Card>
+        </div>
+
+        {/* Payment Instructions */}
+        <Card className="border-gray-200 bg-gray-50">
+          <h5 className="font-medium mb-3">Hướng dẫn thanh toán</h5>
+          <ul className="text-sm text-gray-600 space-y-1">
+            <li>• Chọn một trong các phương thức thanh toán trên</li>
+            <li>• Thanh toán bằng thẻ ngân hàng hoặc ví điện tử</li>
+            <li>• Sau khi thanh toán thành công, lịch hẹn sẽ được xác nhận tự động</li>
+            <li>• Bạn sẽ nhận được email xác nhận trong vòng 5 phút</li>
+          </ul>
+        </Card>
+      </div>
+    );
   };
 
   return (
