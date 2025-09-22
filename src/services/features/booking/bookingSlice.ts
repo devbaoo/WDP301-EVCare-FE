@@ -12,6 +12,8 @@ import {
   SERVICE_CENTER_NEARBY_ENDPOINT,
   MY_BOOKINGS_ENDPOINT,
   BOOKING_DETAILS_ENDPOINT,
+  BOOKING_RESCHEDULE_ENDPOINT,
+  BOOKING_CANCEL_ENDPOINT,
 } from "../../constant/apiConfig";
 import { Vehicle, CreateVehicleData } from "../../../interfaces/vehicle";
 import {
@@ -270,6 +272,54 @@ export const fetchBookingDetails = createAsyncThunk(
   }
 );
 
+// Dời lịch hẹn
+export const rescheduleBooking = createAsyncThunk(
+  "booking/reschedule",
+  async (
+    {
+      bookingId,
+      appointmentDate,
+      appointmentTime,
+    }: { bookingId: string; appointmentDate: string; appointmentTime: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosInstance.put(
+        BOOKING_RESCHEDULE_ENDPOINT(bookingId),
+        { newDate: appointmentDate, newTime: appointmentTime }
+      );
+      return response.data;
+    } catch (err: unknown) {
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to reschedule booking"
+      );
+    }
+  }
+);
+
+// Hủy lịch hẹn
+export const cancelBooking = createAsyncThunk(
+  "booking/cancel",
+  async (
+    { bookingId, reason }: { bookingId: string; reason?: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosInstance.put(
+        BOOKING_CANCEL_ENDPOINT(bookingId),
+        { reason }
+      );
+      return response.data;
+    } catch (err: unknown) {
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to cancel booking"
+      );
+    }
+  }
+);
+
 const bookingSlice = createSlice({
   name: "booking",
   initialState,
@@ -492,6 +542,30 @@ const bookingSlice = createSlice({
         state.bookingDetails = action.payload; // Assuming `bookingDetails` is part of the state
       })
       .addCase(fetchBookingDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Reschedule booking
+      .addCase(rescheduleBooking.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(rescheduleBooking.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(rescheduleBooking.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Cancel booking
+      .addCase(cancelBooking.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(cancelBooking.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(cancelBooking.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

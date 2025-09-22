@@ -255,6 +255,9 @@ export interface Booking {
   _id: string;
   appointmentTime: {
     date: string;
+    startTime?: string;
+    endTime?: string;
+    duration?: number;
   };
   serviceType?: {
     name: string;
