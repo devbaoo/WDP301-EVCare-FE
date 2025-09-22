@@ -17,6 +17,7 @@ import {
   Package,
   Car,
   type LucideIcon,
+  Calendar,
 } from 'lucide-react';
 
 type MenuItem = {
@@ -35,18 +36,18 @@ const Sidebar = () => {
 
   const menuItems: MenuItem[] = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
-    { 
-      icon: Users, 
-      label: 'Users', 
+    {
+      icon: Users,
+      label: 'Users',
       path: '/admin/users',
       children: [
         { icon: UsersRound, label: 'Manage Users', path: '/admin/users/all' },
         { icon: UsersRound, label: 'Manage Staff', path: '/admin/users/staff' },
       ]
     },
-    { 
-      icon: BookPlus, 
-      label: 'Services', 
+    {
+      icon: BookPlus,
+      label: 'Services',
       path: '/admin/services',
       children: [
         { icon: Wrench, label: 'Manage Services', path: '/admin/services/manage' },
@@ -54,6 +55,7 @@ const Sidebar = () => {
         { icon: Package, label: 'Manage Package', path: '/admin/services/package' },
       ]
     },
+    { icon: Calendar, label: 'Bookings', path: '/admin/bookings' },
     { icon: Building2, label: 'Centers', path: '/admin/service-centers' },
     { icon: BarChart3, label: 'Statistics', path: '/admin/statistics' },
     { icon: Settings, label: 'Settings', path: '/admin/settings' },
@@ -71,8 +73,8 @@ const Sidebar = () => {
   };
 
   const toggleDropdown = (path: string) => {
-    setOpenDropdowns(prev => 
-      prev.includes(path) 
+    setOpenDropdowns(prev =>
+      prev.includes(path)
         ? prev.filter(p => p !== path)
         : [...prev, path]
     );
@@ -82,9 +84,8 @@ const Sidebar = () => {
 
   return (
     <aside
-      className={`h-screen sticky top-0 shrink-0 bg-white border-r border-gray-200 shadow-sm transition-all duration-200 ${
-        collapsed ? 'w-20' : 'w-64'
-      }`}
+      className={`h-screen sticky top-0 shrink-0 bg-white border-r border-gray-200 shadow-sm transition-all duration-200 ${collapsed ? 'w-20' : 'w-64'
+        }`}
     >
       <div className="h-16 px-4 flex items-center justify-between border-b border-gray-200 ml-1">
         <div className="flex items-center gap-3">
@@ -101,64 +102,62 @@ const Sidebar = () => {
         </div>
       </div>
 
-       <nav className="py-4 ml-3">
-         {menuItems.map((item) => {
-           const active = isActive(item.path);
-           const hasChildren = item.children && item.children.length > 0;
-           const isOpen = isDropdownOpen(item.path);
-           
-           return (
-             <div key={item.path}>
-               <button
-                 onClick={() => {
-                   if (hasChildren) {
-                     toggleDropdown(item.path);
-                   } else {
-                     navigate(item.path);
-                   }
-                 }}
-                 className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
-                   active
-                     ? 'bg-gray-100 text-gray-900'
-                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                 }`}
-               >
-                 <item.icon className="w-5 h-5" />
-                 {!collapsed && (
-                   <>
-                     <span className="text-sm font-medium">{item.label}</span>
-                     {hasChildren && (
-                       <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                     )}
-                   </>
-                 )}
-               </button>
-               
-               {hasChildren && !collapsed && isOpen && (
-                 <div className="ml-6 border-l border-gray-200">
-                   {item.children!.map((child) => {
-                     const childActive = isActive(child.path);
-                     return (
-                       <button
-                         key={child.path}
-                         onClick={() => navigate(child.path)}
-                         className={`w-full flex items-center gap-3 px-4 py-2 transition-colors ${
-                           childActive
-                             ? 'bg-gray-100 text-gray-900'
-                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                         }`}
-                       >
-                         <child.icon className="w-4 h-4" />
-                         <span className="text-sm font-medium">{child.label}</span>
-                       </button>
-                     );
-                   })}
-                 </div>
-               )}
-             </div>
-           );
-         })}
-       </nav>
+      <nav className="py-4 ml-3">
+        {menuItems.map((item) => {
+          const active = isActive(item.path);
+          const hasChildren = item.children && item.children.length > 0;
+          const isOpen = isDropdownOpen(item.path);
+
+          return (
+            <div key={item.path}>
+              <button
+                onClick={() => {
+                  if (hasChildren) {
+                    toggleDropdown(item.path);
+                  } else {
+                    navigate(item.path);
+                  }
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${active
+                  ? 'bg-gray-100 text-gray-900'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+              >
+                <item.icon className="w-5 h-5" />
+                {!collapsed && (
+                  <>
+                    <span className="text-sm font-medium">{item.label}</span>
+                    {hasChildren && (
+                      <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    )}
+                  </>
+                )}
+              </button>
+
+              {hasChildren && !collapsed && isOpen && (
+                <div className="ml-6 border-l border-gray-200">
+                  {item.children!.map((child) => {
+                    const childActive = isActive(child.path);
+                    return (
+                      <button
+                        key={child.path}
+                        onClick={() => navigate(child.path)}
+                        className={`w-full flex items-center gap-3 px-4 py-2 transition-colors ${childActive
+                          ? 'bg-gray-100 text-gray-900'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          }`}
+                      >
+                        <child.icon className="w-4 h-4" />
+                        <span className="text-sm font-medium">{child.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </nav>
 
       <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 p-4">
         <button
