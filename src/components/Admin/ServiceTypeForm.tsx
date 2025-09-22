@@ -1,6 +1,21 @@
-import { Form, Input, InputNumber, Select, Switch, Button, Divider, Space } from "antd";
+import { Form, Input, InputNumber, Select, Switch, Button, Card, Row, Col, Typography } from "antd";
+import { 
+  FileTextOutlined, 
+  DollarOutlined, 
+  SettingOutlined, 
+  ToolOutlined, 
+  CarOutlined, 
+  OrderedListOutlined, 
+  SafetyOutlined, 
+  TagsOutlined, 
+  PictureOutlined, 
+  RobotOutlined,
+  PlusOutlined,
+  DeleteOutlined
+} from "@ant-design/icons";
 
 const { Option } = Select;
+const { Title, Text } = Typography;
 
 export interface ServiceTypeFormValues {
   name: string;
@@ -26,226 +41,835 @@ export interface ServiceTypeFormValues {
   priority?: number;
   isPopular?: boolean;
   images?: Array<{ url: string; caption?: string; isPrimary?: boolean }>;
-  aiData?: string;
+  aiData?: {
+    averageCompletionTime?: number;
+    successRate?: number;
+    commonIssues?: string[];
+    recommendations?: string[];
+  };
 }
 
 export default function ServiceTypeForm({ form }: { form: any }) {
   return (
-    <Form layout="vertical" form={form} preserve={false}>
-      <Form.Item name="name" label="Tên dịch vụ" rules={[{ required: true, message: "Nhập tên dịch vụ" }]}>
-        <Input placeholder="Ví dụ: Thay pin" />
+    <div className="w-full max-h-[70vh] overflow-y-auto">
+      <Form layout="vertical" form={form} preserve={false} className="space-y-4">
+        {/* Basic Information */}
+        <Card 
+          title={<Title level={4} className="mb-0"><FileTextOutlined className="mr-2" />Thông tin cơ bản</Title>} 
+          className="shadow-sm mb-4"
+          size="small"
+        >
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item 
+                name="name" 
+                label={<Text strong>Tên dịch vụ</Text>} 
+                rules={[{ required: true, message: "Nhập tên dịch vụ" }]}
+              >
+                <Input placeholder="Ví dụ: Thay pin xe điện" />
       </Form.Item>
-      <Form.Item name="description" label="Mô tả" rules={[{ required: true, message: "Nhập mô tả" }]}>
-        <Input.TextArea rows={3} placeholder="Mô tả ngắn" />
-      </Form.Item>
-      <Form.Item name="category" label="Danh mục" rules={[{ required: true, message: "Chọn danh mục" }]}>
+            </Col>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item 
+                name="category" 
+                label={<Text strong>Danh mục</Text>} 
+                rules={[{ required: true, message: "Chọn danh mục" }]}
+              >
         <Select placeholder="Chọn danh mục">
-          <Option value="maintenance">Maintenance</Option>
-          <Option value="repair">Repair</Option>
-          <Option value="upgrade">Upgrade</Option>
-          <Option value="inspection">Inspection</Option>
-          <Option value="emergency">Emergency</Option>
+                  <Option value="maintenance">Bảo trì</Option>
+                  <Option value="repair">Sửa chữa</Option>
+                  <Option value="upgrade">Nâng cấp</Option>
+                  <Option value="inspection">Kiểm tra</Option>
+                  <Option value="emergency">Khẩn cấp</Option>
         </Select>
       </Form.Item>
+            </Col>
+            <Col xs={24}>
+              <Form.Item 
+                name="description" 
+                label={<Text strong>Mô tả dịch vụ</Text>} 
+                rules={[{ required: true, message: "Nhập mô tả" }]}
+              >
+                <Input.TextArea 
+                  rows={3} 
+                  placeholder="Mô tả chi tiết về dịch vụ..." 
+                  showCount 
+                  maxLength={500}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Card>
 
-      <Divider>Pricing</Divider>
-      <Space direction="vertical" className="w-full">
-        <Form.Item name="basePrice" label="Giá cơ bản (VND)" rules={[{ required: true, message: "Nhập giá" }]}>
-          <InputNumber min={0} step={1000} className="w-full" />
+        {/* Pricing Information */}
+        <Card 
+          title={<Title level={4} className="mb-0"><DollarOutlined className="mr-2" />Thông tin giá cả</Title>} 
+          className="shadow-sm mb-4"
+          size="small"
+        >
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item 
+                name="basePrice" 
+                label={<Text strong>Giá cơ bản (VND)</Text>} 
+                rules={[{ required: true, message: "Nhập giá" }]}
+              >
+                <InputNumber 
+                  min={0} 
+                  step={1000} 
+                  className="w-full" 
+                  formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  parser={value => value!.replace(/\$\s?|(,*)/g, '') as any}
+                />
         </Form.Item>
-        <Form.Item name="priceType" label="Loại giá" initialValue="fixed">
+            </Col>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item 
+                name="priceType" 
+                label={<Text strong>Loại giá</Text>} 
+                initialValue="fixed"
+              >
           <Select>
-            <Option value="fixed">Fixed</Option>
-            <Option value="range">Range</Option>
-            <Option value="hourly">Hourly</Option>
+                  <Option value="fixed">Cố định</Option>
+                  <Option value="range">Khoảng giá</Option>
+                  <Option value="hourly">Theo giờ</Option>
           </Select>
         </Form.Item>
-        <Form.Item name="currency" label="Tiền tệ" initialValue="VND">
+            </Col>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item 
+                name="currency" 
+                label={<Text strong>Tiền tệ</Text>} 
+                initialValue="VND"
+              >
           <Input placeholder="VND" />
         </Form.Item>
-        <Form.Item name="isNegotiable" label="Có thương lượng" valuePropName="checked">
-          <Switch />
+            </Col>
+            <Col xs={24}>
+              <Form.Item 
+                name="isNegotiable" 
+                label={<Text strong>Có thể thương lượng giá</Text>} 
+                valuePropName="checked"
+              >
+                <Switch size="default" />
         </Form.Item>
-      </Space>
+            </Col>
+          </Row>
+        </Card>
 
-      <Divider>Service Details</Divider>
-      <Form.Item name="duration" label="Thời lượng (phút)" rules={[{ required: true, message: "Nhập thời lượng" }]}>
-        <InputNumber min={0} step={5} className="w-full" />
+        {/* Service Details */}
+        <Card 
+          title={<Title level={4} className="mb-0"><SettingOutlined className="mr-2" />Chi tiết dịch vụ</Title>} 
+          className="shadow-sm mb-4"
+          size="small"
+        >
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item 
+                name="duration" 
+                label={<Text strong>Thời lượng (phút)</Text>} 
+                rules={[{ required: true, message: "Nhập thời lượng" }]}
+              >
+                <InputNumber 
+                  min={0} 
+                  step={5} 
+                  className="w-full" 
+                  placeholder="Ví dụ: 120"
+                />
       </Form.Item>
-      <Form.Item name="complexity" label="Độ khó" initialValue="easy" rules={[{ required: true }]}>
+            </Col>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item 
+                name="complexity" 
+                label={<Text strong>Độ khó</Text>} 
+                initialValue="easy" 
+                rules={[{ required: true }]}
+              >
         <Select>
-          <Option value="easy">Easy</Option>
-          <Option value="medium">Medium</Option>
-          <Option value="hard">Hard</Option>
+                  <Option value="easy">Dễ</Option>
+                  <Option value="medium">Trung bình</Option>
+                  <Option value="hard">Khó</Option>
         </Select>
       </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item 
+                name="priority" 
+                label={<Text strong>Mức độ ưu tiên</Text>}
+              >
+                <InputNumber 
+                  min={1} 
+                  max={10} 
+                  className="w-full" 
+                  size="large"
+                  placeholder="1-10"
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Card>
+
+        {/* Skills & Tools */}
+        <Card title={<Title level={4} className="mb-0"><ToolOutlined className="mr-2" />Kỹ năng & Dụng cụ</Title>} className="shadow-sm mb-4" size="small">
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12} md={8} lg={6}>
       <Form.List name="requiredSkills">
         {(fields, { add, remove }) => (
           <div>
-            <div className="flex items-center justify-between"><span>Required Skills</span><Button type="link" onClick={() => add()}>Thêm</Button></div>
+                    <div className="flex items-center justify-between mb-4">
+                      <Text strong>Kỹ năng yêu cầu</Text>
+                      <Button type="primary" size="small" onClick={() => add()} icon={<PlusOutlined />} className="min-w-[120px]">
+                        Thêm kỹ năng
+                      </Button>
+                    </div>
             {fields.map((field) => (
-              <Space key={field.key} className="w-full mb-2">
-                <Form.Item {...field} name={[field.name]} className="w-full" rules={[{ required: true, message: "Nhập skill" }]}>
-                  <Input placeholder="e.g. battery management" />
+                      <div key={field.key} className="flex items-center gap-2 mb-2">
+                        <Form.Item 
+                          {...field} 
+                          name={[field.name]} 
+                          className="flex-1 mb-0" 
+                          rules={[{ required: true, message: "Nhập kỹ năng" }]}
+                        >
+                          <Input placeholder="Ví dụ: Quản lý pin, Điện tử ô tô" />
                 </Form.Item>
-                <Button danger onClick={() => remove(field.name)}>Xóa</Button>
-              </Space>
+                      <Button 
+                        danger 
+                        size="small" 
+                        onClick={() => remove(field.name)}
+                        icon={<DeleteOutlined />}
+                        className="min-w-[120px]"
+                      >
+                        Xóa kỹ năng 
+                      </Button>
+                      </div>
             ))}
           </div>
         )}
       </Form.List>
+            </Col>
+            <Col xs={24} sm={12} md={8} lg={6}>
       <Form.List name="tools">
         {(fields, { add, remove }) => (
           <div>
-            <div className="flex items-center justify-between"><span>Tools</span><Button type="link" onClick={() => add()}>Thêm</Button></div>
+                    <div className="flex items-center justify-between mb-4">
+                      <Text strong>Dụng cụ cần thiết</Text>
+                      <Button type="primary" size="small" onClick={() => add()} icon={<PlusOutlined />} className="min-w-[120px]">
+                        Thêm dụng cụ
+                      </Button>
+                    </div>
             {fields.map((field) => (
-              <Space key={field.key} className="w-full mb-2">
-                <Form.Item {...field} name={[field.name]} className="w-full" rules={[{ required: true, message: "Nhập tool" }]}>
-                  <Input placeholder="e.g. hydraulic lift" />
+                      <div key={field.key} className="flex items-center gap-2 mb-2">
+                        <Form.Item 
+                          {...field} 
+                          name={[field.name]} 
+                          className="flex-1 mb-0" 
+                          rules={[{ required: true, message: "Nhập dụng cụ" }]}
+                        >
+                          <Input placeholder="Ví dụ: Cầu nâng thủy lực, Đồng hồ đo điện" />
                 </Form.Item>
-                <Button danger onClick={() => remove(field.name)}>Xóa</Button>
-              </Space>
+                      <Button 
+                          danger 
+                          size="small" 
+                        onClick={() => remove(field.name)}
+                        icon={<DeleteOutlined />}
+                        className="min-w-[120px]"
+                      >
+                        Xóa dụng cụ
+                      </Button>
+                      </div>
             ))}
           </div>
         )}
       </Form.List>
+            </Col>
+          </Row>
+        </Card>
 
-      <Divider>Required Parts</Divider>
+        {/* Required Parts */}
+        <Card title={<Title level={4} className="mb-0"><ToolOutlined className="mr-2" />Linh kiện cần thiết</Title>} className="shadow-sm mb-4" size="small">
       <Form.List name="requiredParts">
         {(fields, { add, remove }) => (
           <div>
-            <Button type="dashed" onClick={() => add()} className="mb-2">Thêm linh kiện</Button>
+                <div className="flex justify-between items-center mb-4">
+                  <Text type="secondary">Thêm các linh kiện cần thiết cho dịch vụ</Text>
+                  <Button type="primary" size="small" onClick={() => add()} icon={<PlusOutlined />} className="min-w-[120px]">
+                    Thêm linh kiện
+                  </Button>
+                </div>
             {fields.map((field) => (
-              <div key={field.key} className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
-                <Form.Item name={[field.name, "partName"]} label="Tên" rules={[{ required: true }]}><Input /></Form.Item>
-                <Form.Item name={[field.name, "partType"]} label="Loại" rules={[{ required: true }]}><Input /></Form.Item>
-                <Form.Item name={[field.name, "quantity"]} label="Số lượng" initialValue={1}><InputNumber min={0} className="w-full" /></Form.Item>
-                <Form.Item name={[field.name, "estimatedCost"]} label="Giá ước tính"><InputNumber min={0} step={1000} className="w-full" /></Form.Item>
-                <Form.Item name={[field.name, "isOptional"]} label="Tùy chọn" valuePropName="checked"><Switch /></Form.Item>
-                <div className="flex items-end"><Button danger onClick={() => remove(field.name)}>Xóa</Button></div>
-              </div>
+                  <Card key={field.key} size="small" className="mb-3 border-dashed">
+                    <Row gutter={[8, 8]}>
+                      <Col xs={24} sm={12} md={8}>
+                        <Form.Item 
+                          name={[field.name, "partName"]} 
+                          label={<Text strong>Tên linh kiện</Text>} 
+                          rules={[{ required: true, message: "Nhập tên linh kiện" }]}
+                        >
+                          <Input placeholder="Ví dụ: Pin lithium-ion" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12} md={8}>
+                        <Form.Item 
+                          name={[field.name, "partType"]} 
+                          label={<Text strong>Loại linh kiện</Text>} 
+                          rules={[{ required: true, message: "Nhập loại linh kiện" }]}
+                        >
+                          <Input placeholder="Ví dụ: Pin, Dây điện, Cảm biến" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12} md={8}>
+                        <Form.Item 
+                          name={[field.name, "quantity"]} 
+                          label={<Text strong>Số lượng</Text>} 
+                          initialValue={1}
+                        >
+                          <InputNumber min={0} className="w-full" placeholder="1" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12} md={8}>
+                        <Form.Item 
+                          name={[field.name, "estimatedCost"]} 
+                          label={<Text strong>Giá ước tính (VND)</Text>}
+                        >
+                          <InputNumber 
+                            min={0} 
+                            step={1000} 
+                            className="w-full"
+                            formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                            parser={value => value!.replace(/\$\s?|(,*)/g, '') as any}
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12} md={8}>
+                        <Form.Item 
+                          name={[field.name, "isOptional"]} 
+                          label={<Text strong>Linh kiện tùy chọn</Text>} 
+                          valuePropName="checked"
+                        >
+                          <Switch />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={8} className="flex items-end justify-end">
+                        <Button 
+                          danger 
+                          size="small"
+                          onClick={() => remove(field.name)}
+                          className="min-w-[120px]"
+                        >
+                          <DeleteOutlined /> Xóa linh kiện
+                        </Button>
+                      </Col>
+                    </Row>
+                  </Card>
             ))}
           </div>
         )}
       </Form.List>
+        </Card>
 
-      <Divider>Compatible Vehicles</Divider>
+        {/* Compatible Vehicles */}
+        <Card title={<Title level={4} className="mb-0"><CarOutlined className="mr-2" />Xe tương thích</Title>} className="shadow-sm mb-4" size="small">
       <Form.List name="compatibleVehicles">
         {(fields, { add, remove }) => (
           <div>
-            <Button type="dashed" onClick={() => add()} className="mb-2">Thêm xe tương thích</Button>
+                <div className="flex justify-between items-center mb-4">
+                  <Text type="secondary">Thêm các loại xe có thể sử dụng dịch vụ này</Text>
+                  <Button type="primary" size="small" onClick={() => add()} icon={<PlusOutlined />} className="min-w-[120px]">
+                    Thêm xe tương thích
+                  </Button>
+                </div>
             {fields.map((field) => (
-              <div key={field.key} className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
-                <Form.Item name={[field.name, "brand"]} label="Hãng" rules={[{ required: true }]}><Input /></Form.Item>
-                <Form.Item name={[field.name, "model"]} label="Model" rules={[{ required: true }]}><Input /></Form.Item>
-                <Form.Item name={[field.name, "year"]} label="Năm" rules={[{ required: true }]}><Input /></Form.Item>
-                <Form.Item name={[field.name, "batteryType"]} label="Loại pin"><Input /></Form.Item>
-                <div className="flex items-end"><Button danger onClick={() => remove(field.name)}>Xóa</Button></div>
-              </div>
+                  <Card key={field.key} size="small" className="mb-3 border-dashed">
+                    <Row gutter={[8, 8]}>
+                      <Col xs={24} sm={12} md={6}>
+                        <Form.Item 
+                          name={[field.name, "brand"]} 
+                          label={<Text strong>Hãng xe</Text>} 
+                          rules={[{ required: true, message: "Nhập hãng xe" }]}
+                        >
+                          <Input placeholder="Ví dụ: Tesla, VinFast" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12} md={6}>
+                        <Form.Item 
+                          name={[field.name, "model"]} 
+                          label={<Text strong>Model</Text>} 
+                          rules={[{ required: true, message: "Nhập model" }]}
+                        >
+                          <Input placeholder="Ví dụ: Model 3, VF8" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12} md={6}>
+                        <Form.Item 
+                          name={[field.name, "year"]} 
+                          label={<Text strong>Năm sản xuất</Text>} 
+                          rules={[{ required: true, message: "Nhập năm" }]}
+                        >
+                          <Input placeholder="Ví dụ: 2023" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12} md={6}>
+                        <Form.Item 
+                          name={[field.name, "batteryType"]} 
+                          label={<Text strong>Loại pin</Text>}
+                        >
+                          <Input placeholder="Ví dụ: Li-ion, LFP" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} className="flex justify-end">
+                        <Button 
+                          danger 
+                          size="small"
+                          onClick={() => remove(field.name)}
+                          className="min-w-[120px]"
+                        >
+                          <DeleteOutlined /> Xóa xe
+                        </Button>
+                      </Col>
+                    </Row>
+                  </Card>
             ))}
           </div>
         )}
       </Form.List>
+        </Card>
 
-      <Divider>Procedure</Divider>
+        {/* Procedure Steps */}
+        <Card title={<Title level={4} className="mb-0"><OrderedListOutlined className="mr-2" />Quy trình thực hiện</Title>} className="shadow-sm mb-4" size="small">
       <Form.List name="steps">
         {(fields, { add, remove }) => (
           <div>
-            <Button type="dashed" onClick={() => add()} className="mb-2">Thêm bước</Button>
+                <div className="flex justify-between items-center mb-4">
+                  <Text type="secondary">Thêm các bước thực hiện dịch vụ</Text>
+                  <Button type="primary" size="small" onClick={() => add()} icon={<PlusOutlined />}>
+                    Thêm bước
+                  </Button>
+                </div>
             {fields.map((field, idx) => (
-              <div key={field.key} className="border rounded p-3 mb-3">
-                <Form.Item name={[field.name, "stepNumber"]} label="Số bước" initialValue={idx + 1}><InputNumber min={1} className="w-full" /></Form.Item>
-                <Form.Item name={[field.name, "title"]} label="Tiêu đề" rules={[{ required: true }]}><Input /></Form.Item>
-                <Form.Item name={[field.name, "description"]} label="Mô tả" rules={[{ required: true }]}><Input.TextArea rows={2} /></Form.Item>
-                <Form.Item name={[field.name, "estimatedTime"]} label="Thời gian (phút)"><InputNumber min={0} className="w-full" /></Form.Item>
-                <Form.Item name={[field.name, "requiredTools"]} label="Dụng cụ (cách nhau dấu phẩy)"><Input /></Form.Item>
-                <Form.Item name={[field.name, "safetyNotes"]} label="Lưu ý an toàn (cách nhau dấu phẩy)"><Input /></Form.Item>
-                <div className="flex justify-end"><Button danger onClick={() => remove(field.name)}>Xóa bước</Button></div>
+                  <Card key={field.key} size="small" className="mb-4 border-l-4 border-l-blue-500">
+                    <div className="flex justify-between items-center mb-3">
+                      <Text strong className="text-blue-600">Bước {idx + 1}</Text>
+                      <Button 
+                        danger 
+                        size="small" 
+                        onClick={() => remove(field.name)}
+                        className="min-w-[120px]"
+                      >
+                        <DeleteOutlined /> Xóa bước
+                      </Button>
               </div>
+                    <Row gutter={[8, 8]}>
+                      <Col xs={24} sm={12} md={6}>
+                        <Form.Item 
+                          name={[field.name, "stepNumber"]} 
+                          label={<Text strong>Số thứ tự</Text>} 
+                          initialValue={idx + 1}
+                        >
+                          <InputNumber min={1} className="w-full" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={18}>
+                        <Form.Item 
+                          name={[field.name, "title"]} 
+                          label={<Text strong>Tiêu đề bước</Text>} 
+                          rules={[{ required: true, message: "Nhập tiêu đề" }]}
+                        >
+                          <Input placeholder="Ví dụ: Kiểm tra tình trạng pin" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24}>
+                        <Form.Item 
+                          name={[field.name, "description"]} 
+                          label={<Text strong>Mô tả chi tiết</Text>} 
+                          rules={[{ required: true, message: "Nhập mô tả" }]}
+                        >
+                          <Input.TextArea 
+                            rows={2} 
+                            placeholder="Mô tả chi tiết các bước thực hiện..."
+                            showCount
+                            maxLength={300}
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12} md={8}>
+                        <Form.Item 
+                          name={[field.name, "estimatedTime"]} 
+                          label={<Text strong>Thời gian ước tính (phút)</Text>}
+                        >
+                          <InputNumber min={0} className="w-full" placeholder="30" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12} md={8}>
+                        <Form.Item 
+                          name={[field.name, "requiredTools"]} 
+                          label={<Text strong>Dụng cụ cần thiết</Text>}
+                        >
+                          <Input placeholder="Cách nhau bằng dấu phẩy" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12} md={8}>
+                        <Form.Item 
+                          name={[field.name, "safetyNotes"]} 
+                          label={<Text strong>Lưu ý an toàn</Text>}
+                        >
+                          <Input placeholder="Cách nhau bằng dấu phẩy" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </Card>
             ))}
           </div>
         )}
       </Form.List>
+        </Card>
 
-      <Divider>Requirements</Divider>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        <Form.Item name="minBatteryLevel" label="Mức pin tối thiểu (%)"><InputNumber min={0} max={100} className="w-full" /></Form.Item>
-        <Form.Item name="maxMileage" label="Odo tối đa (km)"><InputNumber min={0} className="w-full" /></Form.Item>
-      </div>
+        {/* Requirements */}
+        <Card title={<Title level={4} className="mb-0"><SafetyOutlined className="mr-2" />Yêu cầu & Điều kiện</Title>} className="shadow-sm mb-4" size="small">
+          <Row gutter={[8, 8]}>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item 
+                name="minBatteryLevel" 
+                label={<Text strong>Mức pin tối thiểu (%)</Text>}
+              >
+                <InputNumber 
+                  min={0} 
+                  max={100} 
+                  className="w-full" 
+                  size="large"
+                  placeholder="Ví dụ: 20"
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item 
+                name="maxMileage" 
+                label={<Text strong>Odo tối đa (km)</Text>}
+              >
+                <InputNumber 
+                  min={0} 
+                  className="w-full" 
+                  size="large"
+                  placeholder="Ví dụ: 100000"
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          
+          <Row gutter={[8, 8]}>
+            <Col xs={24} sm={12} md={8} lg={6}>
       <Form.List name="specialConditions">
         {(fields, { add, remove }) => (
           <div>
-            <div className="flex items-center justify-between"><span>Điều kiện đặc biệt</span><Button type="link" onClick={() => add()}>Thêm</Button></div>
+                    <div className="flex items-center justify-between mb-4">
+                      <Text strong>Điều kiện đặc biệt</Text>
+                      <Button type="primary" size="small" onClick={() => add()} icon={<PlusOutlined />}>
+                        Thêm điều kiện
+                      </Button>
+                    </div>
             {fields.map((field) => (
-              <Space key={field.key} className="w-full mb-2">
-                <Form.Item {...field} name={[field.name]} className="w-full"><Input /></Form.Item>
-                <Button danger onClick={() => remove(field.name)}>Xóa</Button>
-              </Space>
+                      <div key={field.key} className="flex items-center gap-2 mb-2">
+                        <Form.Item 
+                          {...field} 
+                          name={[field.name]} 
+                          className="flex-1 mb-0"
+                        >
+                          <Input placeholder="Ví dụ: Xe phải được sạc đầy trước khi thực hiện" />
+                        </Form.Item>
+                        <Button 
+                          danger 
+                          size="small" 
+                          onClick={() => remove(field.name)}
+                          icon={<DeleteOutlined />}
+                          className="min-w-[120px]"
+                        >
+                          Xóa điều kiện
+                        </Button>
+                      </div>
             ))}
           </div>
         )}
       </Form.List>
+            </Col>
+            <Col xs={24} sm={12} md={8} lg={6}>
       <Form.List name="safetyRequirements">
         {(fields, { add, remove }) => (
           <div>
-            <div className="flex items-center justify-between"><span>Yêu cầu an toàn</span><Button type="link" onClick={() => add()}>Thêm</Button></div>
+                    <div className="flex items-center justify-between mb-4">
+                      <Text strong>Yêu cầu an toàn</Text>
+                      <Button type="primary" size="small" onClick={() => add()} icon={<PlusOutlined />} className="min-w-[120px]">
+                        Thêm yêu cầu
+                      </Button>
+                    </div>
             {fields.map((field) => (
-              <Space key={field.key} className="w-full mb-2">
-                <Form.Item {...field} name={[field.name]} className="w-full"><Input /></Form.Item>
-                <Button danger onClick={() => remove(field.name)}>Xóa</Button>
-              </Space>
+                      <div key={field.key} className="flex items-center gap-2 mb-2">
+                        <Form.Item 
+                          {...field} 
+                          name={[field.name]} 
+                          className="flex-1 mb-0"
+                        >
+                          <Input placeholder="Ví dụ: Mang găng tay cách điện" />
+                        </Form.Item>
+                        <Button 
+                          danger 
+                          size="small" 
+                          onClick={() => remove(field.name)}
+                          icon={<DeleteOutlined />}
+                          className="min-w-[120px]"
+                        >
+                          Xóa yêu cầu
+                        </Button>
+                      </div>
             ))}
           </div>
         )}
       </Form.List>
+            </Col>
+          </Row>
+        </Card>
 
-      <Divider>Trạng thái & Tags</Divider>
-      <Form.Item name="status" label="Trạng thái" initialValue="active" rules={[{ required: true }]}>
+        {/* Status & Tags */}
+        <Card title={<Title level={4} className="mb-0"><TagsOutlined className="mr-2" />Trạng thái & Thẻ</Title>} className="shadow-sm mb-4" size="small">
+          <Row gutter={[8, 8]}>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item 
+                name="status" 
+                label={<Text strong>Trạng thái dịch vụ</Text>} 
+                initialValue="active" 
+                rules={[{ required: true }]}
+              >
         <Select>
-          <Option value="active">Active</Option>
-          <Option value="inactive">Inactive</Option>
+                  <Option value="active">Hoạt động</Option>
+                  <Option value="inactive">Tạm dừng</Option>
         </Select>
       </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item 
+                name="isPopular" 
+                label={<Text strong>Dịch vụ phổ biến</Text>} 
+                valuePropName="checked"
+              >
+                <Switch size="default" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item 
+                name="priority" 
+                label={<Text strong>Mức độ ưu tiên</Text>}
+              >
+                <InputNumber 
+                  min={1} 
+                  max={10} 
+                  className="w-full" 
+                  size="large"
+                  placeholder="1-10"
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          
       <Form.List name="tags">
         {(fields, { add, remove }) => (
           <div>
-            <div className="flex items-center justify-between"><span>Tags</span><Button type="link" onClick={() => add()}>Thêm</Button></div>
+                <div className="flex items-center justify-between mb-4">
+                  <Text strong>Thẻ phân loại</Text>
+                  <Button type="primary" size="small" onClick={() => add()} icon={<PlusOutlined />} className="min-w-[120px]">
+                    Thêm thẻ
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
             {fields.map((field) => (
-              <Space key={field.key} className="w-full mb-2">
-                <Form.Item {...field} name={[field.name]} className="w-full"><Input placeholder="tag" /></Form.Item>
-                <Button danger onClick={() => remove(field.name)}>Xóa</Button>
-              </Space>
+                    <div key={field.key} className="flex items-center gap-2 bg-gray-50 p-2 rounded">
+                      <Form.Item 
+                        {...field} 
+                        name={[field.name]} 
+                        className="mb-0"
+                      >
+                        <Input 
+                          placeholder="Ví dụ: pin, sửa chữa" 
+                          size="small"
+                          style={{ width: 150 }}
+                        />
+                      </Form.Item>
+                      <Button 
+                        danger 
+                        size="small" 
+                        onClick={() => remove(field.name)}
+                      >
+                        <DeleteOutlined />
+                      </Button>
+
+                    </div>
+                  ))}
+                </div>
+          </div>
+        )}
+      </Form.List>
+        </Card>
+
+        {/* Images */}
+        <Card title={<Title level={4} className="mb-0"><PictureOutlined className="mr-2" />Hình ảnh dịch vụ</Title>} className="shadow-sm mb-4" size="small">
+      <Form.List name="images">
+        {(fields, { add, remove }) => (
+          <div>
+                <div className="flex justify-between items-center mb-4">
+                  <Text type="secondary">Thêm hình ảnh minh họa cho dịch vụ</Text>
+                  <Button type="primary" size="small" onClick={() => add()} icon={<PlusOutlined />} className="min-w-[120px]">
+                    Thêm ảnh
+                  </Button>
+                </div>
+            {fields.map((field) => (
+                  <Card key={field.key} size="small" className="mb-3 border-dashed">
+                    <Row gutter={[8, 8]}>
+                      <Col xs={24} sm={12} md={12}>
+                        <Form.Item 
+                          name={[field.name, "url"]} 
+                          label={<Text strong>URL hình ảnh</Text>} 
+                          rules={[{ required: true, message: "Nhập URL" }]}
+                        >
+                          <Input placeholder="https://example.com/image.jpg" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12} md={12}>
+                        <Form.Item 
+                          name={[field.name, "caption"]} 
+                          label={<Text strong>Chú thích</Text>}
+                        >
+                          <Input placeholder="Mô tả ngắn về hình ảnh" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12} md={12}>
+                        <Form.Item 
+                          name={[field.name, "isPrimary"]} 
+                          label={<Text strong>Ảnh chính</Text>} 
+                          valuePropName="checked"
+                        >
+                          <Switch />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={12} className="flex items-end justify-end">
+                        <Button 
+                          danger 
+                          size="small"
+                          onClick={() => remove(field.name)}
+                          className="min-w-[120px]"
+                        >
+                          <DeleteOutlined /> Xóa ảnh
+                        </Button>
+                      </Col>
+                    </Row>
+                  </Card>
             ))}
           </div>
         )}
       </Form.List>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        <Form.Item name="priority" label="Ưu tiên"><InputNumber min={0} className="w-full" /></Form.Item>
-        <Form.Item name="isPopular" label="Phổ biến" valuePropName="checked"><Switch /></Form.Item>
-      </div>
+        </Card>
 
-      <Divider>Hình ảnh</Divider>
-      <Form.List name="images">
+        {/* AI Data */}
+        <Card title={<Title level={4} className="mb-0"><RobotOutlined className="mr-2" />Dữ liệu AI</Title>} className="shadow-sm mb-4" size="small">
+          <Row gutter={[8, 8]}>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item 
+                name={["aiData", "averageCompletionTime"]} 
+                label={<Text strong>Thời gian hoàn thành trung bình (phút)</Text>}
+              >
+                <InputNumber 
+                  min={0} 
+                  className="w-full" 
+                  size="large"
+                  placeholder="Ví dụ: 175"
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item 
+                name={["aiData", "successRate"]} 
+                label={<Text strong>Tỷ lệ thành công (%)</Text>}
+              >
+                <InputNumber 
+                  min={0} 
+                  max={100} 
+                  className="w-full" 
+                  size="large"
+                  placeholder="Ví dụ: 95"
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          
+          <Row gutter={[8, 8]}>
+            <Col xs={24} sm={12} md={8} lg={6}>
+              <Form.List name={["aiData", "commonIssues"]}>
         {(fields, { add, remove }) => (
           <div>
-            <Button type="dashed" onClick={() => add()} className="mb-2">Thêm ảnh</Button>
+                    <div className="flex items-center justify-between mb-4">
+                      <Text strong>Vấn đề thường gặp</Text>
+                      <Button type="primary" size="small" onClick={() => add()} icon={<PlusOutlined />} className="min-w-[120px]">
+                        Thêm vấn đề
+                      </Button>
+                    </div>
             {fields.map((field) => (
-              <div key={field.key} className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
-                <Form.Item name={[field.name, "url"]} label="URL" rules={[{ required: true }]}><Input /></Form.Item>
-                <Form.Item name={[field.name, "caption"]} label="Chú thích"><Input /></Form.Item>
-                <Form.Item name={[field.name, "isPrimary"]} label="Ảnh chính" valuePropName="checked"><Switch /></Form.Item>
-                <div className="flex items-end"><Button danger onClick={() => remove(field.name)}>Xóa</Button></div>
+                      <div key={field.key} className="flex items-center gap-2 mb-2">
+                        <Form.Item 
+                          {...field} 
+                          name={[field.name]} 
+                          className="flex-1 mb-0"
+                        >
+                          <Input placeholder="Ví dụ: Pin không tương thích" />
+                        </Form.Item>
+                      <Button 
+                        danger 
+                        size="small" 
+                        onClick={() => remove(field.name)}
+                        icon={<DeleteOutlined />}
+                        className="min-w-[120px]"
+                      >
+                        Xóa
+                      </Button>
               </div>
             ))}
           </div>
         )}
       </Form.List>
-
-      <Divider>AI Data (JSON)</Divider>
-      <Form.Item name="aiData" label="Dữ liệu AI (JSON)">
-        <Input.TextArea rows={4} placeholder='{"averageCompletionTime": 175, ...}' />
+            </Col>
+            <Col xs={24} sm={12} md={8} lg={6}>
+              <Form.List name={["aiData", "recommendations"]}>
+                {(fields, { add, remove }) => (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <Text strong>Khuyến nghị</Text>
+                      <Button type="primary" size="small" onClick={() => add()} icon={<PlusOutlined />} className="min-w-[120px]">
+                        Thêm khuyến nghị
+                      </Button>
+                    </div>
+                    {fields.map((field) => (
+                      <div key={field.key} className="flex items-center gap-2 mb-2">
+                        <Form.Item 
+                          {...field} 
+                          name={[field.name]} 
+                          className="flex-1 mb-0"
+                        >
+                          <Input placeholder="Ví dụ: Kiểm tra module BMS trước khi thay" />
       </Form.Item>
+                        <Button 
+                          danger 
+                          size="small" 
+                          onClick={() => remove(field.name)}
+                          icon={<DeleteOutlined />}
+                          className="min-w-[120px]"
+                        >
+                          Xóa
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Form.List>
+            </Col>
+          </Row>
+        </Card>
     </Form>
+    </div>
   );
 }
 

@@ -382,16 +382,19 @@ export default function ServiceCentersPages() {
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
-        width={900}
-        destroyOnClose
+        width="90%"
+        style={{ top: 20 }}
+        
       >
-        <ServiceCenterForm
-          mode={isEditMode ? 'edit' : 'create'}
-          initialValues={isEditMode ? editingCenter || undefined : undefined}
-          loading={loading}
-          onSubmit={handleFormSubmit}
-          onCancel={() => setIsModalOpen(false)}
-        />
+        <div className="w-full max-h-[80vh] overflow-y-auto overflow-x-hidden">
+          <ServiceCenterForm
+            mode={isEditMode ? 'edit' : 'create'}
+            initialValues={isEditMode ? editingCenter || undefined : undefined}
+            loading={loading}
+            onSubmit={handleFormSubmit}
+            onCancel={() => setIsModalOpen(false)}
+          />
+        </div>
       </Modal>
     </motion.div>
   );
