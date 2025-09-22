@@ -62,8 +62,7 @@ const Step3ServiceSelection: React.FC<Step3ServiceSelectionProps> = ({ onNext, o
         return matchesSearch && matchesCategory;
     });
 
-    const categories = [...new Set(compatibleServices.map(service => service.category))]
-        .filter((c) => c !== 'maintenance');
+    const categories = [...new Set(compatibleServices.map(service => service.category))];
 
     // Reset page when filters/search change
     useEffect(() => {
@@ -222,7 +221,8 @@ const Step3ServiceSelection: React.FC<Step3ServiceSelectionProps> = ({ onNext, o
                                                     onClick={() => setTempCategory(category)}
                                                 >
                                                     {category === 'repair' ? 'Sửa chữa' :
-                                                        category === 'inspection' ? 'Kiểm tra' : category}
+                                                        category === 'inspection' ? 'Kiểm tra' :
+                                                            category === 'maintenance' ? 'Bảo dưỡng' : category}
                                                 </Button>
                                             ))}
                                         </div>
