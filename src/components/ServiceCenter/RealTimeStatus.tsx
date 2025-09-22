@@ -9,10 +9,10 @@ interface RealTimeStatusProps {
   showNextOpening?: boolean;
 }
 
-const RealTimeStatus: React.FC<RealTimeStatusProps> = ({ 
-  operatingHours, 
+const RealTimeStatus: React.FC<RealTimeStatusProps> = ({
+  operatingHours,
   className = "",
-  showNextOpening = false 
+  showNextOpening = false
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isOpen, setIsOpen] = useState(false);
@@ -29,9 +29,16 @@ const RealTimeStatus: React.FC<RealTimeStatusProps> = ({
 
   useEffect(() => {
     const checkStatus = () => {
+      // Check if operatingHours is valid before processing
+      if (!operatingHours) {
+        setIsOpen(false);
+        setNextOpening(null);
+        return;
+      }
+
       const currentlyOpen = isCurrentlyOpen(operatingHours);
       const nextOpeningTime = getNextOpeningTime(operatingHours);
-      
+
       setIsOpen(currentlyOpen);
       setNextOpening(nextOpeningTime);
     };
