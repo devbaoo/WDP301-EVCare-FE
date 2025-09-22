@@ -61,9 +61,19 @@ export const BOOKING_TIME_SLOTS_ENDPOINT = (
   date: string
 ) =>
   `${BASE_URL}/api/booking/service-centers/${serviceCenterId}/slots?date=${date}`;
+export const BOOKING_TIME_SLOTS_BY_SERVICE_ENDPOINT = (
+  serviceCenterId: string,
+  serviceTypeId: string,
+  date: string
+) =>
+  `${BASE_URL}/api/booking/service-centers/${serviceCenterId}/services/${serviceTypeId}/slots?date=${date}`;
 export const MY_BOOKINGS_ENDPOINT = `${BASE_URL}/api/booking/my-bookings`;
 export const BOOKING_DETAILS_ENDPOINT = (bookingId: string) =>
   `${BASE_URL}/api/booking/${bookingId}`;
+export const BOOKING_CANCEL_ENDPOINT = (bookingId: string) =>
+  `${BASE_URL}/api/booking/${bookingId}/cancel`;
+export const BOOKING_RESCHEDULE_ENDPOINT = (bookingId: string) =>
+  `${BASE_URL}/api/booking/${bookingId}/reschedule`;
 
 //servicetype
 export const SERVICE_TYPE_POPULAR_ENDPOINT = `${BASE_URL}/api/service-types/popular/list`;

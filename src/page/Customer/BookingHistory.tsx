@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import axiosInstance from "../../services/constant/axiosInstance";
-import { MY_BOOKINGS_ENDPOINT, BOOKING_DETAILS_ENDPOINT } from "../../services/constant/apiConfig";
+import { MY_BOOKINGS_ENDPOINT, BOOKING_DETAILS_ENDPOINT, BOOKING_TIME_SLOTS_ENDPOINT } from "../../services/constant/apiConfig";
 import { Booking } from "../../interfaces/booking";
+import { cancelBooking, rescheduleBooking } from "../../services/features/booking/bookingSlice";
 
 function BookingHistory() {
+    const dispatch = useDispatch();
     const [allBookings, setAllBookings] = useState<Booking[]>([]);
     const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(false);
@@ -13,22 +16,30 @@ function BookingHistory() {
     const [startDate, setStartDate] = useState<string>("");
     const [endDate, setEndDate] = useState<string>("");
 
-    useEffect(() => {
-        const fetchBookings = async () => {
-            setLoading(true);
-            try {
-                const response = await axiosInstance.get(MY_BOOKINGS_ENDPOINT);
-                const data = Array.isArray(response.data.data.appointments) ? response.data.data.appointments : [];
-                setAllBookings(data);
-                setFilteredBookings(data);
-            } catch (err) {
-                const error = err as any;
-                setError(error.message || "Failed to fetch bookings");
-            } finally {
-                setLoading(false);
-            }
-        };
+    const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
+    const [isCancelOpen, setIsCancelOpen] = useState(false);
+    const [newDate, setNewDate] = useState("");
+    const [selectedSlot, setSelectedSlot] = useState("");
+    const [cancelReason, setCancelReason] = useState("");
+    const [availableSlots, setAvailableSlots] = useState<{ startTime: string; endTime: string; }[]>([]);
+    const [loadingSlots, setLoadingSlots] = useState(false);
 
+    const fetchBookings = async () => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.get(MY_BOOKINGS_ENDPOINT);
+            const data = Array.isArray(response.data.data.appointments) ? response.data.data.appointments : [];
+            setAllBookings(data);
+            setFilteredBookings(data);
+        } catch (err) {
+            const error = err as any;
+            setError(error.message || "Failed to fetch bookings");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchBookings();
     }, []);
 
@@ -69,6 +80,116 @@ function BookingHistory() {
         setIsModalOpen(false);
         setSelectedBooking(null);
     };
+
+    const openReschedule = async (booking: Booking) => {
+        try {
+            setLoading(true);
+            // Lấy chi tiết booking để biết serviceCenterId
+            const detailRes = await axiosInstance.get(BOOKING_DETAILS_ENDPOINT(booking._id));
+            const detail = detailRes.data?.data || booking;
+            setSelectedBooking(detail);
+            const initialDate = (detail.appointmentTime?.date || booking.appointmentTime.date || "").substring(0, 10);
+            setNewDate(initialDate);
+            setSelectedSlot("");
+            setIsRescheduleOpen(true);
+        } catch (err) {
+            const error = err as any;
+            setError(error.response?.data?.message || error.message || "Không tải được chi tiết lịch hẹn");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const closeReschedule = () => {
+        setIsRescheduleOpen(false);
+        setSelectedBooking(null);
+        setNewDate("");
+        setSelectedSlot("");
+        setAvailableSlots([]);
+    };
+
+    const submitReschedule = async () => {
+        if (!selectedBooking) return;
+        if (!newDate) {
+            setError("Vui lòng chọn ngày mới");
+            return;
+        }
+        if (!selectedSlot) {
+            setError("Vui lòng chọn khung giờ mới");
+            return;
+        }
+        setLoading(true);
+        setError(null);
+        try {
+            // Gọi qua redux thunk để đồng bộ state
+            // BE yêu cầu { newDate, newTime }
+            // @ts-ignore
+            await dispatch(rescheduleBooking({
+                bookingId: selectedBooking._id,
+                appointmentDate: newDate, // vẫn truyền props chuẩn vào thunk
+                appointmentTime: selectedSlot,
+            }));
+            await fetchBookings();
+            closeReschedule();
+        } catch (err) {
+            const error = err as any;
+            setError(error.response?.data?.message || error.message || "Dời lịch thất bại");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const openCancel = (booking: Booking) => {
+        setSelectedBooking(booking);
+        setCancelReason("");
+        setIsCancelOpen(true);
+    };
+
+    const closeCancel = () => {
+        setIsCancelOpen(false);
+        setSelectedBooking(null);
+        setCancelReason("");
+    };
+
+    const submitCancel = async () => {
+        if (!selectedBooking) return;
+        setLoading(true);
+        setError(null);
+        try {
+            // @ts-ignore
+            await dispatch(cancelBooking({ bookingId: selectedBooking._id, reason: cancelReason }));
+            await fetchBookings();
+            closeCancel();
+        } catch (err) {
+            const error = err as any;
+            setError(error.response?.data?.message || error.message || "Hủy lịch thất bại");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Tải khung giờ khi chọn ngày (và đã có serviceCenterId)
+    useEffect(() => {
+        const loadSlots = async () => {
+            try {
+                if (!isRescheduleOpen || !newDate || !selectedBooking) return;
+                const serviceCenterId = (selectedBooking as any)?.serviceCenter?._id || (selectedBooking as any)?.serviceCenterId;
+                if (!serviceCenterId) return;
+                setLoadingSlots(true);
+                const res = await axiosInstance.get(BOOKING_TIME_SLOTS_ENDPOINT(serviceCenterId, newDate));
+                const slots = res.data?.data?.availableSlots || [];
+                setAvailableSlots(slots);
+                setSelectedSlot("");
+            } catch (err) {
+                const error = err as any;
+                setError(error.response?.data?.message || error.message || "Không tải được khung giờ trống");
+            } finally {
+                setLoadingSlots(false);
+            }
+        };
+        loadSlots();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [newDate, isRescheduleOpen]);
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -113,6 +234,12 @@ function BookingHistory() {
             weekday: 'short'
         };
         return new Date(dateString).toLocaleDateString('en-US', options);
+    };
+
+    const canModifyBooking = (status: string) => {
+        // BE chỉ cho dời lịch khi pending_confirmation | confirmed
+        // và không nên hủy/dời khi đã cancelled
+        return status !== "cancelled";
     };
 
     return (
@@ -178,6 +305,7 @@ function BookingHistory() {
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                         </tr>
@@ -192,18 +320,39 @@ function BookingHistory() {
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                                     {booking.serviceType?.name || "N/A"}
                                                 </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                                    {booking.appointmentTime?.startTime && booking.appointmentTime?.endTime
+                                                        ? `${booking.appointmentTime.startTime} - ${booking.appointmentTime.endTime}`
+                                                        : "N/A"}
+                                                </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(booking.status)}`}>
                                                         {booking.status.replace("_", " ").toUpperCase()}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                    <button
-                                                        className="text-blue-600 hover:text-blue-900 font-medium transition-colors duration-150"
-                                                        onClick={() => fetchBookingDetails(booking._id)}
-                                                    >
-                                                        View Details
-                                                    </button>
+                                                    <div className="flex items-center gap-3">
+                                                        <button
+                                                            className="text-blue-600 hover:text-blue-900 font-medium transition-colors duration-150"
+                                                            onClick={() => fetchBookingDetails(booking._id)}
+                                                        >
+                                                            View Details
+                                                        </button>
+                                                        <button
+                                                            className={`px-3 py-1.5 rounded-lg text-white text-xs font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${canModifyBooking(booking.status) ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-300 cursor-not-allowed'}`}
+                                                            onClick={() => canModifyBooking(booking.status) && openReschedule(booking)}
+                                                            disabled={!canModifyBooking(booking.status)}
+                                                        >
+                                                            Dời lịch
+                                                        </button>
+                                                        <button
+                                                            className={`px-3 py-1.5 rounded-lg text-white text-xs font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-500 ${canModifyBooking(booking.status) ? 'bg-rose-600 hover:bg-rose-700' : 'bg-gray-300 cursor-not-allowed'}`}
+                                                            onClick={() => canModifyBooking(booking.status) && openCancel(booking)}
+                                                            disabled={!canModifyBooking(booking.status)}
+                                                        >
+                                                            Hủy lịch
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
@@ -227,27 +376,27 @@ function BookingHistory() {
                 </div>
             </div>
 
-            {/* Modal */}
+            {/* Modal chi tiết */}
             {isModalOpen && selectedBooking && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
                         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
-                            <h2 className="text-2xl font-bold">Booking Details</h2>
+                            <h2 className="text-2xl font-bold">Chi tiết lịch hẹn</h2>
                         </div>
 
                         <div className="p-6 space-y-4">
                             <div>
-                                <p className="text-sm font-medium text-gray-500">Date</p>
+                                <p className="text-sm font-medium text-gray-500">Ngày</p>
                                 <p className="text-lg font-semibold">{formatDate(selectedBooking.appointmentTime.date)}</p>
                             </div>
 
                             <div>
-                                <p className="text-sm font-medium text-gray-500">Service</p>
+                                <p className="text-sm font-medium text-gray-500">Dịch vụ</p>
                                 <p className="text-lg font-semibold">{selectedBooking.serviceType?.name || "N/A"}</p>
                             </div>
 
                             <div>
-                                <p className="text-sm font-medium text-gray-500">Status</p>
+                                <p className="text-sm font-medium text-gray-500">Trạng thái</p>
                                 <p className="mt-1">
                                     <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(selectedBooking.status)}`}>
                                         {selectedBooking.status.replace("_", " ").toUpperCase()}
@@ -256,7 +405,7 @@ function BookingHistory() {
                             </div>
 
                             <div>
-                                <p className="text-sm font-medium text-gray-500">Description</p>
+                                <p className="text-sm font-medium text-gray-500">Mô tả</p>
                                 <p className="text-lg">{selectedBooking.serviceDetails?.description || "N/A"}</p>
                             </div>
                         </div>
@@ -266,7 +415,109 @@ function BookingHistory() {
                                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                 onClick={closeModal}
                             >
-                                Close
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal dời lịch */}
+            {isRescheduleOpen && selectedBooking && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+                        <div className="bg-gradient-to-r from-indigo-600 to-purple-700 p-6 text-white">
+                            <h2 className="text-2xl font-bold">Dời lịch hẹn</h2>
+                            <p className="opacity-90 mt-1 text-sm">Chọn ngày và khung giờ mới</p>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Ngày mới</label>
+                                <input
+                                    type="date"
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    value={newDate}
+                                    onChange={(e) => setNewDate(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Khung giờ mới</label>
+                                <select
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                                    value={selectedSlot}
+                                    onChange={(e) => setSelectedSlot(e.target.value)}
+                                    disabled={loadingSlots}
+                                >
+                                    <option value="">
+                                        {loadingSlots ? "Đang tải khung giờ..." : "Chọn khung giờ"}
+                                    </option>
+                                    {availableSlots.map((slot, idx) => (
+                                        <option key={`${slot.startTime}-${idx}`} value={slot.startTime}>
+                                            {slot.startTime} - {slot.endTime}
+                                        </option>
+                                    ))}
+                                </select>
+                                {(!loadingSlots && availableSlots.length === 0 && newDate) && (
+                                    <p className="text-sm text-gray-500 mt-2">Không có khung giờ trống cho ngày đã chọn.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3">
+                            <button
+                                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+                                onClick={closeReschedule}
+                            >
+                                Đóng
+                            </button>
+                            <button
+                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                onClick={submitReschedule}
+                                disabled={loading}
+                            >
+                                {loading ? "Đang cập nhật..." : "Xác nhận"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal hủy lịch */}
+            {isCancelOpen && selectedBooking && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+                        <div className="bg-gradient-to-r from-rose-600 to-red-700 p-6 text-white">
+                            <h2 className="text-2xl font-bold">Hủy lịch hẹn</h2>
+                            <p className="opacity-90 mt-1 text-sm">Xác nhận hủy lịch</p>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Lý do (tuỳ chọn)</label>
+                                <textarea
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                                    rows={3}
+                                    value={cancelReason}
+                                    onChange={(e) => setCancelReason(e.target.value)}
+                                    placeholder="Bạn muốn hủy vì lý do gì?"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3">
+                            <button
+                                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+                                onClick={closeCancel}
+                            >
+                                Đóng
+                            </button>
+                            <button
+                                className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
+                                onClick={submitCancel}
+                                disabled={loading}
+                            >
+                                {loading ? "Đang hủy..." : "Xác nhận hủy"}
                             </button>
                         </div>
                     </div>
