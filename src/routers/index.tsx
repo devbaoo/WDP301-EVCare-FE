@@ -159,7 +159,7 @@ const AppRouter = () => {
                         <Route path="services/model" element={<ManageModelPage />} />
                         <Route path="services/package" element={<ManagePackagePage />} />
                         <Route path="service-centers" element={<ServiceCentersPages />} />
-                        <Route path="statistics" element={<StatisticPage />} />
+                        <Route path="booking" element={<StatisticPage />} />
                         <Route path="settings" element={<SettingPage />} />
                     </Route>
                 </Route>

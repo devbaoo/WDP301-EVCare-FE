@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { logout } from '@/services/features/auth/authSlice';
@@ -6,7 +6,7 @@ import {
   LayoutDashboard,
   Users,
   Building2,
-  BarChart3,
+  CalendarDays,
   BookPlus,
   Settings,
   LogOut,
@@ -55,7 +55,7 @@ const Sidebar = () => {
       ]
     },
     { icon: Building2, label: 'Centers', path: '/admin/service-centers' },
-    { icon: BarChart3, label: 'Statistics', path: '/admin/statistics' },
+    { icon: CalendarDays  , label: 'Bookings', path: '/admin/booking' },
     { icon: Settings, label: 'Settings', path: '/admin/settings' },
   ];
 
@@ -79,6 +79,13 @@ const Sidebar = () => {
   };
 
   const isDropdownOpen = (path: string) => openDropdowns.includes(path);
+
+  // On route change, only clear dropdowns if sidebar is collapsed
+  useEffect(() => {
+    if (collapsed) {
+      setOpenDropdowns([]);
+    }
+  }, [location.pathname, collapsed]);
 
   return (
     <aside
@@ -108,7 +115,7 @@ const Sidebar = () => {
            const isOpen = isDropdownOpen(item.path);
            
            return (
-             <div key={item.path}>
+            <div key={item.path} className="relative">
                <button
                  onClick={() => {
                    if (hasChildren) {
@@ -134,27 +141,59 @@ const Sidebar = () => {
                  )}
                </button>
                
-               {hasChildren && !collapsed && isOpen && (
-                 <div className="ml-6 border-l border-gray-200">
-                   {item.children!.map((child) => {
-                     const childActive = isActive(child.path);
-                     return (
-                       <button
-                         key={child.path}
-                         onClick={() => navigate(child.path)}
-                         className={`w-full flex items-center gap-3 px-4 py-2 transition-colors ${
-                           childActive
-                             ? 'bg-gray-100 text-gray-900'
-                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                         }`}
-                       >
-                         <child.icon className="w-4 h-4" />
-                         <span className="text-sm font-medium">{child.label}</span>
-                       </button>
-                     );
-                   })}
-                 </div>
-               )}
+              {hasChildren && isOpen && (
+                !collapsed ? (
+                  <div className="ml-6 border-l border-gray-200">
+                    {item.children!.map((child) => {
+                      const childActive = isActive(child.path);
+                      return (
+                        <button
+                          key={child.path}
+                          onClick={() => {
+                            navigate(child.path);
+                            if (collapsed) {
+                              setOpenDropdowns(prev => prev.filter(p => p !== item.path));
+                            }
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2 transition-colors ${
+                            childActive
+                              ? 'bg-gray-100 text-gray-900'
+                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          }`}
+                        >
+                          <child.icon className="w-4 h-4" />
+                          <span className="text-sm font-medium">{child.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="absolute left-full top-0 z-50 bg-white border border-gray-200 rounded-md shadow-lg py-2 w-56">
+                    {item.children!.map((child) => {
+                      const childActive = isActive(child.path);
+                      return (
+                        <button
+                          key={child.path}
+                          onClick={() => {
+                            navigate(child.path);
+                            if (collapsed) {
+                              setOpenDropdowns(prev => prev.filter(p => p !== item.path));
+                            }
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2 text-left transition-colors ${
+                            childActive
+                              ? 'bg-gray-100 text-gray-900'
+                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          }`}
+                        >
+                          <child.icon className="w-4 h-4" />
+                          <span className="text-sm font-medium">{child.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )
+              )}
              </div>
            );
          })}

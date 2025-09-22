@@ -415,6 +415,9 @@ export default function ServicePage() {
         cancelText="Hủy"
         confirmLoading={loading}
         destroyOnClose
+        width="90%"
+        style={{ top: 20 }}
+        bodyStyle={{ maxHeight: '80vh', overflow: 'hidden' }}
       >
         <ServiceTypeForm form={form} />
       </Modal>
