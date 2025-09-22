@@ -151,10 +151,8 @@ const AppRouter = () => {
                 <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
                     <Route path="/admin" element={<AdminLayout />}>
                         <Route index element={<DashboardPage />} />
-                       
                         <Route path="users/all" element={<AllUserPage />} />
                         <Route path="users/staff" element={<StaffPage />} />
-                        
                         <Route path="services/manage" element={<ServicePage />} />
                         <Route path="services/model" element={<ManageModelPage />} />
                         <Route path="services/package" element={<ManagePackagePage />} />
