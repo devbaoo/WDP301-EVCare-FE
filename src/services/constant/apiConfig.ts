@@ -74,6 +74,9 @@ export const BOOKING_CANCEL_ENDPOINT = (bookingId: string) =>
   `${BASE_URL}/api/booking/${bookingId}/cancel`;
 export const BOOKING_RESCHEDULE_ENDPOINT = (bookingId: string) =>
   `${BASE_URL}/api/booking/${bookingId}/reschedule`;
+export const BOOKING_AWAITING_CONFIRMATION_ENDPOINT = `${BASE_URL}/api/booking/awaiting-confirmation`;
+export const BOOKING_CONFIRM_ENDPOINT = (bookingId: string) =>
+  `${BASE_URL}/api/booking/${bookingId}/confirm`;
 
 //servicetype
 export const SERVICE_TYPE_POPULAR_ENDPOINT = `${BASE_URL}/api/service-types/popular/list`;

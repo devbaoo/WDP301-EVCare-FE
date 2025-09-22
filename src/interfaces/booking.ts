@@ -152,6 +152,16 @@ export interface BookingState {
   createBookingLoading: boolean;
   myBookings: BookingData[];
   bookingDetails: BookingData | null;
+  // Admin booking confirmation
+  awaitingConfirmationBookings: AwaitingConfirmationBooking[];
+  awaitingConfirmationPagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+  } | null;
+  awaitingConfirmationLoading: boolean;
+  confirmBookingLoading: boolean;
 }
 
 export interface TimeSlot {
@@ -266,4 +276,179 @@ export interface Booking {
   serviceDetails?: {
     description: string;
   };
+}
+
+// Awaiting Confirmation Booking interfaces
+export interface AwaitingConfirmationBooking {
+  _id: string;
+  customer:
+    | string
+    | {
+        _id: string;
+        email: string;
+        fullName: string;
+        phone: string;
+      };
+  vehicle:
+    | string
+    | {
+        _id: string;
+        vehicleInfo: {
+          year: number;
+          licensePlate: string;
+          color: string;
+        };
+      };
+  serviceCenter: {
+    _id: string;
+    name: string;
+    description: string;
+    address: {
+      coordinates: {
+        lat: number;
+        lng: number;
+      };
+      street: string;
+      ward: string;
+      district: string;
+      city: string;
+    };
+    contact: {
+      phone: string;
+      email: string;
+      website: string;
+    };
+    operatingHours: {
+      monday: { open: string; close: string; isOpen: boolean };
+      tuesday: { open: string; close: string; isOpen: boolean };
+      wednesday: { open: string; close: string; isOpen: boolean };
+      thursday: { open: string; close: string; isOpen: boolean };
+      friday: { open: string; close: string; isOpen: boolean };
+      saturday: { open: string; close: string; isOpen: boolean };
+      sunday: { open: string; close: string; isOpen: boolean };
+    };
+    capacity: {
+      maxConcurrentServices: number;
+      maxDailyAppointments: number;
+    };
+    rating: {
+      average: number;
+      count: number;
+    };
+    aiSettings: {
+      enableInventoryPrediction: boolean;
+      enableMaintenancePrediction: boolean;
+      enableDemandForecasting: boolean;
+    };
+    services: string[];
+    staff: Array<{
+      user: string;
+      role: string;
+      isActive: boolean;
+      _id: string;
+    }>;
+    status: string;
+    images: Array<{
+      url: string;
+      caption: string;
+      isPrimary: boolean;
+      _id: string;
+    }>;
+    paymentMethods: Array<{
+      type: string;
+      isEnabled: boolean;
+      _id: string;
+    }>;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+  };
+  serviceType:
+    | string
+    | {
+        _id: string;
+        name: string;
+        pricing: {
+          basePrice: number;
+          priceType: string;
+          currency: string;
+          isNegotiable: boolean;
+        };
+      };
+  appointmentTime: {
+    date: string;
+    startTime: string;
+    endTime: string;
+    duration: number;
+  };
+  serviceDetails: {
+    description: string;
+    priority: string;
+    estimatedCost: number;
+    isInspectionOnly: boolean;
+    isFromPackage: boolean;
+  };
+  inspectionAndQuote: {
+    quoteStatus: string;
+  };
+  payment: {
+    method: string;
+    status: string;
+    amount: number;
+    paidAt: string;
+    transactionId?: string;
+  };
+  confirmation: {
+    isConfirmed: boolean;
+    confirmationMethod: string;
+    confirmedAt?: string;
+    confirmedBy?: string;
+  };
+  cancellation: {
+    isCancelled: boolean;
+    refundAmount: number;
+  };
+  rescheduling: {
+    isRescheduled: boolean;
+  };
+  completion: {
+    isCompleted: boolean;
+  };
+  status: string;
+  reminders: any[];
+  documents: any[];
+  internalNotes: any[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export interface AwaitingConfirmationQueryParams {
+  serviceCenterId: string;
+  dateFrom: string;
+  dateTo: string;
+  page: number;
+  limit: number;
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+}
+
+export interface AwaitingConfirmationResponse {
+  success: boolean;
+  message: string;
+  data: {
+    appointments: AwaitingConfirmationBooking[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+      itemsPerPage: number;
+    };
+  };
+}
+
+export interface ConfirmBookingResponse {
+  success: boolean;
+  message: string;
+  data: AwaitingConfirmationBooking;
 }

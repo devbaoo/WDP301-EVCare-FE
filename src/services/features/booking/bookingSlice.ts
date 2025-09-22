@@ -14,6 +14,8 @@ import {
   BOOKING_DETAILS_ENDPOINT,
   BOOKING_RESCHEDULE_ENDPOINT,
   BOOKING_CANCEL_ENDPOINT,
+  BOOKING_AWAITING_CONFIRMATION_ENDPOINT,
+  BOOKING_CONFIRM_ENDPOINT,
 } from "../../constant/apiConfig";
 import { Vehicle, CreateVehicleData } from "../../../interfaces/vehicle";
 import {
@@ -22,6 +24,7 @@ import {
   BookingData,
   BookingServiceCenter,
   BookingState,
+  AwaitingConfirmationQueryParams,
 } from "../../../interfaces/booking";
 
 // Using BookingState from interfaces/booking.ts
@@ -47,6 +50,11 @@ const initialState: BookingState = {
   createBookingLoading: false,
   myBookings: [],
   bookingDetails: null,
+  // Admin booking confirmation
+  awaitingConfirmationBookings: [],
+  awaitingConfirmationPagination: null,
+  awaitingConfirmationLoading: false,
+  confirmBookingLoading: false,
 };
 
 // Async thunks
@@ -320,6 +328,43 @@ export const cancelBooking = createAsyncThunk(
   }
 );
 
+// Admin booking confirmation async thunks
+export const fetchAwaitingConfirmationBookings = createAsyncThunk(
+  "booking/fetchAwaitingConfirmation",
+  async (params: AwaitingConfirmationQueryParams, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(
+        BOOKING_AWAITING_CONFIRMATION_ENDPOINT,
+        { params }
+      );
+      return response.data;
+    } catch (err: unknown) {
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message ||
+          "Failed to fetch awaiting confirmation bookings"
+      );
+    }
+  }
+);
+
+export const confirmBooking = createAsyncThunk(
+  "booking/confirm",
+  async (bookingId: string, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(
+        BOOKING_CONFIRM_ENDPOINT(bookingId)
+      );
+      return response.data;
+    } catch (err: unknown) {
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to confirm booking"
+      );
+    }
+  }
+);
+
 const bookingSlice = createSlice({
   name: "booking",
   initialState,
@@ -497,10 +542,10 @@ const bookingSlice = createSlice({
       })
       .addCase(createBooking.fulfilled, (state, action) => {
         state.createBookingLoading = false;
-        
+
         // Store booking and payment data for payment flow
         state.bookingDetails = action.payload.data.appointment;
-        
+
         // Only reset state if no payment is required
         if (!action.payload.data.requiresPayment) {
           // Reset booking state after successful creation
@@ -567,6 +612,37 @@ const bookingSlice = createSlice({
       })
       .addCase(cancelBooking.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Fetch awaiting confirmation bookings
+      .addCase(fetchAwaitingConfirmationBookings.pending, (state) => {
+        state.awaitingConfirmationLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchAwaitingConfirmationBookings.fulfilled, (state, action) => {
+        state.awaitingConfirmationLoading = false;
+        state.awaitingConfirmationBookings = action.payload.data.appointments;
+        state.awaitingConfirmationPagination = action.payload.data.pagination;
+      })
+      .addCase(fetchAwaitingConfirmationBookings.rejected, (state, action) => {
+        state.awaitingConfirmationLoading = false;
+        state.error = action.payload as string;
+      })
+      // Confirm booking
+      .addCase(confirmBooking.pending, (state) => {
+        state.confirmBookingLoading = true;
+        state.error = null;
+      })
+      .addCase(confirmBooking.fulfilled, (state, action) => {
+        state.confirmBookingLoading = false;
+        // Remove confirmed booking from awaiting list
+        state.awaitingConfirmationBookings =
+          state.awaitingConfirmationBookings.filter(
+            (booking) => booking._id !== action.payload.data._id
+          );
+      })
+      .addCase(confirmBooking.rejected, (state, action) => {
+        state.confirmBookingLoading = false;
         state.error = action.payload as string;
       });
   },
