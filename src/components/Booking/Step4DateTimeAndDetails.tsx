@@ -54,11 +54,13 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
     // Payment modal state
     const [paymentModalVisible, setPaymentModalVisible] = useState(false);
     const [bookingResponse, setBookingResponse] = useState<{
+        success: boolean;
+        message: string;
         data: {
             requiresPayment: boolean;
             payment?: {
                 paymentId: string;
-                orderCode: string;
+                orderCode: string | number;
                 paymentLink: string;
                 qrCode: string;
                 checkoutUrl: string;
@@ -118,6 +120,7 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
             dispatch(updateBookingData(newBookingData));
         }
     }, [dispatch, selectedDate, selectedTime, serviceDescription, priority, paymentPreference, bookingData]);
+
 
     const handleDateChange = (date: dayjs.Dayjs | null) => {
         if (date) {
@@ -182,9 +185,12 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
             // Check if payment is required
             if (response.data.requiresPayment && response.data.payment) {
                 // Store booking response for payment modal
-                setBookingResponse(response.data);
+                setBookingResponse(response);
                 setPaymentModalVisible(true);
                 message.info('Vui lòng thanh toán để xác nhận đặt lịch');
+            } else if (paymentPreference === 'online') {
+                // If user selected online payment but no payment required, show error
+                message.error('Không thể tạo thanh toán trực tuyến. Vui lòng thử lại.');
             } else {
                 // No payment required, booking is complete
                 message.success('Đặt lịch thành công!');
