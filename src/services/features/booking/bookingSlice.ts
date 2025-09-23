@@ -274,7 +274,7 @@ export const fetchMyBookings = createAsyncThunk(
         : MY_BOOKINGS_ENDPOINT;
 
       const response = await axiosInstance.get(url);
-      return response.data.data; // Assuming the API returns bookings in `data`
+      return response.data.data; // This returns { appointments: [...], pagination: {...} }
     } catch (err: unknown) {
       const error = err as any;
       return rejectWithValue(
@@ -612,7 +612,22 @@ const bookingSlice = createSlice({
       })
       .addCase(fetchMyBookings.fulfilled, (state, action) => {
         state.loading = false;
-        state.myBookings = action.payload; // Assuming `myBookings` is part of the state
+        // Handle API response structure: { success: true, data: { appointments: [...], pagination: {...} } }
+        if (
+          action.payload &&
+          action.payload.appointments &&
+          Array.isArray(action.payload.appointments)
+        ) {
+          state.myBookings = action.payload.appointments;
+        } else if (Array.isArray(action.payload)) {
+          state.myBookings = action.payload;
+        } else if (action.payload && Array.isArray(action.payload.bookings)) {
+          state.myBookings = action.payload.bookings;
+        } else if (action.payload && Array.isArray(action.payload.data)) {
+          state.myBookings = action.payload.data;
+        } else {
+          state.myBookings = [];
+        }
       })
       .addCase(fetchMyBookings.rejected, (state, action) => {
         state.loading = false;

@@ -140,13 +140,14 @@ function BookingHistory() {
     };
 
 
-    // Calculate statistics
+    // Calculate statistics - ensure myBookings is an array
+    const bookingsArray = Array.isArray(myBookings) ? myBookings : [];
     const stats = {
-        total: myBookings.length,
-        confirmed: myBookings.filter(b => b.status === 'confirmed').length,
-        inProgress: myBookings.filter(b => ['in_progress', 'maintenance_in_progress'].includes(b.status)).length,
-        completed: myBookings.filter(b => b.status === 'completed').length,
-        cancelled: myBookings.filter(b => b.status === 'cancelled').length
+        total: bookingsArray.length,
+        confirmed: bookingsArray.filter(b => b.status === 'confirmed').length,
+        inProgress: bookingsArray.filter(b => ['in_progress', 'maintenance_in_progress'].includes(b.status)).length,
+        completed: bookingsArray.filter(b => b.status === 'completed').length,
+        cancelled: bookingsArray.filter(b => b.status === 'cancelled').length
     };
 
     const fetchBookingDetails = async (bookingId: string) => {
@@ -658,13 +659,13 @@ function BookingHistory() {
             <Card>
                 <Table
                     columns={columns}
-                    dataSource={myBookings}
+                    dataSource={bookingsArray}
                     loading={loading}
                     rowKey="_id"
                     scroll={{ x: 1000 }}
                     pagination={{
                         current: currentPage,
-                        total: myBookings.length,
+                        total: bookingsArray.length,
                         pageSize: pageSize,
                         showSizeChanger: true,
                         showQuickJumper: true,

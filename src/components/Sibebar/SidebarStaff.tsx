@@ -34,7 +34,7 @@ const SidebarStaff = () => {
         { icon: LayoutDashboard, label: 'Dashboard', path: '/staff' },
         { icon: ShieldCheck, label: 'Certificate', path: '/staff/certificate' },
         { icon: CalendarDays, label: 'Bookings', path: '/staff/booking' },
-        { icon: DollarSign, label: 'Payments', path: '/staff/payments' },
+        { icon: DollarSign, label: 'Payments', path: '/staff/payment' },
         { icon: Wrench, label: 'Technicians', path: '/staff/technicians' },
         { icon: Calendar, label: 'Schedules', path: '/staff/schedules' },
         { icon: Settings, label: 'Settings', path: '/staff/settings' },
