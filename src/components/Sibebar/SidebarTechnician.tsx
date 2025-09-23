@@ -30,7 +30,7 @@ const SidebarTechnician = () => {
 
     const menuItems: MenuItem[] = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/technician' },
-        { icon: Calendar, label: 'Appointments', path: '/technician/appointments' },
+        { icon: Calendar, label: 'Schedule', path: '/technician/schedule' },
         { icon: Wrench, label: 'My Services', path: '/technician/services' },
         { icon: Clock, label: 'History', path: '/technician/history' },
         { icon: Settings, label: 'Settings', path: '/technician/settings' },
