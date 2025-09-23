@@ -9,7 +9,11 @@ import {
   TECHNICIAN_SCHEDULE_DELETE_ENDPOINT,
   TECHNICIAN_STAFF_BY_CENTER_ENDPOINT,
   AVAILABLE_TECHNICIANS_ENDPOINT,
+
+  TECHNICIAN_SCHEDULES_BY_TECHNICIAN_ENDPOINT,
+
   TECHNICIAN_SCHEDULE_ADD_APPOINTMENT_ENDPOINT,
+
 } from "../../constant/apiConfig";
 import {
   TechnicianState,
@@ -78,6 +82,29 @@ export const createDefaultSchedules = createAsyncThunk(
       const error = err as any;
       return rejectWithValue(
         error.response?.data?.message || "Failed to create default schedules"
+      );
+    }
+  }
+);
+
+export const fetchTechnicianSchedulesById = createAsyncThunk(
+  "technician/fetchTechnicianSchedulesById",
+  async (
+    params: { technicianId: string; startDate?: string; endDate?: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const { technicianId, startDate, endDate } = params;
+      const response = await axiosInstance.get(
+        TECHNICIAN_SCHEDULES_BY_TECHNICIAN_ENDPOINT(technicianId),
+        { params: { startDate, endDate } }
+      );
+      return response.data as TechnicianScheduleByCenterResponse; // data: TechnicianSchedule[]
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch technician schedules by id"
       );
     }
   }
@@ -345,6 +372,22 @@ const technicianSlice = createSlice({
       })
       .addCase(fetchTechnicianSchedulesByCenter.rejected, (state, action) => {
         state.fetchSchedulesByCenterLoading = false;
+        state.error = action.payload as string;
+      })
+      // Fetch technician schedules by technician id
+      .addCase(fetchTechnicianSchedulesById.pending, (state) => {
+        state.fetchSchedulesLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchTechnicianSchedulesById.fulfilled, (state, action) => {
+        state.fetchSchedulesLoading = false;
+        state.schedules = Array.isArray(action.payload.data)
+          ? action.payload.data
+          : [];
+        state.pagination = null;
+      })
+      .addCase(fetchTechnicianSchedulesById.rejected, (state, action) => {
+        state.fetchSchedulesLoading = false;
         state.error = action.payload as string;
       })
       // Fetch technician staff

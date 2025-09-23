@@ -100,14 +100,23 @@ export const TECHNICIAN_SCHEDULE_UPDATE_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/technician-schedules/${id}`;
 export const TECHNICIAN_SCHEDULE_DELETE_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/technician-schedules/${id}`;
+
+// Fetch schedules for a technician by ID with optional date range
+export const TECHNICIAN_SCHEDULES_BY_TECHNICIAN_ENDPOINT = (technicianId: string) =>
+  `${BASE_URL}/api/technicians/${technicianId}/schedules`;
+
 export const TECHNICIAN_SCHEDULE_ADD_APPOINTMENT_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/technician-schedules/${id}/appointments`;
+
 
 // Technician staff endpoints
 export const TECHNICIAN_STAFF_BY_CENTER_ENDPOINT = (centerId: string) =>
   `${BASE_URL}/api/service-centers/${centerId}/staff?position=technician`;
 export const AVAILABLE_TECHNICIANS_ENDPOINT = (centerId: string) =>
   `${BASE_URL}/api/service-centers/${centerId}/available-technicians`;
+
+// Deprecated/misnamed helper removed in favor of TECHNICIAN_SCHEDULES_BY_TECHNICIAN_ENDPOINT
+
 
 //servicetype
 export const SERVICE_TYPE_POPULAR_ENDPOINT = `${BASE_URL}/api/service-types/popular/list`;
