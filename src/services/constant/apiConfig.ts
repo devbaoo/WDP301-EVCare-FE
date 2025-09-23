@@ -17,6 +17,9 @@ export const VERIFY_RESET_CODE_ENDPOINT = `${BASE_URL}/api/auth/verify-reset-cod
 export const LOGOUT_ENDPOINT = `${BASE_URL}/api/auth/logout`;
 export const REFRESH_TOKEN_ENDPOINT = `${BASE_URL}/api/auth/refresh`;
 
+// Staff endpoints
+export const STAFF_LIST_ENDPOINT = `${BASE_URL}/api/staff`;
+
 // User endpoints
 export const USER_PROFILE_ENDPOINT = `${BASE_URL}/api/user/profile`;
 export const USER_UPDATE_PROFILE_ENDPOINT = `${BASE_URL}/api/user/profile`;
@@ -90,9 +93,14 @@ export const TECHNICIAN_SCHEDULE_UPDATE_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/technician-schedules/${id}`;
 export const TECHNICIAN_SCHEDULE_DELETE_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/technician-schedules/${id}`;
+
 // Fetch schedules for a technician by ID with optional date range
 export const TECHNICIAN_SCHEDULES_BY_TECHNICIAN_ENDPOINT = (technicianId: string) =>
   `${BASE_URL}/api/technicians/${technicianId}/schedules`;
+
+export const TECHNICIAN_SCHEDULE_ADD_APPOINTMENT_ENDPOINT = (id: string) =>
+  `${BASE_URL}/api/technician-schedules/${id}/appointments`;
+
 
 // Technician staff endpoints
 export const TECHNICIAN_STAFF_BY_CENTER_ENDPOINT = (centerId: string) =>
@@ -111,6 +119,11 @@ export const SERVICE_TYPE_UPDATE_ENDPOINT = (id: string) =>
 export const SERVICE_TYPE_DELETE_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/service-types/${id}`;
 export const SERVICE_TYPE_ENDPOINT = `${BASE_URL}/api/service-types`;
+
+// Certificate endpoints
+export const CERTIFICATE_ENDPOINT = `${BASE_URL}/api/technician-certificates`;
+export const CERTIFICATE_DETAIL_ENDPOINT = (id: string) =>
+  `${BASE_URL}/api/technician-certificates/${id}`;
 
 // Payment endpoints
 export const PAYMENT_CREATE_ENDPOINT = (appointmentId: string) =>
