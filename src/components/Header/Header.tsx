@@ -1,5 +1,5 @@
 import { Button, Dropdown } from "antd";
-import { UserOutlined, LogoutOutlined, CarOutlined, HistoryOutlined } from "@ant-design/icons";
+import { UserOutlined, LogoutOutlined, CarOutlined, HistoryOutlined, CreditCardOutlined } from "@ant-design/icons";
 import type { MenuProps } from 'antd';
 import { useAppSelector, useAppDispatch } from "../../services/store/store";
 import { logout } from "../../services/features/auth/authSlice";
@@ -28,6 +28,10 @@ export default function Header() {
     navigate("/customer/bookings");
   };
 
+  const handleNavigateToPaymentHistory = () => {
+    navigate("/customer/payments");
+  };
+
   const userMenuItems: MenuProps['items'] = [
     {
       key: 'profile',
@@ -52,6 +56,12 @@ export default function Header() {
       icon: <HistoryOutlined />,
       label: 'Booking History',
       onClick: handleNavigateToBookingHistory,
+    },
+    {
+      key: 'payments',
+      icon: <CreditCardOutlined />,
+      label: 'Payment History',
+      onClick: handleNavigateToPaymentHistory,
     },
     {
       type: 'divider',

@@ -612,34 +612,6 @@ const PaymentHistory: React.FC = () => {
               </Card>
             )}
 
-            {/* Appointment Info */}
-            {paymentDetail.appointment && typeof paymentDetail.appointment === 'object' && (
-              <Card title="Thông tin lịch hẹn" size="small">
-                <Row gutter={[16, 16]}>
-                  {paymentDetail.appointment.appointmentTime && (
-                    <Col xs={24} md={12}>
-                      <div className="mb-3">
-                        <Text type="secondary" className="block text-xs">Ngày hẹn</Text>
-                        <Text>{dayjs(paymentDetail.appointment.appointmentTime.date).format('DD/MM/YYYY')}</Text>
-                      </div>
-                    </Col>
-                  )}
-                  {paymentDetail.appointment.appointmentTime && (
-                    <Col xs={24} md={12}>
-                      <div className="mb-3">
-                        <Text type="secondary" className="block text-xs">Thời gian</Text>
-                        <Text>
-                          {paymentDetail.appointment.appointmentTime.startTime}
-                          {paymentDetail.appointment.appointmentTime.endTime &&
-                            ` - ${paymentDetail.appointment.appointmentTime.endTime}`
-                          }
-                        </Text>
-                      </div>
-                    </Col>
-                  )}
-                </Row>
-              </Card>
-            )}
 
             {/* Webhook Info */}
             {paymentDetail.webhook && (

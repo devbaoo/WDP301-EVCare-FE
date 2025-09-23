@@ -396,7 +396,7 @@ function BookingHistory() {
             width: 150,
             render: (record: Booking) => {
                 const serviceName = record.serviceDetails?.isInspectionOnly
-                    ? "Đang chọn dịch vụ mang xe tới kiểm tra"
+                    ? "Mang xe tới kiểm tra"
                     : (record.serviceType?.name || 'N/A');
 
                 return (
@@ -488,6 +488,35 @@ function BookingHistory() {
 
     const canRescheduleBooking = (status: string) => {
         return status !== "cancelled" && status !== "completed";
+    };
+
+    const getStatusColor = (status: string) => {
+        const statusColors: Record<string, string> = {
+            "pending": "#faad14",
+            "confirmed": "#1890ff",
+            "in progress": "#722ed1",
+            "inspection completed": "#13c2c2",
+            "quote provided": "#52c41a",
+            "quote approved": "#52c41a",
+            "quote rejected": "#ff4d4f",
+            "maintenance in progress": "#1890ff",
+            "maintenance completed": "#52c41a",
+            "payment pending": "#faad14",
+            "completed": "#52c41a",
+            "cancelled": "#ff4d4f",
+            "rescheduled": "#faad14",
+            "no show": "#8c8c8c"
+        };
+        return statusColors[status.toLowerCase()] || "#8c8c8c";
+    };
+
+    const getQuoteStatusColor = (status: string) => {
+        const quoteColors: Record<string, string> = {
+            "pending": "#faad14",
+            "approved": "#52c41a",
+            "rejected": "#ff4d4f"
+        };
+        return quoteColors[status.toLowerCase()] || "#8c8c8c";
     };
 
 
@@ -717,7 +746,7 @@ function BookingHistory() {
                                 icon: <InfoCircleOutlined />,
                                 label: "Dịch vụ",
                                 value: selectedBooking.serviceDetails?.isInspectionOnly
-                                    ? "Đang chọn dịch vụ mang xe tới kiểm tra"
+                                    ? "Mang xe tới kiểm tra"
                                     : (selectedBooking.serviceType?.name || "N/A")
                             },
                             { icon: <EnvironmentOutlined />, label: "Trung tâm", value: selectedBooking.serviceCenter?.name || "N/A" },
@@ -809,6 +838,9 @@ function BookingHistory() {
                                     <Statistic
                                         title="Trạng thái hiện tại"
                                         value={((progressData as any)?.currentStatus || "").replaceAll("_", " ")}
+                                        valueStyle={{
+                                            color: getStatusColor(((progressData as any)?.currentStatus || "").replaceAll("_", " "))
+                                        }}
                                     />
                                 </Card>
                             </Col>
@@ -817,6 +849,9 @@ function BookingHistory() {
                                     <Statistic
                                         title="Trạng thái báo giá"
                                         value={(progressData as any)?.appointmentId?.inspectionAndQuote?.quoteStatus || (progressData as any)?.quote?.quoteStatus || "pending"}
+                                        valueStyle={{
+                                            color: getQuoteStatusColor((progressData as any)?.appointmentId?.inspectionAndQuote?.quoteStatus || (progressData as any)?.quote?.quoteStatus || "pending")
+                                        }}
                                     />
                                 </Card>
                             </Col>
@@ -834,33 +869,35 @@ function BookingHistory() {
                             </Card>
                         )}
 
-                        <Card title="Phản hồi báo giá">
-                            <TextArea
-                                rows={3}
-                                placeholder="Ghi chú của bạn (tùy chọn)"
-                                value={quoteResponseNotes}
-                                onChange={(e) => setQuoteResponseNotes(e.target.value)}
-                                className="mb-4"
-                            />
-                            <Space>
-                                <Button
-                                    type="primary"
-                                    icon={<CheckCircleOutlined />}
-                                    onClick={() => submitQuoteResponse("approved")}
-                                    loading={progressLoading}
-                                >
-                                    Chấp nhận
-                                </Button>
-                                <Button
-                                    danger
-                                    icon={<CloseOutlined />}
-                                    onClick={() => submitQuoteResponse("rejected")}
-                                    loading={progressLoading}
-                                >
-                                    Từ chối
-                                </Button>
-                            </Space>
-                        </Card>
+                        {((progressData as any)?.currentStatus || "").toLowerCase() !== "completed" && (
+                            <Card title="Phản hồi báo giá">
+                                <TextArea
+                                    rows={3}
+                                    placeholder="Ghi chú của bạn (tùy chọn)"
+                                    value={quoteResponseNotes}
+                                    onChange={(e) => setQuoteResponseNotes(e.target.value)}
+                                    className="mb-4"
+                                />
+                                <Space>
+                                    <Button
+                                        type="primary"
+                                        icon={<CheckCircleOutlined />}
+                                        onClick={() => submitQuoteResponse("approved")}
+                                        loading={progressLoading}
+                                    >
+                                        Chấp nhận
+                                    </Button>
+                                    <Button
+                                        danger
+                                        icon={<CloseOutlined />}
+                                        onClick={() => submitQuoteResponse("rejected")}
+                                        loading={progressLoading}
+                                    >
+                                        Từ chối
+                                    </Button>
+                                </Space>
+                            </Card>
+                        )}
                     </div>
                 )}
             </Modal>
