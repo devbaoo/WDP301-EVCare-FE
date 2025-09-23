@@ -162,6 +162,15 @@ export interface BookingState {
   } | null;
   awaitingConfirmationLoading: boolean;
   confirmBookingLoading: boolean;
+  // Staff confirmed bookings
+  confirmedBookings: AwaitingConfirmationBooking[];
+  confirmedBookingsPagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+  } | null;
+  confirmedBookingsLoading: boolean;
 }
 
 export interface TimeSlot {
@@ -297,6 +306,11 @@ export interface AwaitingConfirmationBooking {
           year: number;
           licensePlate: string;
           color: string;
+          vehicleModel?: {
+            _id: string;
+            brand: string;
+            modelName: string;
+          };
         };
       };
   serviceCenter: {
@@ -415,9 +429,9 @@ export interface AwaitingConfirmationBooking {
     isCompleted: boolean;
   };
   status: string;
-  reminders: any[];
-  documents: any[];
-  internalNotes: any[];
+  reminders: string[];
+  documents: string[];
+  internalNotes: string[];
   createdAt: string;
   updatedAt: string;
   __v: number;

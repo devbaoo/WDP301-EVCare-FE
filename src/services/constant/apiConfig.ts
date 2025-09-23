@@ -81,6 +81,27 @@ export const BOOKING_AWAITING_CONFIRMATION_ENDPOINT = `${BASE_URL}/api/booking/a
 export const BOOKING_CONFIRM_ENDPOINT = (bookingId: string) =>
   `${BASE_URL}/api/booking/${bookingId}/confirm`;
 
+// Confirmed bookings (for staff/technician views)
+export const BOOKINGS_CONFIRMED_ENDPOINT = `${BASE_URL}/api/bookings/confirmed`;
+
+// Technician schedule endpoints
+export const TECHNICIAN_SCHEDULE_CREATE_ENDPOINT = `${BASE_URL}/api/technician-schedules`;
+export const TECHNICIAN_SCHEDULE_CREATE_DEFAULT_ENDPOINT = `${BASE_URL}/api/technician-schedules/default`;
+export const TECHNICIAN_SCHEDULE_LIST_ENDPOINT = `${BASE_URL}/api/technician-schedules`;
+export const TECHNICIAN_SCHEDULE_BY_CENTER_ENDPOINT = `${BASE_URL}/api/technician-schedules`;
+export const TECHNICIAN_SCHEDULE_UPDATE_ENDPOINT = (id: string) =>
+  `${BASE_URL}/api/technician-schedules/${id}`;
+export const TECHNICIAN_SCHEDULE_DELETE_ENDPOINT = (id: string) =>
+  `${BASE_URL}/api/technician-schedules/${id}`;
+export const TECHNICIAN_SCHEDULE_ADD_APPOINTMENT_ENDPOINT = (id: string) =>
+  `${BASE_URL}/api/technician-schedules/${id}/appointments`;
+
+// Technician staff endpoints
+export const TECHNICIAN_STAFF_BY_CENTER_ENDPOINT = (centerId: string) =>
+  `${BASE_URL}/api/service-centers/${centerId}/staff?position=technician`;
+export const AVAILABLE_TECHNICIANS_ENDPOINT = (centerId: string) =>
+  `${BASE_URL}/api/service-centers/${centerId}/available-technicians`;
+
 //servicetype
 export const SERVICE_TYPE_POPULAR_ENDPOINT = `${BASE_URL}/api/service-types/popular/list`;
 export const SERVICE_TYPE_CREATE_ENDPOINT = `${BASE_URL}/api/service-types`;

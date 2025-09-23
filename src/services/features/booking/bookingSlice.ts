@@ -16,6 +16,7 @@ import {
   BOOKING_CANCEL_ENDPOINT,
   BOOKING_AWAITING_CONFIRMATION_ENDPOINT,
   BOOKING_CONFIRM_ENDPOINT,
+  BOOKINGS_CONFIRMED_ENDPOINT,
 } from "../../constant/apiConfig";
 import { Vehicle, CreateVehicleData } from "../../../interfaces/vehicle";
 import {
@@ -55,6 +56,10 @@ const initialState: BookingState = {
   awaitingConfirmationPagination: null,
   awaitingConfirmationLoading: false,
   confirmBookingLoading: false,
+  // Staff confirmed bookings
+  confirmedBookings: [],
+  confirmedBookingsPagination: null,
+  confirmedBookingsLoading: false,
 };
 
 // Async thunks
@@ -365,6 +370,25 @@ export const confirmBooking = createAsyncThunk(
   }
 );
 
+// Fetch confirmed bookings (for staff/technicians)
+export const fetchConfirmedBookings = createAsyncThunk(
+  "booking/fetchConfirmed",
+  async (params: AwaitingConfirmationQueryParams, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(BOOKINGS_CONFIRMED_ENDPOINT, {
+        params,
+      });
+      return response.data;
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch confirmed bookings"
+      );
+    }
+  }
+);
+
 const bookingSlice = createSlice({
   name: "booking",
   initialState,
@@ -643,6 +667,20 @@ const bookingSlice = createSlice({
       })
       .addCase(confirmBooking.rejected, (state, action) => {
         state.confirmBookingLoading = false;
+        state.error = action.payload as string;
+      })
+      // Fetch confirmed bookings
+      .addCase(fetchConfirmedBookings.pending, (state) => {
+        state.confirmedBookingsLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchConfirmedBookings.fulfilled, (state, action) => {
+        state.confirmedBookingsLoading = false;
+        state.confirmedBookings = action.payload.data.appointments;
+        state.confirmedBookingsPagination = action.payload.data.pagination;
+      })
+      .addCase(fetchConfirmedBookings.rejected, (state, action) => {
+        state.confirmedBookingsLoading = false;
         state.error = action.payload as string;
       });
   },

@@ -43,7 +43,7 @@ const { RangePicker } = DatePicker;
 const { Option } = Select;
 const { Title, Text } = Typography;
 
-const BookingManagePages: React.FC = () => {
+const StaffBookingManagePage: React.FC = () => {
     const dispatch = useAppDispatch();
     const {
         awaitingConfirmationBookings,
@@ -262,7 +262,7 @@ const BookingManagePages: React.FC = () => {
             <div className="mb-6">
                 <Title level={2}>Quản lý Booking Chờ Xác Nhận</Title>
                 <Text type="secondary">
-                    Quản lý các booking đã thanh toán và chờ xác nhận từ admin
+                    Quản lý các booking đã thanh toán và chờ xác nhận từ staff
                 </Text>
             </div>
 
@@ -462,9 +462,7 @@ const BookingManagePages: React.FC = () => {
                                 <Col span={8}>
                                     <div>Phương thức: {selectedBooking.confirmation.confirmationMethod}</div>
                                 </Col>
-                                <Col span={8}>
-                                    <div>Người xác nhận: {selectedBooking.confirmation.confirmedBy || "N/A"}</div>
-                                </Col>
+
                             </Row>
                             {selectedBooking.confirmation.isConfirmed && (
                                 <div className="mt-2">
@@ -503,6 +501,4 @@ const BookingManagePages: React.FC = () => {
     );
 };
 
-export default BookingManagePages;
-
-
+export default StaffBookingManagePage;
