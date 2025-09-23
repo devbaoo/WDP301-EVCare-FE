@@ -150,7 +150,7 @@ export interface BookingState {
   error: string | null;
   createVehicleLoading: boolean;
   createBookingLoading: boolean;
-  myBookings: BookingData[];
+  myBookings: Booking[];
   bookingDetails: BookingData | null;
   // Admin booking confirmation
   awaitingConfirmationBookings: AwaitingConfirmationBooking[];
@@ -280,11 +280,99 @@ export interface Booking {
   };
   serviceType?: {
     name: string;
+    pricing?: {
+      basePrice: number;
+      priceType: string;
+      currency: string;
+      isNegotiable: boolean;
+    };
+    category?: string;
+    _id?: string;
+  };
+  serviceCenter?: {
+    name: string;
+    address?: {
+      coordinates: {
+        lat: number;
+        lng: number;
+      };
+      street: string;
+      ward: string;
+      district: string;
+      city: string;
+    };
+    contact?: {
+      phone: string;
+      email: string;
+      website?: string;
+    };
+    _id?: string;
+  };
+  vehicle?: {
+    vehicleInfo: {
+      vehicleModel: string;
+      year: number;
+      color: string;
+      licensePlate: string;
+    };
+    _id: string;
   };
   status: string;
   serviceDetails?: {
     description: string;
+    priority?: string;
+    estimatedCost?: number;
+    isInspectionOnly?: boolean;
+    isFromPackage?: boolean;
+    servicePackageId?: string;
   };
+  payment?: {
+    method: string;
+    status: string;
+    amount: number;
+    paidAt?: string;
+    notes?: string;
+  };
+  confirmation?: {
+    isConfirmed: boolean;
+    confirmationMethod: string;
+    confirmedAt?: string;
+    confirmedBy?: string;
+  };
+  cancellation?: {
+    isCancelled: boolean;
+    refundAmount: number;
+    cancelledAt?: string;
+    cancelledBy?: string;
+    reason?: string;
+  };
+  rescheduling?: {
+    isRescheduled: boolean;
+  };
+  completion?: {
+    isCompleted: boolean;
+    completedAt?: string;
+    completedBy?: string;
+    workDone?: string;
+    recommendations?: string;
+  };
+  inspectionAndQuote?: {
+    quoteStatus?: string;
+    inspectionNotes?: string;
+    inspectionCompletedAt?: string;
+    vehicleCondition?: string;
+    diagnosisDetails?: string;
+    quoteAmount?: number;
+    quoteDetails?: string;
+    quotedAt?: string;
+    customerResponseAt?: string;
+    customerResponseNotes?: string;
+  };
+  reminders?: string[];
+  documents?: string[];
+  internalNotes?: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Awaiting Confirmation Booking interfaces

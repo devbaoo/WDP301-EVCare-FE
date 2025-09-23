@@ -42,6 +42,7 @@ import BookingManagePages from "@/page/Admin/BookingManagePages";
 import StaffBookingManagePage from "@/page/Staff/StaffBookingManagePage";
 import StaffTechnicianPage from "@/page/Staff/StaffTechnicianPage";
 import StaffSchedulesTechnicianPage from "@/page/Staff/StaffSchedulesTechnicianPage";
+import TechnicianWorkProgressPage from "@/page/Technician/TechnicianWorkProgressPage";
 
 const AppRouter = () => {
     const { isAuthenticated, user, needVerification } = useSelector((state: RootState) => state.auth);
@@ -146,7 +147,7 @@ const AppRouter = () => {
                     <Route path="/technician" element={<TechnicianLayout />}>
                         <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Technician Dashboard</h1></div>} />
                         <Route path="schedule" element={<div className="p-6"><h1 className="text-2xl font-bold">My Schedule</h1></div>} />
-                        <Route path="services" element={<div className="p-6"><h1 className="text-2xl font-bold">My Services</h1></div>} />
+                        <Route path="services" element={<TechnicianWorkProgressPage />} />
                         <Route path="history" element={<div className="p-6"><h1 className="text-2xl font-bold">Service History</h1></div>} />
                         <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Technician Settings</h1></div>} />
                     </Route>

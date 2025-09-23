@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
     Card,
     Table,
@@ -32,7 +32,7 @@ import {
 } from "../../interfaces/booking";
 import { ServiceCenter } from "../../interfaces/serviceCenter";
 import { fetchConfirmedBookings } from "../../services/features/booking/bookingSlice";
-import { addAppointmentToSchedule, fetchTechnicianSchedules } from "../../services/features/technician/technicianSlice";
+import { addAppointmentToSchedule, fetchTechnicianSchedules, fetchTechnicianSchedulesByCenter } from "../../services/features/technician/technicianSlice";
 import { useSelector } from "react-redux";
 import { RootState } from "../../services/store/store";
 
@@ -50,6 +50,19 @@ const StaffTechnicianPage: React.FC = () => {
     const { serviceCenters } = useAppSelector((state) => state.serviceCenter);
     const techLoading = useSelector((s: RootState) => s.technician.fetchSchedulesLoading);
     const techSchedules = useSelector((s: RootState) => s.technician.schedules);
+
+    // Build a Set of appointmentIds already assigned to any technician in the center
+    const assignedAppointmentIds = useMemo(() => {
+        const ids = new Set<string>();
+        for (const sch of techSchedules) {
+            if (Array.isArray(sch.assignedAppointments)) {
+                sch.assignedAppointments.forEach((a) => {
+                    if (a && a._id) ids.add(a._id);
+                });
+            }
+        }
+        return ids;
+    }, [techSchedules]);
 
     const [selectedServiceCenter, setSelectedServiceCenter] = useState<string>("");
     const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>([
@@ -92,6 +105,13 @@ const StaffTechnicianPage: React.FC = () => {
             fetchBookings();
         }
     }, [fetchBookings, selectedServiceCenter, dateRange]);
+
+    // Keep technician schedules for the selected center loaded to know which bookings are already assigned
+    useEffect(() => {
+        if (selectedServiceCenter) {
+            dispatch(fetchTechnicianSchedulesByCenter({ centerId: selectedServiceCenter }));
+        }
+    }, [dispatch, selectedServiceCenter]);
 
     const getStatusColor = (status: string) => {
         switch (status.toLowerCase()) {
@@ -194,7 +214,7 @@ const StaffTechnicianPage: React.FC = () => {
                     <Button size="small" onClick={() => setDetailBooking(record)} icon={<UserOutlined />}>
                         Chi tiết
                     </Button>
-                    <Button size="small" type="primary" onClick={() => openAssignModal(record)}>
+                    <Button size="small" type="primary" onClick={() => openAssignModal(record)} disabled={assignedAppointmentIds.has(record._id)}>
                         Gán nhân viên
                     </Button>
                 </Space>
@@ -219,7 +239,7 @@ const StaffTechnicianPage: React.FC = () => {
         setAssignVisible(true);
         setSelectedAppointmentId(booking._id);
         setSelectedScheduleId(null);
-        dispatch(fetchTechnicianSchedules({ centerId, workDate, availability: "available" }));
+        dispatch(fetchTechnicianSchedules({ centerId, workDate, status: "working", availability: "available" }));
     };
 
     const handleAssign = async () => {

@@ -1,5 +1,5 @@
-export const BASE_URL = "https://dolphin-app-pwai8.ondigitalocean.app";
-// export const BASE_URL = "http://localhost:8080";
+// export const BASE_URL = "https://dolphin-app-pwai8.ondigitalocean.app";
+export const BASE_URL = "http://localhost:8080";
 
 // Auth endpoints
 export const LOGIN_ENDPOINT = `${BASE_URL}/api/auth/login`;
@@ -81,6 +81,10 @@ export const BOOKING_AWAITING_CONFIRMATION_ENDPOINT = `${BASE_URL}/api/booking/a
 export const BOOKING_CONFIRM_ENDPOINT = (bookingId: string) =>
   `${BASE_URL}/api/booking/${bookingId}/confirm`;
 
+// Appointment progress (customer view)
+export const APPOINTMENT_PROGRESS_ENDPOINT = (appointmentId: string) =>
+  `${BASE_URL}/api/appointments/${appointmentId}/progress`;
+
 // Confirmed bookings (for staff/technician views)
 export const BOOKINGS_CONFIRMED_ENDPOINT = `${BASE_URL}/api/bookings/confirmed`;
 
@@ -89,6 +93,9 @@ export const TECHNICIAN_SCHEDULE_CREATE_ENDPOINT = `${BASE_URL}/api/technician-s
 export const TECHNICIAN_SCHEDULE_CREATE_DEFAULT_ENDPOINT = `${BASE_URL}/api/technician-schedules/default`;
 export const TECHNICIAN_SCHEDULE_LIST_ENDPOINT = `${BASE_URL}/api/technician-schedules`;
 export const TECHNICIAN_SCHEDULE_BY_CENTER_ENDPOINT = `${BASE_URL}/api/technician-schedules`;
+export const TECHNICIAN_SCHEDULES_BY_TECHNICIAN_ENDPOINT = (
+  technicianId: string
+) => `${BASE_URL}/api/technicians/${technicianId}/schedules`;
 export const TECHNICIAN_SCHEDULE_UPDATE_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/technician-schedules/${id}`;
 export const TECHNICIAN_SCHEDULE_DELETE_ENDPOINT = (id: string) =>
@@ -115,6 +122,21 @@ export const SERVICE_TYPE_ENDPOINT = `${BASE_URL}/api/service-types`;
 export const CERTIFICATE_ENDPOINT = `${BASE_URL}/api/technician-certificates`;
 export const CERTIFICATE_DETAIL_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/technician-certificates/${id}`;
+
+// Technician work progress endpoints
+export const TECHNICIAN_PROGRESS_CREATE_ENDPOINT = `${BASE_URL}/api/work-progress`;
+export const TECHNICIAN_PROGRESS_QUOTE_RESPONSE_ENDPOINT = (
+  progressId: string
+) => `${BASE_URL}/api/work-progress/${progressId}/quote-response`;
+export const TECHNICIAN_PROGRESS_INSPECTION_QUOTE_ENDPOINT = (
+  progressId: string
+) => `${BASE_URL}/api/work-progress/${progressId}/inspection-quote`;
+export const TECHNICIAN_PROGRESS_START_MAINTENANCE_ENDPOINT = (
+  progressId: string
+) => `${BASE_URL}/api/work-progress/${progressId}/start-maintenance`;
+export const TECHNICIAN_PROGRESS_COMPLETE_MAINTENANCE_ENDPOINT = (
+  progressId: string
+) => `${BASE_URL}/api/work-progress/${progressId}/complete-maintenance`;
 
 // Payment endpoints
 export const PAYMENT_CREATE_ENDPOINT = (appointmentId: string) =>

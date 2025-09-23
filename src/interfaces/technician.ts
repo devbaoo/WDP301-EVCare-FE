@@ -131,7 +131,7 @@ export interface TechnicianScheduleQueryParams {
   technicianId?: string;
   centerId?: string;
   workDate?: string; // ISO date format (YYYY-MM-DD)
-  status?: "scheduled" | "completed" | "cancelled" | "in-progress";
+  status?: "scheduled" | "working" | "completed" | "cancelled" | "in-progress";
   availability?: "available" | "busy" | "unavailable";
   page?: number;
   limit?: number;

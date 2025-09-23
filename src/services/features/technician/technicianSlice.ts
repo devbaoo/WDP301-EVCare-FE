@@ -301,12 +301,30 @@ const technicianSlice = createSlice({
       })
       .addCase(fetchTechnicianSchedules.fulfilled, (state, action) => {
         state.fetchSchedulesLoading = false;
-        // Ensure data.schedules is an array
-        const schedules = Array.isArray(action.payload.data.schedules)
-          ? action.payload.data.schedules
-          : [];
+        // API may return { data: { schedules: TechnicianSchedule[] }} or { data: TechnicianSchedule[] }
+        type PayloadA = {
+          success: boolean;
+          data: TechnicianState["schedules"];
+        };
+        type PayloadB = {
+          success: boolean;
+          data: {
+            schedules: TechnicianState["schedules"];
+            pagination?: TechnicianState["pagination"];
+          };
+        };
+        const payload = action.payload as PayloadA | PayloadB;
+        let schedules: TechnicianState["schedules"] = [];
+        let pagination: TechnicianState["pagination"] | null = null;
+        if (Array.isArray((payload as PayloadA).data)) {
+          schedules = (payload as PayloadA).data;
+        } else {
+          const d = (payload as PayloadB).data;
+          schedules = d.schedules;
+          pagination = d.pagination || null;
+        }
         state.schedules = schedules;
-        state.pagination = action.payload.data.pagination;
+        state.pagination = pagination;
       })
       .addCase(fetchTechnicianSchedules.rejected, (state, action) => {
         state.fetchSchedulesLoading = false;
