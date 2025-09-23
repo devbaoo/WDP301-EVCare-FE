@@ -42,6 +42,7 @@ import BookingManagePages from "@/page/Admin/BookingManagePages";
 import StaffBookingManagePage from "@/page/Staff/StaffBookingManagePage";
 import StaffTechnicianPage from "@/page/Staff/StaffTechnicianPage";
 import StaffSchedulesTechnicianPage from "@/page/Staff/StaffSchedulesTechnicianPage";
+import StaffPaymentPage from "@/page/Staff/StaffPaymentPage";
 import TechnicianWorkProgressPage from "@/page/Technician/TechnicianWorkProgressPage";
 import SchedulePage from "@/page/Technician/SchedulePage";
 
@@ -159,6 +160,7 @@ const AppRouter = () => {
                     <Route path="/staff" element={<StaffLayout />}>
                         <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Dashboard</h1></div>} />
                         <Route path="booking" element={<StaffBookingManagePage />} />
+                        <Route path="payment" element={<StaffPaymentPage />} />
                         <Route path="certificate" element={<CertificatePage />} />
                         <Route path="technicians" element={<StaffTechnicianPage />} />
                         <Route path="schedules" element={<StaffSchedulesTechnicianPage />} />

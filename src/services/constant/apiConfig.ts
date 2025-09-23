@@ -128,6 +128,11 @@ export const CERTIFICATE_DETAIL_ENDPOINT = (id: string) =>
 
 // Technician work progress endpoints
 export const TECHNICIAN_PROGRESS_CREATE_ENDPOINT = `${BASE_URL}/api/work-progress`;
+export const WORK_PROGRESS_LIST_ENDPOINT = `${BASE_URL}/api/work-progress`;
+export const WORK_PROGRESS_DETAIL_ENDPOINT = (id: string) =>
+  `${BASE_URL}/api/work-progress/${id}`;
+export const WORK_PROGRESS_PROCESS_PAYMENT_ENDPOINT = (id: string) =>
+  `${BASE_URL}/api/work-progress/${id}/process-payment`;
 export const TECHNICIAN_PROGRESS_QUOTE_RESPONSE_ENDPOINT = (
   progressId: string
 ) => `${BASE_URL}/api/work-progress/${progressId}/quote-response`;

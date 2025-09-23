@@ -4,7 +4,7 @@ export interface WorkProgressMilestone {
   _id?: string;
   name: string;
   description: string;
-  status?: "pending" | "in_progress" | "done";
+  status?: "pending" | "completed";
 }
 
 export interface WorkProgress {
@@ -61,6 +61,10 @@ export interface WorkProgress {
         };
         completion: {
           isCompleted: boolean;
+          completedAt?: string;
+          completedBy?: string;
+          workDone?: string;
+          recommendations?: string;
         };
         customer: string;
         vehicle: string;
@@ -142,4 +146,45 @@ export interface CompleteMaintenancePayload {
   notes?: string;
   workDone: string;
   recommendations?: string;
+}
+
+// Query params for fetching work progress list
+export interface WorkProgressQueryParams {
+  currentStatus?:
+    | "not_started"
+    | "in_progress"
+    | "paused"
+    | "completed"
+    | "delayed"
+    | "inspection_completed"
+    | "quote_provided"
+    | "quote_approved"
+    | "quote_rejected";
+  serviceDate?: string; // YYYY-MM-DD format
+}
+
+// Response interface for work progress list
+export interface WorkProgressListResponse {
+  success: boolean;
+  data: WorkProgress[];
+}
+
+// Process payment payload
+export interface ProcessPaymentPayload {
+  staffId: string;
+  paidAmount: number;
+  notes?: string;
+}
+
+// Process payment response
+export interface ProcessPaymentResponse {
+  success: boolean;
+  data: WorkProgress;
+  message: string;
+}
+
+// Work progress detail response
+export interface WorkProgressDetailResponse {
+  success: boolean;
+  data: WorkProgress;
 }
