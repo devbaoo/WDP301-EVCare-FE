@@ -10,6 +10,7 @@ import bookingReducer from "../features/booking/bookingSlice";
 import vehicleReducer from "../features/vehicle/vehicleSlice";
 import paymentReducer from "../features/payment/paymentSlice";
 import technicianReducer from "../features/technician/technicianSlice";
+import workProgressReducer from "../features/technician/workProgressSlice";
 
 const presistConfig = {
   key: "root",
@@ -35,6 +36,7 @@ const rootReducer = combineReducers({
   vehicle: vehicleReducer,
   payment: paymentReducer,
   technician: technicianReducer,
+  workProgress: workProgressReducer,
 });
 
 const persistedReducer = persistReducer(presistConfig, rootReducer);

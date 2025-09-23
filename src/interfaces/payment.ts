@@ -34,16 +34,20 @@ export interface PaymentWebhook {
 
 export interface Payment {
   _id: string;
-  appointment: string | AppointmentInfo;
+  appointment: string | AppointmentInfo | null;
   customer: string | CustomerInfo;
   paymentInfo: PaymentInfo;
   payosInfo: PayOSInfo;
   status: PaymentStatus;
   paymentMethod: string;
   transaction?: PaymentTransaction;
+  refund?: {
+    isRefunded: boolean;
+    refundAmount: number;
+  };
   expiresAt: string;
-  isExpired: boolean;
-  statusDisplay: string;
+  isExpired?: boolean;
+  statusDisplay?: string;
   webhook?: PaymentWebhook;
   createdAt: string;
   updatedAt: string;
@@ -51,15 +55,21 @@ export interface Payment {
 
 export interface AppointmentInfo {
   _id: string;
-  serviceType: {
-    name: string;
-  };
-  serviceCenter: {
-    name: string;
-  };
+  serviceType?:
+    | string
+    | {
+        name: string;
+      };
+  serviceCenter?:
+    | string
+    | {
+        name: string;
+      };
   appointmentTime: {
     date: string;
     startTime: string;
+    endTime?: string;
+    duration?: number;
   };
 }
 
@@ -70,7 +80,13 @@ export interface CustomerInfo {
   fullName: string;
 }
 
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cancelled' | 'expired' | 'refunded';
+export type PaymentStatus =
+  | "pending"
+  | "paid"
+  | "failed"
+  | "cancelled"
+  | "expired"
+  | "refunded";
 
 export interface CreatePaymentResponse {
   success: boolean;
@@ -160,7 +176,9 @@ export interface PaymentQueryParams {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface PaymentState {

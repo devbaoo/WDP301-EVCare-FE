@@ -1,5 +1,5 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import axiosInstance from '../../constant/axiosInstance';
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import axiosInstance from "../../constant/axiosInstance";
 import {
   PAYMENT_CREATE_ENDPOINT,
   PAYMENT_STATUS_ENDPOINT,
@@ -7,8 +7,8 @@ import {
   PAYMENT_CANCEL_ENDPOINT,
   MY_PAYMENTS_ENDPOINT,
   PAYOS_PAYMENT_INFO_ENDPOINT,
-  PAYOS_CANCEL_ENDPOINT
-} from '../../constant/apiConfig';
+  PAYOS_CANCEL_ENDPOINT,
+} from "../../constant/apiConfig";
 import {
   Payment,
   CreatePaymentResponse,
@@ -18,8 +18,8 @@ import {
   PaymentCancelResponse,
   PayOSPaymentInfoResponse,
   PaymentQueryParams,
-  PaymentState
-} from '../../../interfaces/payment';
+  PaymentState,
+} from "../../../interfaces/payment";
 
 const initialState: PaymentState = {
   currentPayment: null,
@@ -32,7 +32,7 @@ const initialState: PaymentState = {
 
 // Create payment for booking
 export const createPayment = createAsyncThunk(
-  'payment/createPayment',
+  "payment/createPayment",
   async (appointmentId: string, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post<CreatePaymentResponse>(
@@ -41,7 +41,7 @@ export const createPayment = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || 'Không thể tạo thanh toán'
+        error.response?.data?.message || "Không thể tạo thanh toán"
       );
     }
   }
@@ -49,7 +49,7 @@ export const createPayment = createAsyncThunk(
 
 // Get payment status (legacy - kept for backward compatibility)
 export const getPaymentStatus = createAsyncThunk(
-  'payment/getPaymentStatus',
+  "payment/getPaymentStatus",
   async (paymentId: string, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get<PaymentStatusResponse>(
@@ -58,7 +58,7 @@ export const getPaymentStatus = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || 'Không thể lấy trạng thái thanh toán'
+        error.response?.data?.message || "Không thể lấy trạng thái thanh toán"
       );
     }
   }
@@ -66,7 +66,7 @@ export const getPaymentStatus = createAsyncThunk(
 
 // Sync payment status using orderCode
 export const syncPaymentStatus = createAsyncThunk(
-  'payment/syncPaymentStatus',
+  "payment/syncPaymentStatus",
   async (orderCode: string, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post<PaymentSyncResponse>(
@@ -75,7 +75,8 @@ export const syncPaymentStatus = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || 'Không thể đồng bộ trạng thái thanh toán'
+        error.response?.data?.message ||
+          "Không thể đồng bộ trạng thái thanh toán"
       );
     }
   }
@@ -83,7 +84,7 @@ export const syncPaymentStatus = createAsyncThunk(
 
 // Cancel payment
 export const cancelPayment = createAsyncThunk(
-  'payment/cancelPayment',
+  "payment/cancelPayment",
   async (paymentId: string, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.put<PaymentCancelResponse>(
@@ -92,7 +93,7 @@ export const cancelPayment = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || 'Không thể hủy thanh toán'
+        error.response?.data?.message || "Không thể hủy thanh toán"
       );
     }
   }
@@ -100,18 +101,20 @@ export const cancelPayment = createAsyncThunk(
 
 // Get my payments
 export const getMyPayments = createAsyncThunk(
-  'payment/getMyPayments',
+  "payment/getMyPayments",
   async (params: PaymentQueryParams = {}, { rejectWithValue }) => {
     try {
       const queryString = new URLSearchParams();
-      
-      if (params.status) queryString.append('status', params.status);
-      if (params.page) queryString.append('page', params.page.toString());
-      if (params.limit) queryString.append('limit', params.limit.toString());
-      if (params.sortBy) queryString.append('sortBy', params.sortBy);
-      if (params.sortOrder) queryString.append('sortOrder', params.sortOrder);
 
-      const url = queryString.toString() 
+      if (params.status) queryString.append("status", params.status);
+      if (params.page) queryString.append("page", params.page.toString());
+      if (params.limit) queryString.append("limit", params.limit.toString());
+      if (params.sortBy) queryString.append("sortBy", params.sortBy);
+      if (params.sortOrder) queryString.append("sortOrder", params.sortOrder);
+      if (params.startDate) queryString.append("startDate", params.startDate);
+      if (params.endDate) queryString.append("endDate", params.endDate);
+
+      const url = queryString.toString()
         ? `${MY_PAYMENTS_ENDPOINT}?${queryString.toString()}`
         : MY_PAYMENTS_ENDPOINT;
 
@@ -119,7 +122,7 @@ export const getMyPayments = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || 'Không thể lấy danh sách thanh toán'
+        error.response?.data?.message || "Không thể lấy danh sách thanh toán"
       );
     }
   }
@@ -127,7 +130,7 @@ export const getMyPayments = createAsyncThunk(
 
 // Get PayOS payment info
 export const getPayOSPaymentInfo = createAsyncThunk(
-  'payment/getPayOSPaymentInfo',
+  "payment/getPayOSPaymentInfo",
   async (orderCode: string, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get<PayOSPaymentInfoResponse>(
@@ -136,7 +139,8 @@ export const getPayOSPaymentInfo = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || 'Không thể lấy thông tin thanh toán từ PayOS'
+        error.response?.data?.message ||
+          "Không thể lấy thông tin thanh toán từ PayOS"
       );
     }
   }
@@ -144,7 +148,7 @@ export const getPayOSPaymentInfo = createAsyncThunk(
 
 // Cancel PayOS payment
 export const cancelPayOSPayment = createAsyncThunk(
-  'payment/cancelPayOSPayment',
+  "payment/cancelPayOSPayment",
   async (orderCode: string, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.put<PaymentCancelResponse>(
@@ -153,7 +157,7 @@ export const cancelPayOSPayment = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || 'Không thể hủy thanh toán trên PayOS'
+        error.response?.data?.message || "Không thể hủy thanh toán trên PayOS"
       );
     }
   }
@@ -161,17 +165,18 @@ export const cancelPayOSPayment = createAsyncThunk(
 
 // Poll payment status (for real-time updates) - legacy method
 export const pollPaymentStatus = createAsyncThunk(
-  'payment/pollPaymentStatus',
+  "payment/pollPaymentStatus",
   async (paymentId: string, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get<PaymentStatusResponse>(
         PAYMENT_STATUS_ENDPOINT(paymentId)
       );
-      
+
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || 'Không thể kiểm tra trạng thái thanh toán'
+        error.response?.data?.message ||
+          "Không thể kiểm tra trạng thái thanh toán"
       );
     }
   }
@@ -179,24 +184,25 @@ export const pollPaymentStatus = createAsyncThunk(
 
 // Poll payment status using orderCode (new method)
 export const pollPaymentStatusByOrderCode = createAsyncThunk(
-  'payment/pollPaymentStatusByOrderCode',
+  "payment/pollPaymentStatusByOrderCode",
   async (orderCode: string, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post<PaymentSyncResponse>(
         PAYMENT_SYNC_ENDPOINT(orderCode)
       );
-      
+
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || 'Không thể kiểm tra trạng thái thanh toán'
+        error.response?.data?.message ||
+          "Không thể kiểm tra trạng thái thanh toán"
       );
     }
   }
 );
 
 const paymentSlice = createSlice({
-  name: 'payment',
+  name: "payment",
   initialState,
   reducers: {
     clearError: (state) => {
@@ -250,7 +256,7 @@ const paymentSlice = createSlice({
         state.loading = false;
         state.error = null;
         if (state.currentPayment) {
-          state.currentPayment.status = 'cancelled';
+          state.currentPayment.status = "cancelled";
         }
       })
       .addCase(cancelPayment.rejected, (state, action) => {
@@ -298,7 +304,7 @@ const paymentSlice = createSlice({
         state.error = null;
         // Update current payment status to cancelled
         if (state.currentPayment) {
-          state.currentPayment.status = 'cancelled';
+          state.currentPayment.status = "cancelled";
         }
       })
       .addCase(cancelPayOSPayment.rejected, (state, action) => {
@@ -355,5 +361,6 @@ const paymentSlice = createSlice({
   },
 });
 
-export const { clearError, clearCurrentPayment, setCurrentPayment } = paymentSlice.actions;
+export const { clearError, clearCurrentPayment, setCurrentPayment } =
+  paymentSlice.actions;
 export default paymentSlice.reducer;

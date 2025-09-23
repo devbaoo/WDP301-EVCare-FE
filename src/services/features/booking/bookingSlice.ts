@@ -254,9 +254,26 @@ export const createBooking = createAsyncThunk(
 // Async thunk for fetching my bookings
 export const fetchMyBookings = createAsyncThunk(
   "booking/fetchMyBookings",
-  async (_, { rejectWithValue }) => {
+  async (params: Record<string, string | number> = {}, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(MY_BOOKINGS_ENDPOINT);
+      const queryString = new URLSearchParams();
+
+      if (params.page) queryString.append("page", params.page.toString());
+      if (params.limit) queryString.append("limit", params.limit.toString());
+      if (params.status) queryString.append("status", params.status.toString());
+      if (params.sortBy) queryString.append("sortBy", params.sortBy.toString());
+      if (params.sortOrder)
+        queryString.append("sortOrder", params.sortOrder.toString());
+      if (params.startDate)
+        queryString.append("startDate", params.startDate.toString());
+      if (params.endDate)
+        queryString.append("endDate", params.endDate.toString());
+
+      const url = queryString.toString()
+        ? `${MY_BOOKINGS_ENDPOINT}?${queryString.toString()}`
+        : MY_BOOKINGS_ENDPOINT;
+
+      const response = await axiosInstance.get(url);
       return response.data.data; // Assuming the API returns bookings in `data`
     } catch (err: unknown) {
       const error = err as any;

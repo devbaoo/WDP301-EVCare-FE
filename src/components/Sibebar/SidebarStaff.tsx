@@ -5,7 +5,6 @@ import { logout } from '@/services/features/auth/authSlice';
 import {
     LayoutDashboard,
     DollarSign,
-    Users,
     Wrench,
     Settings,
     LogOut,
@@ -32,14 +31,13 @@ const SidebarStaff = () => {
     const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
 
     const menuItems: MenuItem[] = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/staff' },
-    { icon: ShieldCheck, label: 'Certificate', path: '/staff/certificate' },
-    { icon: CalendarDays, label: 'Bookings', path: '/staff/booking' },
-    { icon: DollarSign, label: 'Payments', path: '/staff/payments' },
-    { icon: Users, label: 'Service Centers', path: '/staff/service-centers' },
-    { icon: Wrench, label: 'Technicians', path: '/staff/technicians' },
-    { icon: Calendar, label: 'Schedules', path: '/staff/schedules' },
-    { icon: Settings, label: 'Settings', path: '/staff/settings' },
+        { icon: LayoutDashboard, label: 'Dashboard', path: '/staff' },
+        { icon: ShieldCheck, label: 'Certificate', path: '/staff/certificate' },
+        { icon: CalendarDays, label: 'Bookings', path: '/staff/booking' },
+        { icon: DollarSign, label: 'Payments', path: '/staff/payments' },
+        { icon: Wrench, label: 'Technicians', path: '/staff/technicians' },
+        { icon: Calendar, label: 'Schedules', path: '/staff/schedules' },
+        { icon: Settings, label: 'Settings', path: '/staff/settings' },
     ];
 
     const handleLogout = () => {
