@@ -12,6 +12,9 @@ import {
     Modal,
     Pagination,
     Typography,
+    List,
+    Radio,
+    message,
 } from "antd";
 import {
     CalendarOutlined,
@@ -29,6 +32,9 @@ import {
 } from "../../interfaces/booking";
 import { ServiceCenter } from "../../interfaces/serviceCenter";
 import { fetchConfirmedBookings } from "../../services/features/booking/bookingSlice";
+import { addAppointmentToSchedule, fetchTechnicianSchedules } from "../../services/features/technician/technicianSlice";
+import { useSelector } from "react-redux";
+import { RootState } from "../../services/store/store";
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -42,6 +48,8 @@ const StaffTechnicianPage: React.FC = () => {
         confirmedBookingsLoading,
     } = useAppSelector((state) => state.booking);
     const { serviceCenters } = useAppSelector((state) => state.serviceCenter);
+    const techLoading = useSelector((s: RootState) => s.technician.fetchSchedulesLoading);
+    const techSchedules = useSelector((s: RootState) => s.technician.schedules);
 
     const [selectedServiceCenter, setSelectedServiceCenter] = useState<string>("");
     const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>([
@@ -183,15 +191,54 @@ const StaffTechnicianPage: React.FC = () => {
             key: "actions",
             render: (record: AwaitingConfirmationBooking) => (
                 <Space>
-                    <Button size="small" onClick={() => setSelectedBooking(record)} icon={<UserOutlined />}>
+                    <Button size="small" onClick={() => setDetailBooking(record)} icon={<UserOutlined />}>
                         Chi tiết
+                    </Button>
+                    <Button size="small" type="primary" onClick={() => openAssignModal(record)}>
+                        Gán nhân viên
                     </Button>
                 </Space>
             ),
         },
     ];
 
-    const [selectedBooking, setSelectedBooking] = useState<AwaitingConfirmationBooking | null>(null);
+    const [detailBooking, setDetailBooking] = useState<AwaitingConfirmationBooking | null>(null);
+    const [assignVisible, setAssignVisible] = useState(false);
+    const [assignLoading, setAssignLoading] = useState(false);
+    const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
+    const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
+
+    const openAssignModal = async (booking: AwaitingConfirmationBooking) => {
+        const centerId = ((): string | undefined => {
+            const sc = (booking as AwaitingConfirmationBooking).serviceCenter as AwaitingConfirmationBooking["serviceCenter"];
+            if (sc && typeof sc === "object" && "_id" in sc) return sc._id as string;
+            return selectedServiceCenter;
+        })();
+        const dateISO = booking.appointmentTime?.date;
+        const workDate = dateISO ? dayjs(dateISO).format("YYYY-MM-DD") : dayjs().format("YYYY-MM-DD");
+        setAssignVisible(true);
+        setSelectedAppointmentId(booking._id);
+        setSelectedScheduleId(null);
+        dispatch(fetchTechnicianSchedules({ centerId, workDate, availability: "available" }));
+    };
+
+    const handleAssign = async () => {
+        if (!selectedAppointmentId || !selectedScheduleId) return;
+        setAssignLoading(true);
+        try {
+            await dispatch(addAppointmentToSchedule({ scheduleId: selectedScheduleId, appointmentId: selectedAppointmentId })).unwrap();
+            message.success("Đã gán kỹ thuật viên cho booking");
+            setAssignVisible(false);
+            setSelectedScheduleId(null);
+            setSelectedAppointmentId(null);
+            // Refresh list
+            fetchBookings();
+        } catch {
+            message.error("Gán thất bại");
+        } finally {
+            setAssignLoading(false);
+        }
+    };
 
     return (
         <div className="p-6">
@@ -296,48 +343,84 @@ const StaffTechnicianPage: React.FC = () => {
 
             <Modal
                 title="Chi tiết Booking"
-                open={!!selectedBooking}
-                onCancel={() => setSelectedBooking(null)}
-                footer={<Button onClick={() => setSelectedBooking(null)}>Đóng</Button>}
+                open={!!detailBooking}
+                onCancel={() => setDetailBooking(null)}
+                footer={<Button onClick={() => setDetailBooking(null)}>Đóng</Button>}
             >
-                {selectedBooking && (
+                {detailBooking && (
                     <div className="space-y-2">
                         <div>
-                            <UserOutlined /> {typeof selectedBooking.customer === "string" ? "N/A" : selectedBooking.customer.fullName}
+                            <UserOutlined /> {typeof detailBooking.customer === "string" ? "N/A" : detailBooking.customer.fullName}
                         </div>
                         <div>
-                            <MailOutlined /> {typeof selectedBooking.customer === "string" ? "N/A" : selectedBooking.customer.email}
+                            <MailOutlined /> {typeof detailBooking.customer === "string" ? "N/A" : detailBooking.customer.email}
                         </div>
                         <div>
-                            <PhoneOutlined /> {typeof selectedBooking.customer === "string" ? "N/A" : selectedBooking.customer.phone}
+                            <PhoneOutlined /> {typeof detailBooking.customer === "string" ? "N/A" : detailBooking.customer.phone}
                         </div>
                         <div>
-                            <CarOutlined /> {typeof selectedBooking.vehicle === "string" ? "N/A" : selectedBooking.vehicle.vehicleInfo.licensePlate}
+                            <CarOutlined /> {typeof detailBooking.vehicle === "string" ? "N/A" : detailBooking.vehicle.vehicleInfo.licensePlate}
                         </div>
                         <div>
-                            <strong>Hãng:</strong> {typeof selectedBooking.vehicle === "string" ? "N/A" : selectedBooking.vehicle.vehicleInfo.vehicleModel?.brand || "N/A"}
+                            <strong>Hãng:</strong> {typeof detailBooking.vehicle === "string" ? "N/A" : detailBooking.vehicle.vehicleInfo.vehicleModel?.brand || "N/A"}
                         </div>
                         <div>
-                            <strong>Model:</strong> {typeof selectedBooking.vehicle === "string" ? "N/A" : selectedBooking.vehicle.vehicleInfo.vehicleModel?.modelName || "N/A"}
+                            <strong>Model:</strong> {typeof detailBooking.vehicle === "string" ? "N/A" : detailBooking.vehicle.vehicleInfo.vehicleModel?.modelName || "N/A"}
                         </div>
                         <div>
-                            <CalendarOutlined /> {dayjs(selectedBooking.appointmentTime.date).format("DD/MM/YYYY")} {selectedBooking.appointmentTime.startTime}
+                            <CalendarOutlined /> {dayjs(detailBooking.appointmentTime.date).format("DD/MM/YYYY")} {detailBooking.appointmentTime.startTime}
                         </div>
                         <div>
-                            <strong>Trạng thái xác nhận:</strong> <Tag color={selectedBooking.confirmation.isConfirmed ? "green" : "orange"}>{selectedBooking.confirmation.isConfirmed ? "ĐÃ XÁC NHẬN" : "CHỜ XÁC NHẬN"}</Tag>
+                            <strong>Trạng thái xác nhận:</strong> <Tag color={detailBooking.confirmation.isConfirmed ? "green" : "orange"}>{detailBooking.confirmation.isConfirmed ? "ĐÃ XÁC NHẬN" : "CHỜ XÁC NHẬN"}</Tag>
                         </div>
-                        {selectedBooking.confirmation.isConfirmed && (
+                        {detailBooking.confirmation.isConfirmed && (
                             <>
                                 <div>
-                                    <strong>Phương thức xác nhận:</strong> {selectedBooking.confirmation.confirmationMethod}
+                                    <strong>Phương thức xác nhận:</strong> {detailBooking.confirmation.confirmationMethod}
                                 </div>
                                 <div>
-                                    <strong>Thời gian xác nhận:</strong> {dayjs(selectedBooking.confirmation.confirmedAt).format("DD/MM/YYYY HH:mm")}
+                                    <strong>Thời gian xác nhận:</strong> {dayjs(detailBooking.confirmation.confirmedAt).format("DD/MM/YYYY HH:mm")}
                                 </div>
 
                             </>
                         )}
                     </div>
+                )}
+            </Modal>
+
+            <Modal
+                title="Gán nhân viên vào booking"
+                open={assignVisible}
+                onCancel={() => setAssignVisible(false)}
+                footer={
+                    <Space>
+                        <Button onClick={() => setAssignVisible(false)}>Hủy</Button>
+                        <Button type="primary" onClick={handleAssign} loading={assignLoading} disabled={!selectedScheduleId}>
+                            Xác nhận gán
+                        </Button>
+                    </Space>
+                }
+            >
+                {techLoading ? (
+                    <div className="py-6">Đang tải...</div>
+                ) : techSchedules.length === 0 ? (
+                    <div className="py-6 text-gray-600">Hiện tại không có nhân viên phù hợp với booking.</div>
+                ) : (
+                    <Radio.Group value={selectedScheduleId} onChange={(e) => setSelectedScheduleId(e.target.value)} className="w-full">
+                        <List
+                            dataSource={techSchedules}
+                            renderItem={(item) => (
+                                <List.Item className="!px-0">
+                                    <Radio value={item._id} className="w-full">
+                                        <div className="flex flex-col">
+                                            <span className="font-medium">{item.technicianId.fullName || item.technicianId.email}</span>
+                                            <span className="text-sm text-gray-500">Ca: {item.shiftStart} - {item.shiftEnd} • Trạng thái: {item.status}</span>
+                                        </div>
+                                    </Radio>
+                                </List.Item>
+                            )}
+                        />
+                    </Radio.Group>
                 )}
             </Modal>
 

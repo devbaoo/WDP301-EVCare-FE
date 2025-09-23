@@ -44,10 +44,65 @@ export interface TechnicianSchedule {
   breakTime: BreakTime[];
   overtimeHours: number;
   availability: "available" | "busy" | "unavailable";
-  assignedAppointments: any[]; // Array of appointment IDs or objects
+  assignedAppointments: AssignedAppointment[]; // Strongly-typed assigned appointments
   actualWorkHours: number;
   notes?: string;
   leaveRequest?: LeaveRequest;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+// Minimal appointment shape assigned to a technician schedule
+export interface AssignedAppointment {
+  _id: string;
+  appointmentTime: {
+    date: string; // ISO date
+    startTime: string;
+    endTime: string;
+    duration: number;
+  };
+  serviceDetails: {
+    description: string;
+    priority: string;
+    estimatedCost: number;
+    isInspectionOnly: boolean;
+    isFromPackage: boolean;
+  };
+  inspectionAndQuote: {
+    quoteStatus: string;
+  };
+  payment: {
+    method: string;
+    status: string;
+    amount: number;
+    paidAt?: string;
+    transactionId?: string;
+  };
+  confirmation: {
+    isConfirmed: boolean;
+    confirmationMethod: string;
+    confirmedAt?: string;
+    confirmedBy?: string;
+  };
+  cancellation: {
+    isCancelled: boolean;
+    refundAmount: number;
+  };
+  rescheduling: {
+    isRescheduled: boolean;
+  };
+  completion: {
+    isCompleted: boolean;
+  };
+  customer: string; // ids in current API shape
+  vehicle: string;
+  serviceCenter: string;
+  serviceType: string;
+  status: string;
+  reminders: string[];
+  documents: string[];
+  internalNotes: string[];
   createdAt: string;
   updatedAt: string;
   __v: number;

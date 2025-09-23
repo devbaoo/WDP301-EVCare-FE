@@ -9,6 +9,7 @@ import {
   TECHNICIAN_SCHEDULE_DELETE_ENDPOINT,
   TECHNICIAN_STAFF_BY_CENTER_ENDPOINT,
   AVAILABLE_TECHNICIANS_ENDPOINT,
+  TECHNICIAN_SCHEDULE_ADD_APPOINTMENT_ENDPOINT,
 } from "../../constant/apiConfig";
 import {
   TechnicianState,
@@ -211,6 +212,31 @@ export const deleteSchedule = createAsyncThunk(
   }
 );
 
+// Assign an appointment to a technician schedule
+export const addAppointmentToSchedule = createAsyncThunk(
+  "technician/addAppointmentToSchedule",
+  async (
+    payload: { scheduleId: string; appointmentId: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosInstance.post(
+        TECHNICIAN_SCHEDULE_ADD_APPOINTMENT_ENDPOINT(payload.scheduleId),
+        { appointmentId: payload.appointmentId }
+      );
+      // Response shape is compatible with UpdateScheduleResponse (data: TechnicianSchedule)
+      return response.data as UpdateScheduleResponse;
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message ||
+          "Failed to assign appointment to schedule"
+      );
+    }
+  }
+);
+
 const technicianSlice = createSlice({
   name: "technician",
   initialState,
@@ -362,6 +388,17 @@ const technicianSlice = createSlice({
       })
       .addCase(deleteSchedule.rejected, (state, action) => {
         state.deleteScheduleLoading = false;
+        state.error = action.payload as string;
+      })
+      // Add appointment to schedule
+      .addCase(addAppointmentToSchedule.fulfilled, (state, action) => {
+        const updated = action.payload.data;
+        if (Array.isArray(state.schedules)) {
+          const idx = state.schedules.findIndex((s) => s._id === updated._id);
+          if (idx !== -1) state.schedules[idx] = updated;
+        }
+      })
+      .addCase(addAppointmentToSchedule.rejected, (state, action) => {
         state.error = action.payload as string;
       });
   },

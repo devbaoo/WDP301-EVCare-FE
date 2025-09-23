@@ -90,6 +90,8 @@ export const TECHNICIAN_SCHEDULE_UPDATE_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/technician-schedules/${id}`;
 export const TECHNICIAN_SCHEDULE_DELETE_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/technician-schedules/${id}`;
+export const TECHNICIAN_SCHEDULE_ADD_APPOINTMENT_ENDPOINT = (id: string) =>
+  `${BASE_URL}/api/technician-schedules/${id}/appointments`;
 
 // Technician staff endpoints
 export const TECHNICIAN_STAFF_BY_CENTER_ENDPOINT = (centerId: string) =>
