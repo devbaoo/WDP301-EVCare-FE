@@ -23,7 +23,9 @@ import ScrollToTop from "@/components/ScrollToTop/ScrollToTop";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/services/store/store";
+
 import DashboardPage from "@/page/Admin/DashboardPage";
+import CertificatePage from "../page/Admin/Certificate";
 
 import AllUserPage from "@/page/Admin/AllUserPage";
 import StaffPage from "@/page/Admin/StaffPage";
@@ -130,6 +132,7 @@ const AppRouter = () => {
                 <Route element={<ProtectedRoute allowedRoles={["staff"]} />}>
                     <Route path="/staff" element={<StaffLayout />}>
                         <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Dashboard</h1></div>} />
+                        <Route path="certificate" element={<CertificatePage />} />
                         <Route path="service-centers" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Service Centers</h1></div>} />
                         <Route path="technicians" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Technicians</h1></div>} />
                         <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Settings</h1></div>} />

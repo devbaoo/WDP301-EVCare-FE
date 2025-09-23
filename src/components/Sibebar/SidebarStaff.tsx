@@ -11,6 +11,7 @@ import {
     LogOut,
     ChevronDown,
     ChevronRight,
+    ShieldCheck,  
     type LucideIcon,
 } from 'lucide-react';
 
@@ -29,6 +30,7 @@ const SidebarStaff = () => {
 
     const menuItems: MenuItem[] = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/staff' },
+        { icon: ShieldCheck, label: 'Certificate', path: '/staff/certificate' },
         { icon: DollarSign, label: 'Payments', path: '/staff/payments' },
         { icon: Users, label: 'Service Centers', path: '/staff/service-centers' },
         { icon: Wrench, label: 'Technicians', path: '/staff/technicians' },
@@ -92,7 +94,6 @@ const SidebarStaff = () => {
                                     </span>
                                 )}
                             </button>
-
                             {/* Dropdown children */}
                             {hasChildren && isOpen && (
                                 <div className="ml-4 mt-2 space-y-1">
