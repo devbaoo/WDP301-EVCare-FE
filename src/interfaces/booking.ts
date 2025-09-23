@@ -429,9 +429,9 @@ export interface AwaitingConfirmationBooking {
     isCompleted: boolean;
   };
   status: string;
-  reminders: any[];
-  documents: any[];
-  internalNotes: any[];
+  reminders: string[];
+  documents: string[];
+  internalNotes: string[];
   createdAt: string;
   updatedAt: string;
   __v: number;
