@@ -17,6 +17,8 @@ import {
   BOOKING_AWAITING_CONFIRMATION_ENDPOINT,
   BOOKING_CONFIRM_ENDPOINT,
   BOOKINGS_CONFIRMED_ENDPOINT,
+  SUBMIT_CUSTOMER_FEEDBACK_ENDPOINT,
+  GET_CUSTOMER_FEEDBACK_ENDPOINT,
 } from "../../constant/apiConfig";
 import { Vehicle, CreateVehicleData } from "../../../interfaces/vehicle";
 import {
@@ -406,6 +408,42 @@ export const fetchConfirmedBookings = createAsyncThunk(
   }
 );
 
+
+export const getCustomerFeedback = createAsyncThunk(
+  "booking/getCustomerFeedback",
+  async (appointmentId: string, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(GET_CUSTOMER_FEEDBACK_ENDPOINT(appointmentId));
+      return response.data;
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to get customer feedback"
+      );
+    }
+  }
+);
+
+export const submitCustomerFeedback = createAsyncThunk(
+  "booking/submitCustomerFeedback",
+  async (
+    { appointmentId, feedback }: { appointmentId: string; feedback: { overall: number; service: number; technician: number; facility: number; comment: string } },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosInstance.post(SUBMIT_CUSTOMER_FEEDBACK_ENDPOINT(appointmentId), feedback);
+      return response.data;
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to submit customer feedback"
+      );
+    }
+  }
+);
+
 const bookingSlice = createSlice({
   name: "booking",
   initialState,
@@ -713,6 +751,55 @@ const bookingSlice = createSlice({
       })
       .addCase(fetchConfirmedBookings.rejected, (state, action) => {
         state.confirmedBookingsLoading = false;
+        state.error = action.payload as string;
+      })
+      // Fetch customer feedback
+      .addCase(getCustomerFeedback.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getCustomerFeedback.fulfilled, (state, action) => {
+        state.loading = false;
+        // Store feedback data in state
+        const feedbackData = action.payload.data;
+        const appointmentId = action.meta.arg;
+        
+        // Update feedback in myBookings if it exists
+        if (state.myBookings && Array.isArray(state.myBookings)) {
+          const bookingIndex = state.myBookings.findIndex(booking => booking._id === appointmentId);
+          if (bookingIndex !== -1) {
+            state.myBookings[bookingIndex].feedback = feedbackData;
+          }
+        }
+      })
+      .addCase(getCustomerFeedback.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Submit customer feedback
+      .addCase(submitCustomerFeedback.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(submitCustomerFeedback.fulfilled, (state, action) => {
+        state.loading = false;
+        // Update the booking with feedback data
+        const feedbackData = action.payload.data;
+        const appointmentId = action.meta.arg.appointmentId;
+        
+        // Update feedback in myBookings if it exists
+        if (state.myBookings && Array.isArray(state.myBookings)) {
+          const bookingIndex = state.myBookings.findIndex(booking => booking._id === appointmentId);
+          if (bookingIndex !== -1) {
+            state.myBookings[bookingIndex].feedback = {
+              ...feedbackData,
+              submittedAt: new Date().toISOString()
+            };
+          }
+        }
+      })
+      .addCase(submitCustomerFeedback.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload as string;
       });
   },
