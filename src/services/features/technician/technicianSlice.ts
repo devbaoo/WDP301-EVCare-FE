@@ -13,6 +13,8 @@ import {
   TECHNICIAN_SCHEDULES_BY_TECHNICIAN_ENDPOINT,
 
   TECHNICIAN_SCHEDULE_ADD_APPOINTMENT_ENDPOINT,
+  TECHNICIAN_CHECK_IN_ENDPOINT,
+  TECHNICIAN_CHECK_OUT_ENDPOINT,
 
 } from "../../constant/apiConfig";
 import {
@@ -45,6 +47,8 @@ const initialState: TechnicianState = {
   fetchAvailableTechniciansLoading: false,
   updateScheduleLoading: false,
   deleteScheduleLoading: false,
+  checkInLoading: false,
+  checkOutLoading: false,
   error: null,
 };
 
@@ -105,6 +109,38 @@ export const fetchTechnicianSchedulesById = createAsyncThunk(
       const error = err as any;
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch technician schedules by id"
+      );
+    }
+  }
+);
+
+export const checkInTechnician = createAsyncThunk(
+  "technician/checkInTechnician",
+  async (scheduleId: string, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(TECHNICIAN_CHECK_IN_ENDPOINT(scheduleId));
+      return response.data as UpdateScheduleResponse;
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to check in technician"
+      );
+    }
+  }
+);
+
+export const checkOutTechnician = createAsyncThunk(
+  "technician/checkOutTechnician",
+  async (scheduleId: string, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(TECHNICIAN_CHECK_OUT_ENDPOINT(scheduleId));
+      return response.data as UpdateScheduleResponse;
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to check out technician"
       );
     }
   }
@@ -460,6 +496,48 @@ const technicianSlice = createSlice({
         }
       })
       .addCase(addAppointmentToSchedule.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+      // Check in technician
+      .addCase(checkInTechnician.pending, (state) => {
+        state.checkInLoading = true;
+        state.error = null;
+      })
+      .addCase(checkInTechnician.fulfilled, (state, action) => {
+        state.checkInLoading = false;
+        const updatedSchedule = action.payload.data;
+        if (Array.isArray(state.schedules)) {
+          const index = state.schedules.findIndex(
+            (schedule) => schedule._id === updatedSchedule._id
+          );
+          if (index !== -1) {
+            state.schedules[index] = updatedSchedule;
+          }
+        }
+      })
+      .addCase(checkInTechnician.rejected, (state, action) => {
+        state.checkInLoading = false;
+        state.error = action.payload as string;
+      })
+      // Check out technician
+      .addCase(checkOutTechnician.pending, (state) => {
+        state.checkOutLoading = true;
+        state.error = null;
+      })
+      .addCase(checkOutTechnician.fulfilled, (state, action) => {
+        state.checkOutLoading = false;
+        const updatedSchedule = action.payload.data;
+        if (Array.isArray(state.schedules)) {
+          const index = state.schedules.findIndex(
+            (schedule) => schedule._id === updatedSchedule._id
+          );
+          if (index !== -1) {
+            state.schedules[index] = updatedSchedule;
+          }
+        }
+      })
+      .addCase(checkOutTechnician.rejected, (state, action) => {
+        state.checkOutLoading = false;
         state.error = action.payload as string;
       });
   },

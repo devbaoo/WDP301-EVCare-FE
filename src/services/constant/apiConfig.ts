@@ -110,6 +110,13 @@ export const TECHNICIAN_STAFF_BY_CENTER_ENDPOINT = (centerId: string) =>
 export const AVAILABLE_TECHNICIANS_ENDPOINT = (centerId: string) =>
   `${BASE_URL}/api/service-centers/${centerId}/available-technicians`;
 
+//Technician check in endpoints
+
+export const TECHNICIAN_CHECK_IN_ENDPOINT = (scheduleId: string) =>
+  `${BASE_URL}/api/technician-schedules/${scheduleId}/check-in`;
+export const TECHNICIAN_CHECK_OUT_ENDPOINT = (scheduleId: string) =>
+  `${BASE_URL}/api/technician-schedules/${scheduleId}/check-out`;
+
 // Deprecated/misnamed helper removed in favor of TECHNICIAN_SCHEDULES_BY_TECHNICIAN_ENDPOINT
 
 //servicetype
