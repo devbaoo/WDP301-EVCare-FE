@@ -1,6 +1,6 @@
 import Header from "@/components/Header/Header";
 import ServiceCenterCardSimple from "@/components/ServiceCenter/ServiceCenterCardSimple";
-import { Button, Spin, Empty, Typography, Select } from "antd";
+import { Button, Spin, Empty, Typography, Select, message } from "antd";
 import { useAppDispatch, useAppSelector } from "@/services/store/store";
 import { fetchNearbyServiceCenters } from "@/services/features/serviceCenter/serviceCenterSlice";
 import { useEffect, useState, useRef } from "react";
@@ -34,6 +34,27 @@ export default function HomePage() {
           (error) => {
             console.error('Error getting location:', error);
             setLocationPermissionDenied(true);
+            
+            // Handle different types of geolocation errors
+            switch (error.code) {
+              case error.PERMISSION_DENIED:
+                console.log('User denied the request for Geolocation.');
+                message.warning('Không thể truy cập vị trí của bạn. Sử dụng vị trí mặc định (TP.HCM).');
+                break;
+              case error.POSITION_UNAVAILABLE:
+                console.log('Location information is unavailable.');
+                message.warning('Thông tin vị trí không khả dụng. Sử dụng vị trí mặc định (TP.HCM).');
+                break;
+              case error.TIMEOUT:
+                console.log('The request to get user location timed out.');
+                message.warning('Hết thời gian chờ lấy vị trí. Sử dụng vị trí mặc định (TP.HCM).');
+                break;
+              default:
+                console.log('An unknown error occurred.');
+                message.warning('Lỗi không xác định khi lấy vị trí. Sử dụng vị trí mặc định (TP.HCM).');
+                break;
+            }
+            
             // Fallback to Ho Chi Minh City coordinates
             setUserLocation({ lat: 10.762622, lng: 106.660172 });
           },

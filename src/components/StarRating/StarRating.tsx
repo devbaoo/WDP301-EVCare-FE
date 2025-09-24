@@ -36,7 +36,8 @@ const StarRating: React.FC<StarRatingProps> = ({
   };
 
   const stars = [];
-  const fullStars = Math.floor(rating);
+  const safeRating = rating || 0;
+  const fullStars = Math.floor(safeRating);
   
 
   // Tạo sao đầy
@@ -78,7 +79,7 @@ const StarRating: React.FC<StarRatingProps> = ({
       </div>
       {showNumber && (
         <span className="ml-1 text-sm text-gray-600">
-          {rating.toFixed(1)}
+          {safeRating.toFixed(1)}
         </span>
       )}
     </div>

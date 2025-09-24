@@ -495,6 +495,13 @@ const bookingSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    updateBookingFeedback: (state, action: PayloadAction<{ bookingId: string; feedback: any }>) => {
+      const { bookingId, feedback } = action.payload;
+      const bookingIndex = state.myBookings.findIndex(booking => booking._id === bookingId);
+      if (bookingIndex !== -1) {
+        state.myBookings[bookingIndex].feedback = feedback;
+      }
+    },
     resetBooking: (state) => {
       state.currentStep = 1;
       state.bookingData = {};
@@ -815,6 +822,7 @@ export const {
   setSelectedServicePackage,
   updateBookingData,
   clearError,
+  updateBookingFeedback,
   resetBooking,
 } = bookingSlice.actions;
 
