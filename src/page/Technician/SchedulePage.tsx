@@ -5,14 +5,14 @@ import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import { useAppDispatch, useAppSelector } from "../../services/store/store";
-import { fetchTechnicianSchedulesById, updateSchedule } from "../../services/features/technician/technicianSlice";
+import { fetchTechnicianSchedulesById, checkInTechnician, checkOutTechnician } from "../../services/features/technician/technicianSlice";
 import type { TechnicianSchedule } from "../../interfaces/technician";
 
 const { Title, Text } = Typography;
 
 const SchedulePage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { schedules, fetchSchedulesLoading, updateScheduleLoading } = useAppSelector((s) => s.technician);
+  const { schedules, fetchSchedulesLoading, checkInLoading, checkOutLoading } = useAppSelector((s) => s.technician);
   const { user } = useAppSelector((s) => s.auth);
 
   dayjs.locale("vi");
@@ -72,9 +72,7 @@ const SchedulePage: React.FC = () => {
         message.info("Bạn đã check-in rồi.");
         return;
       }
-      await dispatch(
-        updateSchedule({ _id: target._id, status: "working" })
-      ).unwrap();
+      await dispatch(checkInTechnician(target._id)).unwrap();
       message.success("Check-in thành công");
     } catch (e) {
       message.error("Check-in thất bại");
@@ -95,9 +93,7 @@ const SchedulePage: React.FC = () => {
         message.info("Bạn đã check-out rồi.");
         return;
       }
-      await dispatch(
-        updateSchedule({ _id: target._id, status: "completed" })
-      ).unwrap();
+      await dispatch(checkOutTechnician(target._id)).unwrap();
       message.success("Check-out thành công");
     } catch (e) {
       message.error("Check-out thất bại");
@@ -163,11 +159,11 @@ const SchedulePage: React.FC = () => {
           <Space>
             <Button onClick={() => setCurrentMonth(dayjs())}>Hôm nay</Button>
             {todayStatus === "working" ? (
-              <Button danger loading={updateScheduleLoading} onClick={handleCheckOut}>Check out</Button>
+              <Button danger loading={checkOutLoading} onClick={handleCheckOut}>Check out</Button>
             ) : todayStatus === "completed" ? (
               <Button disabled>Đã check out</Button>
             ) : (
-              <Button type="primary" loading={updateScheduleLoading} onClick={handleCheckIn}>Check in</Button>
+              <Button type="primary" loading={checkInLoading} onClick={handleCheckIn}>Check in</Button>
             )}
           </Space>
         </Space>

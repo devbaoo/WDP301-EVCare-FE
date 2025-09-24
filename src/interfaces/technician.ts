@@ -249,5 +249,7 @@ export interface TechnicianState {
   fetchAvailableTechniciansLoading: boolean;
   updateScheduleLoading: boolean;
   deleteScheduleLoading: boolean;
+  checkInLoading: boolean;
+  checkOutLoading: boolean;
   error: string | null;
 }
