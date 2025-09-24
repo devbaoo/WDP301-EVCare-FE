@@ -371,6 +371,14 @@ export interface Booking {
   reminders?: string[];
   documents?: string[];
   internalNotes?: string[];
+  feedback?: {
+    overall: number;
+    service: number;
+    technician: number;
+    facility: number;
+    comment: string;
+    submittedAt?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

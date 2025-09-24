@@ -12,7 +12,9 @@ import {
     InfoCircleOutlined,
     EnvironmentOutlined,
     TagOutlined,
-    HistoryOutlined
+    HistoryOutlined,
+    StarOutlined,
+    MessageOutlined
 } from "@ant-design/icons";
 import {
     Card,
@@ -37,8 +39,9 @@ import {
 import axiosInstance from "../../services/constant/axiosInstance";
 import { BOOKING_DETAILS_ENDPOINT, BOOKING_TIME_SLOTS_ENDPOINT, APPOINTMENT_PROGRESS_ENDPOINT, TECHNICIAN_PROGRESS_QUOTE_RESPONSE_ENDPOINT } from "../../services/constant/apiConfig";
 import { Booking } from "../../interfaces/booking";
-import { cancelBooking, rescheduleBooking, fetchMyBookings } from "../../services/features/booking/bookingSlice";
+import { cancelBooking, rescheduleBooking, fetchMyBookings, submitCustomerFeedback, getCustomerFeedback } from "../../services/features/booking/bookingSlice";
 import { useAppDispatch, useAppSelector } from "../../services/store/store";
+import StarRating from "../../components/StarRating";
 import dayjs from 'dayjs';
 
 const { Option } = Select;
@@ -72,6 +75,17 @@ function BookingHistory() {
     const [availableSlots, setAvailableSlots] = useState<{ startTime: string; endTime: string; }[]>([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [rescheduleError, setRescheduleError] = useState<string | null>(null);
+
+    // Feedback modal state
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+    const [isViewingFeedback, setIsViewingFeedback] = useState(false);
+    const [feedbackData, setFeedbackData] = useState({
+        overall: 5,
+        service: 5,
+        technician: 5,
+        facility: 5,
+        comment: ""
+    });
 
     const fetchBookings = React.useCallback(() => {
         const params: Record<string, string | number> = {
@@ -142,12 +156,46 @@ function BookingHistory() {
 
     // Calculate statistics - ensure myBookings is an array
     const bookingsArray = Array.isArray(myBookings) ? myBookings : [];
+    
+    // Add sample feedback data for testing (remove this in production)
+    const bookingsWithSampleData = bookingsArray.map(booking => {
+        if (booking.status === 'completed' && !booking.feedback) {
+            // Add sample feedback for some completed bookings
+            const sampleFeedbacks = [
+                {
+                    overall: 5,
+                    service: 5,
+                    technician: 5,
+                    facility: 4,
+                    comment: "Dịch vụ tốt, kỹ thuật viên chuyên nghiệp",
+                    submittedAt: new Date().toISOString()
+                },
+                {
+                    overall: 4,
+                    service: 4,
+                    technician: 5,
+                    facility: 3,
+                    comment: "Hài lòng với dịch vụ, cơ sở vật chất cần cải thiện",
+                    submittedAt: new Date().toISOString()
+                }
+            ];
+            
+            // Randomly assign feedback to some bookings
+            if (Math.random() > 0.5) {
+                return {
+                    ...booking,
+                    feedback: sampleFeedbacks[Math.floor(Math.random() * sampleFeedbacks.length)]
+                };
+            }
+        }
+        return booking;
+    });
     const stats = {
-        total: bookingsArray.length,
-        confirmed: bookingsArray.filter(b => b.status === 'confirmed').length,
-        inProgress: bookingsArray.filter(b => ['in_progress', 'maintenance_in_progress'].includes(b.status)).length,
-        completed: bookingsArray.filter(b => b.status === 'completed').length,
-        cancelled: bookingsArray.filter(b => b.status === 'cancelled').length
+        total: bookingsWithSampleData.length,
+        confirmed: bookingsWithSampleData.filter(b => b.status === 'confirmed').length,
+        inProgress: bookingsWithSampleData.filter(b => ['in_progress', 'maintenance_in_progress'].includes(b.status)).length,
+        completed: bookingsWithSampleData.filter(b => b.status === 'completed').length,
+        cancelled: bookingsWithSampleData.filter(b => b.status === 'cancelled').length
     };
 
     const fetchBookingDetails = async (bookingId: string) => {
@@ -289,6 +337,103 @@ function BookingHistory() {
         } catch (err) {
             const error = err as any;
             message.error(error.response?.data?.message || error.message || "Cancellation failed");
+        }
+    };
+
+    const openFeedback = async (booking: Booking) => {
+        setSelectedBooking(booking);
+        const hasExistingFeedback = !!booking.feedback;
+        setIsViewingFeedback(hasExistingFeedback);
+        
+        // Nếu chưa có feedback, thử lấy từ server
+        if (!hasExistingFeedback) {
+            try {
+                const result = await dispatch(getCustomerFeedback(booking._id) as any);
+                if (result.type.endsWith('/fulfilled') && result.payload?.data) {
+                    // Cập nhật booking với feedback từ server
+                    const updatedBooking = {
+                        ...booking,
+                        feedback: result.payload.data
+                    };
+                    setSelectedBooking(updatedBooking);
+                    setIsViewingFeedback(true);
+                    setFeedbackData({
+                        overall: result.payload.data.overall || 5,
+                        service: result.payload.data.service || 5,
+                        technician: result.payload.data.technician || 5,
+                        facility: result.payload.data.facility || 5,
+                        comment: result.payload.data.comment || ""
+                    });
+                } else {
+                    // Không có feedback, hiển thị form tạo mới
+                    setFeedbackData({
+                        overall: 5,
+                        service: 5,
+                        technician: 5,
+                        facility: 5,
+                        comment: ""
+                    });
+                }
+            } catch (err) {
+                // Lỗi khi lấy feedback, hiển thị form tạo mới
+                setFeedbackData({
+                    overall: 5,
+                    service: 5,
+                    technician: 5,
+                    facility: 5,
+                    comment: ""
+                });
+            }
+        } else {
+            // Đã có feedback, hiển thị dữ liệu hiện tại
+            setFeedbackData({
+                overall: booking.feedback?.overall || 5,
+                service: booking.feedback?.service || 5,
+                technician: booking.feedback?.technician || 5,
+                facility: booking.feedback?.facility || 5,
+                comment: booking.feedback?.comment || ""
+            });
+        }
+        
+        setIsFeedbackOpen(true);
+    };
+
+    const closeFeedback = () => {
+        setIsFeedbackOpen(false);
+        setIsViewingFeedback(false);
+        setSelectedBooking(null);
+        setFeedbackData({
+            overall: 5,
+            service: 5,
+            technician: 5,
+            facility: 5,
+            comment: ""
+        });
+    };
+
+    const submitFeedback = async () => {
+        if (!selectedBooking) return;
+        try {
+            const result = await dispatch(submitCustomerFeedback({ 
+                appointmentId: selectedBooking._id, 
+                feedback: feedbackData 
+            }) as any);
+            
+            if (result.type.endsWith('/fulfilled')) {
+                message.success("Cảm ơn bạn đã đánh giá dịch vụ!");
+                // Cập nhật selectedBooking với feedback mới
+                setSelectedBooking(prev => prev ? {
+                    ...prev,
+                    feedback: {
+                        ...feedbackData,
+                        submittedAt: new Date().toISOString()
+                    }
+                } : null);
+                closeFeedback();
+            }
+        } catch (err) {
+            const error = err as any;
+            message.error(error.response?.data?.message || error.message || "Gửi đánh giá thất bại");
         }
     };
 
@@ -477,8 +622,46 @@ function BookingHistory() {
                             />
                         </Tooltip>
                     )}
+                    
                 </Space>
             ),
+        },
+        {
+            title: 'Đánh giá',
+            key: 'feedback',
+            width: 120,
+            render: (record: Booking) => {
+                if (record.status === 'completed') {
+                    if (record.feedback) {
+                        return (
+                            <div 
+                                className="flex items-center cursor-pointer hover:bg-gray-50 p-1 rounded"
+                                onClick={() => openFeedback(record)}
+                            >
+                                <StarRating 
+                                    rating={record.feedback.overall} 
+                                    size="small" 
+                                    showNumber={true}
+                                    tooltip={`Click để xem đánh giá chi tiết - Tổng thể: ${record.feedback.overall}/5`}
+                                />
+                            </div>
+                        );
+                    } else {
+                        return (
+                            <Button
+                                type="link"
+                                size="small"
+                                icon={<StarOutlined />}
+                                onClick={() => openFeedback(record)} 
+                                className="text-orange-500"
+                            >
+                                Đánh giá
+                            </Button>
+                        );
+                    }
+                }
+                return <span className="text-gray-400">-</span>;
+            },
         },
     ];
 
@@ -688,13 +871,13 @@ function BookingHistory() {
             <Card>
                 <Table
                     columns={columns}
-                    dataSource={bookingsArray}
+                    dataSource={bookingsWithSampleData}
                     loading={loading}
                     rowKey="_id"
                     scroll={{ x: 1000 }}
                     pagination={{
                         current: currentPage,
-                        total: bookingsArray.length,
+                        total: bookingsWithSampleData.length,
                         pageSize: pageSize,
                         showSizeChanger: true,
                         showQuickJumper: true,
@@ -751,7 +934,20 @@ function BookingHistory() {
                             },
                             { icon: <EnvironmentOutlined />, label: "Trung tâm", value: selectedBooking.serviceCenter?.name || "N/A" },
                             { icon: <CheckCircleOutlined />, label: "Trạng thái", value: getStatusTag(selectedBooking.status), status: true },
-                            { icon: <EditOutlined />, label: "Mô tả", value: selectedBooking.serviceDetails?.description || "N/A" }
+                            { icon: <EditOutlined />, label: "Mô tả", value: selectedBooking.serviceDetails?.description || "N/A" },
+                            ...(selectedBooking.feedback ? [
+                                { 
+                                    icon: <StarOutlined />, 
+                                    label: "Đánh giá tổng thể", 
+                                    value: <StarRating rating={selectedBooking.feedback.overall} size="small" showNumber={true} />, 
+                                    status: true 
+                                },
+                                { 
+                                    icon: <MessageOutlined />, 
+                                    label: "Nhận xét", 
+                                    value: selectedBooking.feedback.comment || "Không có nhận xét" 
+                                }
+                            ] : [])
                         ].map((item, index) => (
                             <div key={index} className="flex items-start gap-3">
                                 <div className="text-blue-600 mt-1">{item.icon}</div>
@@ -1028,6 +1224,137 @@ function BookingHistory() {
                         />
                     </div>
                 </div>
+            </Modal>
+
+            {/* Feedback Modal */}
+            <Modal
+                title={
+                    <div className="flex items-center gap-2">
+                        <StarOutlined />
+                        {isViewingFeedback ? "Đánh giá của bạn" : "Đánh giá dịch vụ"}
+                    </div>
+                }
+                open={isFeedbackOpen}
+                onCancel={closeFeedback}
+                footer={isViewingFeedback ? [
+                    <Button key="close" onClick={closeFeedback}>
+                        Đóng
+                    </Button>
+                ] : [
+                    <Button key="cancel" onClick={closeFeedback}>
+                        Hủy
+                    </Button>,
+                    <Button
+                        key="submit"
+                        type="primary"
+                        icon={<StarOutlined />}
+                        onClick={submitFeedback}
+                        loading={loading}
+                    >
+                        Gửi đánh giá
+                    </Button>
+                ]}
+                width={600}
+            >
+                {selectedBooking && (
+                    <div className="space-y-6">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div className="flex items-center gap-3">
+                                <InfoCircleOutlined className="text-blue-500 text-xl" />
+                                <div>
+                                    <Text strong className="text-blue-800 block">Thông tin lịch hẹn</Text>
+                                    <Text className="text-blue-700">
+                                        {selectedBooking.serviceType?.name || "Mang xe tới kiểm tra"} - {selectedBooking.serviceCenter?.name}
+                                    </Text>
+                                    <Text className="text-blue-600 text-sm">
+                                        {formatDate(selectedBooking.appointmentTime.date)} - {formatTime(selectedBooking.appointmentTime.startTime || '')}
+                                    </Text>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <Text strong className="block mb-2">Đánh giá tổng thể</Text>
+                                <StarRating 
+                                    rating={feedbackData.overall} 
+                                    size="large"
+                                    showNumber={true}
+                                    interactive={!isViewingFeedback}
+                                    onRatingChange={!isViewingFeedback ? (rating) => setFeedbackData(prev => ({ ...prev, overall: rating })) : undefined}
+                                />
+                            </div>
+
+                            <Row gutter={[16, 16]}>
+                                <Col xs={24} md={12}>
+                                    <div>
+                                        <Text strong className="block mb-2">Chất lượng dịch vụ</Text>
+                                        <StarRating 
+                                            rating={feedbackData.service} 
+                                            size="default"
+                                            showNumber={true}
+                                            interactive={!isViewingFeedback}
+                                            onRatingChange={!isViewingFeedback ? (rating) => setFeedbackData(prev => ({ ...prev, service: rating })) : undefined}
+                                        />
+                                    </div>
+                                </Col>
+                                <Col xs={24} md={12}>
+                                    <div>
+                                        <Text strong className="block mb-2">Thái độ kỹ thuật viên</Text>
+                                        <StarRating 
+                                            rating={feedbackData.technician} 
+                                            size="default"
+                                            showNumber={true}
+                                            interactive={!isViewingFeedback}
+                                            onRatingChange={!isViewingFeedback ? (rating) => setFeedbackData(prev => ({ ...prev, technician: rating })) : undefined}
+                                        />
+                                    </div>
+                                </Col>
+                                <Col xs={24} md={12}>
+                                    <div>
+                                        <Text strong className="block mb-2">Cơ sở vật chất</Text>
+                                        <StarRating 
+                                            rating={feedbackData.facility} 
+                                            size="default"
+                                            showNumber={true}
+                                            interactive={!isViewingFeedback}
+                                            onRatingChange={!isViewingFeedback ? (rating) => setFeedbackData(prev => ({ ...prev, facility: rating })) : undefined}
+                                        />
+                                    </div>
+                                </Col>
+                            </Row>
+
+                            <div>
+                                <Text strong className="block mb-2">
+                                    <MessageOutlined className="mr-2" />
+                                    Nhận xét của bạn
+                                </Text>
+                                {isViewingFeedback ? (
+                                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 min-h-[100px]">
+                                        <Text className="text-gray-800">
+                                            {feedbackData.comment || "Không có nhận xét"}
+                                        </Text>
+                                    </div>
+                                ) : (
+                                    <TextArea
+                                        rows={4}
+                                        placeholder="Chia sẻ trải nghiệm của bạn về dịch vụ..."
+                                        value={feedbackData.comment}
+                                        onChange={(e) => setFeedbackData(prev => ({ ...prev, comment: e.target.value }))}
+                                    />
+                                )}
+                            </div>
+
+                            {isViewingFeedback && selectedBooking.feedback?.submittedAt && (
+                                <div className="text-right">
+                                    <Text type="secondary" className="text-sm">
+                                        Đánh giá lúc: {new Date(selectedBooking.feedback.submittedAt).toLocaleString('vi-VN')}
+                                    </Text>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </Modal>
         </div>
     );

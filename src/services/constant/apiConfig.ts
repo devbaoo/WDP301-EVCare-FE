@@ -81,6 +81,16 @@ export const BOOKING_AWAITING_CONFIRMATION_ENDPOINT = `${BASE_URL}/api/booking/a
 export const BOOKING_CONFIRM_ENDPOINT = (bookingId: string) =>
   `${BASE_URL}/api/booking/${bookingId}/confirm`;
 
+//Feeback endpoints by customer
+export const CUSTOMER_FEEDBACK_ENDPOINT = (appointmentId: string) =>
+  `${BASE_URL}/api/appointments/${appointmentId}/feedback`;
+//get customer feedback
+export const GET_CUSTOMER_FEEDBACK_ENDPOINT = (appointmentId: string) =>
+  `${BASE_URL}/api/appointments/${appointmentId}/feedback`;
+
+export const SUBMIT_CUSTOMER_FEEDBACK_ENDPOINT = (appointmentId: string) =>
+  `${BASE_URL}/api/appointments/${appointmentId}/feedback`;
+
 // Appointment progress (customer view)
 export const APPOINTMENT_PROGRESS_ENDPOINT = (appointmentId: string) =>
   `${BASE_URL}/api/appointments/${appointmentId}/progress`;
