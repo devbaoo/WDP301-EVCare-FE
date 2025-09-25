@@ -102,10 +102,6 @@ export default function ServiceCentersPages() {
   };
 
   const handleMenuClick = (actionKey: string, center: ServiceCenter) => {
-    if (actionKey === 'new') {
-      
-      return;
-    }
     if (actionKey === 'edit') {
       openEditModal(center);
       return;
@@ -123,15 +119,6 @@ export default function ServiceCentersPages() {
   };
 
   const cardMenuItems = () => ([
-    {
-      key: 'new',
-      label: (
-        <div className="flex items-center gap-2">
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-blue-600"><PlusOutlined /></span>
-          <span>Add</span>
-        </div>
-      ),
-    },
     {
       key: 'edit',
       label: (

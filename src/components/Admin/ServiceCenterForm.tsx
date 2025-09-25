@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Input, Select, Row, Col, Button, TimePicker, Switch, Card, Typography } from 'antd';
 import { 
   FileTextOutlined,
@@ -14,6 +14,7 @@ import { ServiceCenterCreatePayload, ServiceCenterUpdatePayload, ServiceCenter }
 import { useAppDispatch, useAppSelector } from '@/services/store/store';
 import { fetchServiceTypes } from '@/services/features/admin/seviceSlice';
 import dayjs from 'dayjs';
+import { fetchAllStaff, StaffUser } from '@/services/features/admin/technicianService';
 
 type Mode = 'create' | 'edit';
 
@@ -35,6 +36,8 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
   const [form] = Form.useForm();
   const dispatch = useAppDispatch();
   const { items: serviceTypeItems, loading: servicesLoading } = useAppSelector((state) => state.adminService);
+  const [staffList, setStaffList] = useState<StaffUser[]>([]);
+  const [staffLoading, setStaffLoading] = useState<boolean>(false);
   const PAYMENT_OPTIONS = [
     { value: 'cash', label: 'Tiền mặt' },
     { value: 'card', label: 'Thẻ' },
@@ -45,6 +48,18 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
   useEffect(() => {
     // Load service types for selection
     dispatch(fetchServiceTypes({ page: 1, limit: 1000 }));
+    // Load staff users
+    (async () => {
+      try {
+        setStaffLoading(true);
+        const data = await fetchAllStaff();
+        setStaffList(Array.isArray(data) ? data.filter(u => u.role !== 'admin') : []);
+      } catch {
+        setStaffList([]);
+      } finally {
+        setStaffLoading(false);
+      }
+    })();
     if (initialValues) {
       const sc = initialValues as any;
       const days = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"] as const;
@@ -80,7 +95,7 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
         paymentMethodsSelection: Array.isArray(sc.paymentMethods)
           ? (sc.paymentMethods as any[]).filter((m: any) => m?.isEnabled).map((m: any) => m.type)
           : [],
-        staffJson: JSON.stringify(Array.isArray(sc.staff) ? (sc.staff as any[]).map((s: any) => ({ user: s.user?._id || s.user, role: s.role, isActive: s.isActive })) : [], null, 2),
+        staffUsers: Array.isArray(sc.staff) ? (sc.staff as any[]).map((s: any) => (typeof s.user === 'string' ? s.user : s.user?._id)).filter(Boolean) : [],
         imagesUrls: Array.isArray(sc.images)
           ? (typeof sc.images[0] === 'string'
               ? (sc.images as string[])
@@ -110,7 +125,9 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
         acc[d] = { open, close, isOpen };
         return acc;
       }, {} as any);
-      const staff = values.staffJson ? JSON.parse(values.staffJson) : [];
+      const staff = Array.isArray(values.staffUsers)
+        ? (values.staffUsers as string[]).filter(Boolean).map((uid) => ({ user: uid, role: 'staff', isActive: true }))
+        : [];
       const images = Array.isArray(values.imagesUrls)
         ? (values.imagesUrls as string[]).filter(Boolean).map((url) => ({ url, caption: '', isPrimary: false }))
         : [];
@@ -282,8 +299,17 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label={<Text strong>Nhân sự (JSON)</Text>} name="staffJson">
-                <Input.TextArea rows={4} spellCheck={false} placeholder='[{"user":"id","role":"staff","isActive":true}]' />
+              <Form.Item label={<Text strong>Nhân sự</Text>} name="staffUsers">
+                <Select
+                  mode="multiple"
+                  placeholder="Chọn nhân sự (role: staff)"
+                  loading={staffLoading}
+                  optionFilterProp="label"
+                  options={staffList.map((u) => ({
+                    label: `${(u.role || '').charAt(0).toUpperCase()}${(u.role || '').slice(1)}_${u.username || u.email || '—'}`,
+                    value: u._id,
+                  }))}
+                />
               </Form.Item>
             </Col>
           </Row>
