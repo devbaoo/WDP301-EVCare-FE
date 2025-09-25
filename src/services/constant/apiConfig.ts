@@ -20,6 +20,8 @@ export const REFRESH_TOKEN_ENDPOINT = `${BASE_URL}/api/auth/refresh`;
 // Staff endpoints
 export const STAFF_LIST_ENDPOINT = `${BASE_URL}/api/staff`;
 export const STAFF_ASSIGNMENT_LIST_ENDPOINT = `${BASE_URL}/api/staff-assignments`;
+//change role endpoint
+export const CHANGE_ROLE_ENDPOINT = `${BASE_URL}/api/staff-assignments`;
 
 
 // User endpoints

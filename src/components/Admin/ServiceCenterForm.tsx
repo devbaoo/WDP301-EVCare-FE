@@ -8,7 +8,7 @@ import {
   AppstoreOutlined,
   PictureOutlined,
   SettingOutlined,
-  StarOutlined
+  TeamOutlined
 } from '@ant-design/icons';
 import { ServiceCenterCreatePayload, ServiceCenterUpdatePayload, ServiceCenter } from '@/interfaces/serviceCenter';
 import { useAppDispatch, useAppSelector } from '@/services/store/store';
@@ -285,12 +285,12 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
         </Card>
 
         <Card 
-          title={<Title level={4} className="mb-0"><AppstoreOutlined className="mr-2" />Dịch vụ & Nhân sự</Title>} 
+          title={<Title level={4} className="mb-0"><AppstoreOutlined className="mr-2" />Dịch vụ</Title>} 
           size="small"
           className="shadow-sm"
         >
           <Row gutter={[12, 12]}>
-            <Col span={12}>
+            <Col span={24}>
               <Form.Item label={<Text strong>Dịch vụ</Text>} name="servicesIds" rules={[{ required: true, message: 'Chọn ít nhất 1 dịch vụ' }]}> 
                 <Select
                   mode="multiple"
@@ -301,22 +301,33 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
                 />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item label={<Text strong>Nhân sự</Text>} name="staffUsers">
-                <Select
-                  mode="multiple"
-                  placeholder="Chọn nhân sự (role: staff)"
-                  loading={staffLoading}
-                  optionFilterProp="label"
-                  options={staffList.map((u) => ({
-                    label: `${(u.role || '').charAt(0).toUpperCase()}${(u.role || '').slice(1)}_${u.username || u.email || '—'}`,
-                    value: u._id,
-                  }))}
-                />
-              </Form.Item>
-            </Col>
           </Row>
         </Card>
+
+        {mode === 'edit' && (
+          <Card 
+            title={<Title level={4} className="mb-0"><TeamOutlined className="mr-2" />Nhân sự</Title>} 
+            size="small"
+            className="shadow-sm"
+          >
+            <Row gutter={[12, 12]}>
+              <Col span={24}>
+                <Form.Item label={<Text strong>Nhân sự</Text>} name="staffUsers">
+                  <Select
+                    mode="multiple"
+                    placeholder="Chọn nhân sự (role: staff)"
+                    loading={staffLoading}
+                    optionFilterProp="label"
+                    options={staffList.map((u) => ({
+                      label: `${(u.role || '').charAt(0).toUpperCase()}${(u.role || '').slice(1)}_${u.username || u.email || '—'}`,
+                      value: u._id,
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Card>
+        )}
 
         <Card 
           title={<Title level={4} className="mb-0"><PictureOutlined className="mr-2" />Hình ảnh & Thanh toán</Title>} 
@@ -402,12 +413,7 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
               </Form.Item>
             </Col>
           </Row>
-          {mode === 'edit' && (
-            <Row gutter={[12, 12]}>
-              <Col span={12}><Form.Item label={<Text strong><StarOutlined className="mr-1" />Rating Average</Text>} name="ratingAverage"><Input type="number" step="0.1" placeholder="4.7" /></Form.Item></Col>
-              <Col span={12}><Form.Item label={<Text strong><StarOutlined className="mr-1" />Rating Count</Text>} name="ratingCount"><Input type="number" placeholder="128" /></Form.Item></Col>
-            </Row>
-          )}
+          
         </Card>
 
         <div className="flex justify-end gap-2">
