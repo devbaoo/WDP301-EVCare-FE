@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { message } from "antd";
 import axiosInstance from "../../constant/axiosInstance";
-import { SERVICE_TYPE_CREATE_ENDPOINT, SERVICE_TYPE_DELETE_ENDPOINT, SERVICE_TYPE_ENDPOINT, SERVICE_TYPE_UPDATE_ENDPOINT } from "../../constant/apiConfig";
+import { CHANGE_ROLE_ENDPOINT, SERVICE_TYPE_CREATE_ENDPOINT, SERVICE_TYPE_DELETE_ENDPOINT, SERVICE_TYPE_ENDPOINT, SERVICE_TYPE_UPDATE_ENDPOINT } from "../../constant/apiConfig";
 import {
   ServiceType,
   PaginationInfo,
@@ -48,6 +48,22 @@ export const fetchServiceTypes = createAsyncThunk<
   } catch (err: unknown) {
     const anyErr = err as any;
     const msg = anyErr?.response?.data?.message || anyErr?.message || "Lấy danh sách dịch vụ thất bại";
+    return rejectWithValue({ message: msg });
+  }
+});
+
+//change role
+export const changeRole = createAsyncThunk<
+  any,
+  { data: Partial<any> },
+  { rejectValue: { message: string } }
+>("adminService/changeRole", async ({ data }, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post(CHANGE_ROLE_ENDPOINT, data);
+    return response.data;
+  } catch (err: unknown) {
+    const anyErr = err as any;
+    const msg = anyErr?.response?.data?.message || anyErr?.message || "Thay đổi vai trò thất bại";
     return rejectWithValue({ message: msg });
   }
 });
@@ -142,6 +158,19 @@ const adminServiceSlice = createSlice({
         state.loading = false;
         state.error = action.payload?.message || "Lấy danh sách dịch vụ thất bại";
         message.error(state.error);
+      })
+      //change role
+      .addCase(changeRole.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(changeRole.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(changeRole.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Thay đổi vai trò thất bại";
       })
       // Create
       .addCase(createServiceType.pending, (state) => {

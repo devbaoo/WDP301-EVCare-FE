@@ -47,7 +47,7 @@ import dayjs from 'dayjs';
 const { Option } = Select;
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
-const { TextArea } = AntInput;
+const { TextArea } = AntInput;  
 
 function BookingHistory() {
     const dispatch = useAppDispatch();
@@ -465,6 +465,17 @@ function BookingHistory() {
         );
     };
 
+    const getAverageDetailedRating = (feedback: any) => {
+        if (!feedback) return 0;
+        const parts = [feedback.service, feedback.technician, feedback.facility].filter((n: any) => typeof n === 'number' && n > 0);
+        if (parts.length > 0) {
+            const avg = parts.reduce((a: number, b: number) => a + Number(b || 0), 0) / parts.length;
+            return Number(avg.toFixed(1));
+        }
+        // Fallback to overall if detailed parts are not available
+        return typeof feedback.overall === 'number' ? Number(Number(feedback.overall).toFixed(1)) : 0;
+    };
+
     const formatDate = (dateString: string) => {
         const options: Intl.DateTimeFormatOptions = {
             year: 'numeric',
@@ -610,7 +621,8 @@ function BookingHistory() {
             width: 120,
             render: (record: Booking) => {
                 if (record.status === 'completed') {
-                    if (record.feedback && record.feedback.overall) {
+                    if (record.feedback && (record.feedback.service || record.feedback.technician || record.feedback.facility || record.feedback.overall)) {
+                        const avg = getAverageDetailedRating(record.feedback);
                         return (
                             <div 
                                 className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
@@ -618,12 +630,12 @@ function BookingHistory() {
                                 title="Bấm để xem chi tiết đánh giá"
                             >
                                 <StarRating 
-                                    rating={record.feedback.overall} 
+                                    rating={avg} 
                                     size="small" 
                                     showNumber={true}
-                                    tooltip={`Đã đánh giá: ${record.feedback.overall}/5 sao - Bấm để xem chi tiết`}
+                                    tooltip={`Đã đánh giá: ${avg}/5 sao - Bấm để xem chi tiết`}
                                 />
-                                <span className="ml-2 text-xs text-gray-500">Đã đánh giá</span>
+                                
                             </div>
                         );
                     } else {
@@ -916,20 +928,23 @@ function BookingHistory() {
                             { icon: <CheckCircleOutlined />, label: "Trạng thái", value: getStatusTag(selectedBooking.status), status: true },
                             { icon: <EditOutlined />, label: "Mô tả", value: selectedBooking.serviceDetails?.description || "N/A" },
                             ...(selectedBooking.feedback ? [
-                                { 
-                                    icon: <StarOutlined />, 
-                                    label: "Đánh giá tổng thể", 
-                                    value: (
+                            { 
+                                icon: <StarOutlined />, 
+                                label: "Đánh giá trung bình", 
+                                value: (() => {
+                                    const avg = getAverageDetailedRating(selectedBooking.feedback || {});
+                                    return (
                                         <div 
                                             className="cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
                                             onClick={() => openFeedback(selectedBooking)}
                                             title="Bấm để xem chi tiết đánh giá"
                                         >
-                                            <StarRating rating={selectedBooking.feedback?.overall || 0} size="small" showNumber={true} />
+                                            <StarRating rating={avg} size="small" showNumber={true} />
                                         </div>
-                                    ), 
-                                    status: true 
-                                },
+                                    );
+                                })(), 
+                                status: true 
+                            },
                                 { 
                                     icon: <MessageOutlined />, 
                                     label: "Nhận xét", 
