@@ -126,7 +126,10 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
         return acc;
       }, {} as any);
       const staff = Array.isArray(values.staffUsers)
-        ? (values.staffUsers as string[]).filter(Boolean).map((uid) => ({ user: uid, role: 'staff', isActive: true }))
+        ? (values.staffUsers as string[]).filter(Boolean).map((uid) => {
+            const user = staffList.find(u => u._id === uid);
+            return { user: uid, role: user?.role || 'staff', isActive: true };
+          })
         : [];
       const images = Array.isArray(values.imagesUrls)
         ? (values.imagesUrls as string[]).filter(Boolean).map((url) => ({ url, caption: '', isPrimary: false }))
