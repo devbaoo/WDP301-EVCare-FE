@@ -22,6 +22,8 @@ export const STAFF_LIST_ENDPOINT = `${BASE_URL}/api/staff`;
 export const STAFF_ASSIGNMENT_LIST_ENDPOINT = `${BASE_URL}/api/staff-assignments`;
 //change role endpoint
 export const CHANGE_ROLE_ENDPOINT = `${BASE_URL}/api/staff-assignments`;
+//get all users endpoint
+export const GET_ALL_USERS_ENDPOINT = `${BASE_URL}/api/users`;
 
 
 // User endpoints

@@ -26,6 +26,10 @@ export default function ServiceCentersPages() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingCenter, setEditingCenter] = useState<ServiceCenter | null>(null);
 
+  const refreshCenters = () => {
+    dispatch(fetchServiceCenters({ page: 1, limit: 1000 } as any));
+  };
+
   useEffect(() => {
     // Load all service centers for local filtering and pagination
     dispatch(fetchServiceCenters({
@@ -95,6 +99,7 @@ export default function ServiceCentersPages() {
     const res = await dispatch(deleteServiceCenter(id));
     if ((res as any).meta.requestStatus === "fulfilled") {
       message.success("Đã xóa trung tâm");
+      refreshCenters();
     } else {
       const errMsg = (res as any).payload?.message || "Xóa thất bại";
       message.error(errMsg);
@@ -150,6 +155,7 @@ export default function ServiceCentersPages() {
         if ((res as any).meta.requestStatus === "fulfilled") {
           message.success("Cập nhật trung tâm thành công");
           setIsModalOpen(false);
+          refreshCenters();
         } else {
           const errMsg = (res as any).payload?.message || "Cập nhật thất bại";
           message.error(errMsg);
@@ -159,6 +165,7 @@ export default function ServiceCentersPages() {
         if ((res as any).meta.requestStatus === "fulfilled") {
           message.success("Tạo trung tâm thành công");
           setIsModalOpen(false);
+          refreshCenters();
         } else {
           const errMsg = (res as any).payload?.message || "Tạo thất bại";
           message.error(errMsg);

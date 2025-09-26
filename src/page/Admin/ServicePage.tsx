@@ -30,6 +30,10 @@ export default function ServicePage() {
   const [editingService, setEditingService] = useState<ServiceType | null>(null);
   const [form] = Form.useForm();
 
+  const refreshServices = () => {
+    dispatch(fetchServiceTypes({ page: 1, limit: 1000 }));
+  };
+
   useEffect(() => {
     dispatch(fetchServiceTypes({ page: 1, limit: 1000 }));
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -89,8 +93,11 @@ export default function ServicePage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    dispatch(deleteServiceType(id));
+  const handleDelete = async (id: string) => {
+    const res: any = await dispatch(deleteServiceType(id));
+    if (res?.type?.endsWith('/fulfilled')) {
+      refreshServices();
+    }
   };
 
   const handleSubmit = async () => {
@@ -156,9 +163,15 @@ export default function ServicePage() {
       } as Partial<ServiceType>;
 
       if (editingService) {
-        await dispatch(updateServiceType({ id: editingService._id, data }));
+        const res: any = await dispatch(updateServiceType({ id: editingService._id, data }));
+        if (res?.type?.endsWith('/fulfilled')) {
+          refreshServices();
+        }
       } else {
-        await dispatch(createServiceType(data));
+        const res: any = await dispatch(createServiceType(data));
+        if (res?.type?.endsWith('/fulfilled')) {
+          refreshServices();
+        }
       }
       setIsModalOpen(false);
       setEditingService(null);
