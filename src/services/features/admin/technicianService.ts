@@ -36,3 +36,4 @@ export const fetchStaff = async (): Promise<StaffUser[]> => {
     ? allStaff.filter((u) => u.role === 'staff')
     : [];
 };
+
