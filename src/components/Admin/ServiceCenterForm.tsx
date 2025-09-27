@@ -1,5 +1,5 @@
-import React, { useEffect  } from 'react';
-import { Form, Input, Select, Row, Col, Button, TimePicker, Switch, Card, Typography } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Form, Input, Select, Row, Col, Button, TimePicker, Switch, Card, Typography, message } from 'antd';
 import { 
   FileTextOutlined,
   HomeOutlined,
@@ -14,6 +14,7 @@ import { ServiceCenterCreatePayload, ServiceCenterUpdatePayload, ServiceCenter }
 import { useAppDispatch, useAppSelector } from '@/services/store/store';
 import { fetchServiceTypes } from '@/services/features/admin/seviceSlice';
 import dayjs from 'dayjs';
+import MapboxPicker from '../Mapbox/MapboxPicker';
 // import removed: staff selection no longer used
 
 type Mode = 'create' | 'edit';
@@ -37,6 +38,10 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
   const dispatch = useAppDispatch();
   const { items: serviceTypeItems, loading: servicesLoading } = useAppSelector((state) => state.adminService);
   // removed staff states
+  
+  // Google Maps state
+  const [selectedCoordinates, setSelectedCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState<string>('');
   const PAYMENT_OPTIONS = [
     { value: 'cash', label: 'Tiền mặt' },
     { value: 'card', label: 'Thẻ' },
@@ -63,6 +68,21 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
           operatingFields[`operatingHours_${d}_range`] = [];
         }
       });
+      
+      // Set coordinates for Google Maps
+      if (sc.address?.coordinates) {
+        setSelectedCoordinates({
+          lat: sc.address.coordinates.lat,
+          lng: sc.address.coordinates.lng
+        });
+      }
+      
+      // Set address for Google Maps
+      if (sc.address) {
+        const fullAddress = `${sc.address.street || ''}, ${sc.address.ward || ''}, ${sc.address.district || ''}, ${sc.address.city || ''}`.trim();
+        setSelectedAddress(fullAddress);
+      }
+      
       form.setFieldsValue({
         name: sc.name || '',
         description: sc.description || '',
@@ -99,8 +119,16 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
       });
     } else {
       form.resetFields();
+      setSelectedCoordinates(null);
+      setSelectedAddress('');
     }
   }, [initialValues, form, dispatch]);
+
+  // Handle Google Maps location selection
+  const handleLocationSelect = (coordinates: { lat: number; lng: number }, address: string) => {
+    setSelectedCoordinates(coordinates);
+    setSelectedAddress(address);
+  };
 
   const handleFinish = (values: any) => {
     try {
@@ -127,6 +155,12 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
       };
       const services = Array.isArray(values.servicesIds) ? values.servicesIds : [];
 
+      // Kiểm tra coordinates trước khi submit
+      if (!selectedCoordinates || (selectedCoordinates.lat === 0 && selectedCoordinates.lng === 0)) {
+        message.warning('Vui lòng chọn vị trí trên bản đồ trước khi lưu');
+        return;
+      }
+
       const basePayload = {
         name: values.name,
         description: values.description,
@@ -135,7 +169,7 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
           ward: values.addressWard,
           district: values.addressDistrict,
           city: values.addressCity,
-          coordinates: { lat: 0, lng: 0 },
+          coordinates: selectedCoordinates,
         },
         contact: {
           phone: values.contactPhone,
@@ -176,7 +210,6 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
         labelCol={labelCol}
         wrapperCol={wrapperCol}
         onFinish={handleFinish}
-        disabled={loading}
         className="space-y-4"
       >
         <Card 
@@ -218,6 +251,35 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
             <Col span={12}><Form.Item label={<Text strong>Quận/Huyện</Text>} name="addressDistrict" rules={[{ required: true }]}><Input placeholder="Quận 1" /></Form.Item></Col>
             <Col span={12}><Form.Item label={<Text strong>Tỉnh/Thành</Text>} name="addressCity" rules={[{ required: true }]}><Input placeholder="Hồ Chí Minh" /></Form.Item></Col>
           </Row>
+          
+          {/* Mapbox Picker */}
+          <div className="mt-4">
+            <Text strong className="block mb-2">Chọn vị trí trên bản đồ</Text>
+            <MapboxPicker
+              onLocationSelect={handleLocationSelect}
+              initialAddress={selectedAddress}
+              initialCoordinates={selectedCoordinates || undefined}
+              className="w-full"
+            />
+            {selectedCoordinates && (
+              <div className="mt-2 p-2 bg-blue-50 rounded text-sm">
+                <Text type="secondary">
+                  Tọa độ: {selectedCoordinates.lat.toFixed(6)}, {selectedCoordinates.lng.toFixed(6)}
+                </Text>
+                <br />
+                <Text type="secondary" className="text-xs">
+                  Địa chỉ: {selectedAddress}
+                </Text>
+              </div>
+            )}
+            {!selectedCoordinates && (
+              <div className="mt-2 p-2 bg-yellow-50 rounded text-sm">
+                <Text type="warning">
+                  ⚠️ Vui lòng chọn vị trí trên bản đồ trước khi lưu
+                </Text>
+              </div>
+            )}
+          </div>
         </Card>
 
         <Card 
@@ -298,14 +360,21 @@ const ServiceCenterForm: React.FC<ServiceCenterFormProps> = ({ mode, initialValu
                   {(fields, { add, remove }) => (
                     <div>
                       <Button type="dashed" size="small" onClick={() => add('')} className="mb-2 min-w-[120px]">Thêm URL</Button>
-                      {fields.map((field) => (
-                        <div key={field.key} className="flex gap-2 mb-2">
-                          <Form.Item {...field} name={[field.name]} className="flex-1" rules={[{ required: true, message: 'Nhập URL hình ảnh' }]}>
-                            <Input placeholder="https://.../image.jpg" />
-                          </Form.Item>
-                          <Button danger size="small" className="min-w-[120px]" onClick={() => remove(field.name)}>Xóa URL</Button>
-                        </div>
-                      ))}
+                      {fields.map((field) => {
+                        const { key, name } = field;
+                        return (
+                          <div key={key} className="flex gap-2 mb-2">
+                            <Form.Item 
+                              name={[name]} 
+                              className="flex-1" 
+                              rules={[{ required: true, message: 'Nhập URL hình ảnh' }]}
+                            >
+                              <Input placeholder="https://.../image.jpg" />
+                            </Form.Item>
+                            <Button danger size="small" className="min-w-[120px]" onClick={() => remove(name)}>Xóa URL</Button>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </Form.List>

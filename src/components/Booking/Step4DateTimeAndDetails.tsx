@@ -50,6 +50,10 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
     const [serviceDescription, setServiceDescription] = useState<string>('');
     const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
     const [paymentPreference, setPaymentPreference] = useState<'online' | 'offline'>('offline');
+    
+    // Time slot filtering
+    const [timeFilter, setTimeFilter] = useState<'all' | 'morning' | 'afternoon' | 'evening'>('all');
+    const [showMoreSlots, setShowMoreSlots] = useState(false);
 
     // Payment modal state
     const [paymentModalVisible, setPaymentModalVisible] = useState(false);
@@ -127,6 +131,8 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
             const formattedDate = date.format('YYYY-MM-DD');
             setSelectedDate(formattedDate);
             setSelectedTime(''); // Reset time when date changes
+            setTimeFilter('all'); // Reset time filter
+            setShowMoreSlots(false); // Reset show more state
 
             // Fetch available time slots when date changes
             if (selectedServiceCenter?._id) {
@@ -138,6 +144,8 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
         } else {
             setSelectedDate('');
             setSelectedTime('');
+            setTimeFilter('all');
+            setShowMoreSlots(false);
         }
     };
 
@@ -221,9 +229,6 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
         return current && current < dayjs().startOf('day');
     };
 
-    const formatTimeSlot = (slot: TimeSlot) => {
-        return `${slot.startTime} - ${slot.endTime}`;
-    };
 
     const isTimeSlotAvailable = (slot: TimeSlot) => {
         return slot.availableTechnicians && slot.availableTechnicians.length > 0;
@@ -267,6 +272,67 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
 
         // Find next opening day
         return getNextOpeningTime(selectedServiceCenter.operatingHours);
+    };
+
+    // Filter time slots by period
+    const getFilteredTimeSlots = () => {
+        if (!availableTimeSlots || availableTimeSlots.length === 0) return [];
+        
+        let filtered = availableTimeSlots;
+        
+        if (timeFilter !== 'all') {
+            filtered = availableTimeSlots.filter(slot => {
+                const hour = parseInt(slot.startTime.split(':')[0]);
+                switch (timeFilter) {
+                    case 'morning':
+                        return hour >= 6 && hour < 12;
+                    case 'afternoon':
+                        return hour >= 12 && hour < 17;
+                    case 'evening':
+                        return hour >= 17 && hour < 22;
+                    default:
+                        return true;
+                }
+            });
+        }
+        
+        // Show only first 8 slots initially, or all if showMoreSlots is true
+        if (!showMoreSlots && filtered.length > 8) {
+            return filtered.slice(0, 8);
+        }
+        
+        return filtered;
+    };
+
+    const getTimeFilterLabel = (filter: string) => {
+        switch (filter) {
+            case 'morning': return 'Sáng (6h-12h)';
+            case 'afternoon': return 'Chiều (12h-17h)';
+            case 'evening': return 'Tối (17h-22h)';
+            default: return 'Tất cả';
+        }
+    };
+
+    const getTimeFilterCount = (filter: string) => {
+        if (!availableTimeSlots || availableTimeSlots.length === 0) return 0;
+        
+        if (filter === 'all') return availableTimeSlots.length;
+        
+        const filtered = availableTimeSlots.filter(slot => {
+            const hour = parseInt(slot.startTime.split(':')[0]);
+            switch (filter) {
+                case 'morning':
+                    return hour >= 6 && hour < 12;
+                case 'afternoon':
+                    return hour >= 12 && hour < 17;
+                case 'evening':
+                    return hour >= 17 && hour < 22;
+                default:
+                    return true;
+            }
+        });
+        
+        return filtered.length;
     };
 
     return (
@@ -330,29 +396,83 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                                     <Spin />
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 gap-2">
-                                    {availableTimeSlots.map((slot, index) => (
-                                        <Button
-                                            key={`${slot.startTime}-${slot.endTime}-${index}`}
-                                            type={selectedTime === `${slot.startTime}-${slot.endTime}` ? 'primary' : 'default'}
-                                            disabled={!isTimeSlotAvailable(slot)}
-                                            onClick={() => handleTimeSelect(`${slot.startTime}-${slot.endTime}`)}
-                                            className={`h-12 ${selectedTime === `${slot.startTime}-${slot.endTime}`
-                                                ? 'bg-blue-600 hover:bg-blue-700'
-                                                : isTimeSlotAvailable(slot)
-                                                    ? 'hover:bg-blue-50'
-                                                    : 'opacity-50 cursor-not-allowed'
+                                <div className="space-y-4">
+                                    {/* Time Filter Pills */}
+                                    <div className="flex flex-wrap gap-2">
+                                        {(['all', 'morning', 'afternoon', 'evening'] as const).map((filter) => (
+                                            <Button
+                                                key={filter}
+                                                size="small"
+                                                type={timeFilter === filter ? 'primary' : 'default'}
+                                                onClick={() => {
+                                                    setTimeFilter(filter);
+                                                    setShowMoreSlots(false);
+                                                }}
+                                                className={`text-xs ${timeFilter === filter ? 'bg-blue-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+                                            >
+                                                {getTimeFilterLabel(filter)} ({getTimeFilterCount(filter)})
+                                            </Button>
+                                        ))}
+                                    </div>
+
+                                    {/* Time Slots Grid */}
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                        {getFilteredTimeSlots().map((slot, index) => (
+                                            <Button
+                                                key={`${slot.startTime}-${slot.endTime}-${index}`}
+                                                type={selectedTime === `${slot.startTime}-${slot.endTime}` ? 'primary' : 'default'}
+                                                disabled={!isTimeSlotAvailable(slot)}
+                                                onClick={() => handleTimeSelect(`${slot.startTime}-${slot.endTime}`)}
+                                                className={`h-12 flex items-center justify-center p-2 ${
+                                                    selectedTime === `${slot.startTime}-${slot.endTime}`
+                                                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                                        : isTimeSlotAvailable(slot)
+                                                            ? 'hover:bg-blue-50 border-gray-200'
+                                                            : 'opacity-50 cursor-not-allowed bg-gray-50'
                                                 }`}
-                                            title={getTimeSlotReason(slot)}
-                                        >
-                                            <div className="text-center">
-                                                <div className="font-medium">{formatTimeSlot(slot)}</div>
-                                                <div className="text-xs text-gray-500">
-                                                    {slot.duration} phút
+                                                title={getTimeSlotReason(slot)}
+                                            >
+                                                <div className="text-sm font-medium">
+                                                    {slot.startTime}
                                                 </div>
+                                            </Button>
+                                        ))}
+                                    </div>
+
+                                    {/* Show More/Less Button */}
+                                    {availableTimeSlots.length > 8 && (
+                                        <div className="text-center">
+                                            <Button
+                                                type="link"
+                                                onClick={() => setShowMoreSlots(!showMoreSlots)}
+                                                className="text-blue-600 hover:text-blue-800"
+                                            >
+                                                {showMoreSlots ? 'Thu gọn' : `Xem thêm khung giờ khác`}
+                                            </Button>
+                                        </div>
+                                    )}
+
+                                    {/* Selected Time Summary */}
+                                    {selectedTime && (
+                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center space-x-2">
+                                                    <Clock className="w-4 h-4 text-blue-600" />
+                                                    <span className="font-medium text-blue-900">
+                                                        Đã chọn: {selectedTime}
+                                                    </span>
+                                                </div>
+                                                <Button
+                                                    size="small"
+                                                    type="link"
+                                                    onClick={() => setSelectedTime('')}
+                                                    className="text-blue-600 hover:text-blue-800"
+                                                >
+                                                    Hủy
+                                                </Button>
                                             </div>
-                                        </Button>
-                                    ))}
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
