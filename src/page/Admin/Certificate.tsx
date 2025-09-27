@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
 import {
-  Table,
   Button,
   Modal,
   Form,
   Input,
   message,
   Tooltip,
-  Card,
   Tag,
   Space,
   Typography,
   Select,
+  DatePicker,
+  Row,
+  Col,
+  Pagination,
 } from "antd";
 import {
   fetchTechnicians,
@@ -20,31 +22,48 @@ import {
 import {
   PlusOutlined,
   EditOutlined,
-  FilePdfOutlined,
-  UserOutlined,
   CalendarOutlined,
   SafetyCertificateOutlined,
-  BankOutlined,
-  NumberOutlined,
-  ToolOutlined,
-  LinkOutlined,
   DownloadOutlined,
+  SearchOutlined,
+  FilterOutlined,
+  ReloadOutlined,
+  InfoCircleOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import {
   fetchCertificates,
   createCertificate,
   updateCertificate,
 } from "../../services/features/admin/certificateService";
-
 import { Certificate } from "../../interfaces/certificate";
+import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
+import { RangePickerProps } from "antd/es/date-picker";
+
+// Extend dayjs with isBetween plugin
+dayjs.extend(isBetween);
+
+const { RangePicker } = DatePicker;
+const { Option } = Select;
 
 function CertificatePage() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [filteredCertificates, setFilteredCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [editing, setEditing] = useState<Certificate | null>(null);
+  const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null);
   const [form] = Form.useForm();
   const [technicians, setTechnicians] = useState<StaffUser[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const fetchData = async (withTechnicians = false) => {
     setLoading(true);
@@ -87,6 +106,7 @@ function CertificatePage() {
       });
 
       setCertificates(mapped);
+      setFilteredCertificates(mapped);
     } catch (err) {
       message.error("Lỗi tải danh sách chứng chỉ");
     } finally {
@@ -97,6 +117,33 @@ function CertificatePage() {
   useEffect(() => {
     fetchData(true);
   }, []);
+
+  useEffect(() => {
+    const filtered = certificates.filter((cert) => {
+      const matchesSearch = cert.certificateName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cert.issuingAuthority?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cert.certificateNumber?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesStatus = statusFilter === "all" ||
+        getStatusText(cert.status || "", cert.expiryDate).toLowerCase() === statusFilter;
+
+      // Fix date filter logic
+      let matchesDate = true;
+      if (dateRange && dateRange[0] && dateRange[1]) {
+        const [start, end] = dateRange;
+        const issueDate = cert.issueDate ? dayjs(cert.issueDate) : null;
+        const expiryDate = cert.expiryDate ? dayjs(cert.expiryDate) : null;
+
+        matchesDate = (issueDate && issueDate.isBetween(start, end, 'day', '[]')) ||
+          (expiryDate && expiryDate.isBetween(start, end, 'day', '[]')) ||
+          (!issueDate && !expiryDate && statusFilter === "all");
+      }
+
+      return matchesSearch && matchesStatus && matchesDate;
+    });
+    setFilteredCertificates(filtered);
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, dateRange, certificates]);
 
   const handleAdd = async () => {
     setEditing(null);
@@ -123,15 +170,12 @@ function CertificatePage() {
       form.setFieldsValue({
         certificateName: record.certificateName,
         issuingAuthority: record.issuingAuthority,
-        issueDate: record.issueDate ? record.issueDate.slice(0, 10) : undefined,
-        expiryDate: record.expiryDate
-          ? record.expiryDate.slice(0, 10)
-          : undefined,
+        issueDate: record.issueDate ? dayjs(record.issueDate) : undefined,
+        expiryDate: record.expiryDate ? dayjs(record.expiryDate) : undefined,
         certificateNumber: record.certificateNumber,
         specialization: record.specialization,
         status: record.status,
         documentUrl: record.documentUrl,
-        // Không set technicianId khi sửa
       });
     } catch {
       setTechnicians([]);
@@ -142,32 +186,44 @@ function CertificatePage() {
     }
   };
 
+  const handleViewDetail = (record: Certificate) => {
+    setSelectedCertificate(record);
+    setDetailModalOpen(true);
+  };
+
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
+
+      const processedValues = {
+        ...values,
+        issueDate: values.issueDate ? values.issueDate.format('YYYY-MM-DD') : undefined,
+        expiryDate: values.expiryDate ? values.expiryDate.format('YYYY-MM-DD') : undefined,
+      };
+
       if (editing) {
-        // Khi update, không gửi technicianId nữa
-        const { technicianId, ...updateValues } = values;
+        const { technicianId, ...updateValues } = processedValues;
         await updateCertificate(editing._id, updateValues);
         message.success("Cập nhật thành công");
       } else {
         const createPayload = {
-          technicianId: values.technicianId,
-          certificateName: values.certificateName,
-          issuingAuthority: values.issuingAuthority,
-          issueDate: values.issueDate,
-          expiryDate: values.expiryDate,
-          certificateNumber: values.certificateNumber,
-          specialization: values.specialization,
-          documentUrl: values.documentUrl,
+          technicianId: processedValues.technicianId,
+          certificateName: processedValues.certificateName,
+          issuingAuthority: processedValues.issuingAuthority,
+          issueDate: processedValues.issueDate,
+          expiryDate: processedValues.expiryDate,
+          certificateNumber: processedValues.certificateNumber,
+          specialization: processedValues.specialization,
+          documentUrl: processedValues.documentUrl,
         };
         await createCertificate(createPayload);
         message.success("Tạo mới thành công");
       }
       setModalOpen(false);
       await fetchData(true);
-    } catch {
+    } catch (error) {
+      console.error('Validation failed:', error);
       message.error("Có lỗi xảy ra");
     } finally {
       setLoading(false);
@@ -230,70 +286,67 @@ function CertificatePage() {
     }
   };
 
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setDateRange(null);
+  };
+
+  // Fix date range handler
+  const handleDateRangeChange: RangePickerProps['onChange'] = (dates) => {
+    if (dates && dates[0] && dates[1]) {
+      setDateRange([dates[0], dates[1]]);
+    } else {
+      setDateRange(null);
+    }
+  };
+
+  // Pagination
+  const paginatedCertificates = filteredCertificates.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   const columns = [
     {
-      title: (
-        <>
-          <SafetyCertificateOutlined style={{ color: "#1890ff" }} /> Tên chứng
-          chỉ
-        </>
+      title: "#",
+      dataIndex: "index",
+      key: "index",
+      width: 60,
+      render: (_: any, __: any, index: number) => (
+        <div className="text-sm font-medium text-gray-900 bg-blue-100 w-8 h-8 rounded-full flex items-center justify-center">
+          {(currentPage - 1) * pageSize + index + 1}
+        </div>
       ),
+    },
+    {
+      title: "Tên chứng chỉ",
       dataIndex: "certificateName",
       key: "certificateName",
       render: (text: string) => (
-        <Typography.Text strong style={{ color: "#1890ff" }}>
+        <Typography.Text strong className="text-blue-600">
           {text}
         </Typography.Text>
       ),
     },
     {
-      title: (
-        <>
-          <BankOutlined style={{ color: "#52c41a" }} /> Cơ quan cấp
-        </>
-      ),
+      title: "Cơ quan cấp",
       dataIndex: "issuingAuthority",
       key: "issuingAuthority",
     },
     {
-      title: (
-        <>
-          <CalendarOutlined style={{ color: "#fa8c16" }} /> Ngày cấp
-        </>
-      ),
+      title: "Ngày cấp",
       dataIndex: "issueDate",
       key: "issueDate",
       render: (date: string) =>
-        date ? new Date(date).toLocaleDateString("vi-VN") : "-",
+        date ? dayjs(date).format("DD/MM/YYYY") : "-",
     },
     {
-      title: (
-        <>
-          <CalendarOutlined style={{ color: "#fa8c16" }} /> Ngày hết hạn
-        </>
-      ),
+      title: "Ngày hết hạn",
       dataIndex: "expiryDate",
       key: "expiryDate",
       render: (date: string) =>
-        date ? new Date(date).toLocaleDateString("vi-VN") : "-",
-    },
-    {
-      title: (
-        <>
-          <NumberOutlined style={{ color: "#722ed1" }} /> Số chứng chỉ
-        </>
-      ),
-      dataIndex: "certificateNumber",
-      key: "certificateNumber",
-    },
-    {
-      title: (
-        <>
-          <ToolOutlined style={{ color: "#13c2c2" }} /> Chuyên môn
-        </>
-      ),
-      dataIndex: "specialization",
-      key: "specialization",
+        date ? dayjs(date).format("DD/MM/YYYY") : "-",
     },
     {
       title: "Trạng thái",
@@ -306,48 +359,14 @@ function CertificatePage() {
       ),
     },
     {
-      title: (
-        <>
-          <FilePdfOutlined style={{ color: "#eb2f96" }} /> File
-        </>
-      ),
-      dataIndex: "documentUrl",
-      key: "documentUrl",
-      render: (url: string, record: Certificate) =>
-        url ? (
-          <Tooltip title="Tải về">
-            <Button
-              type="link"
-              icon={
-                <DownloadOutlined style={{ color: "#1890ff", fontSize: 16 }} />
-              }
-              onClick={() =>
-                handleDownloadPdf(
-                  url,
-                  `${record.certificateName || "certificate"}.pdf`
-                )
-              }
-            />
-          </Tooltip>
-        ) : (
-          <Typography.Text type="secondary">Không có file</Typography.Text>
-        ),
-    },
-    {
-      title: (
-        <>
-          <UserOutlined style={{ color: "#52c41a" }} /> Kỹ thuật viên
-        </>
-      ),
+      title: "Kỹ thuật viên",
       dataIndex: "technicianId",
       key: "technicianId",
       render: (technicianId: string) => {
         const found = technicians.find((t) => t._id === technicianId);
         const name = found?.fullName || "";
         return (
-          <Typography.Text
-            style={{ color: "#52c41a", fontWeight: 500, fontSize: 15 }}
-          >
+          <Typography.Text className="text-green-600 font-medium">
             {name || "Không rõ"}
           </Typography.Text>
         );
@@ -356,15 +375,23 @@ function CertificatePage() {
     {
       title: "Hành động",
       key: "action",
+      width: 150,
       render: (_: any, record: Certificate) => (
-        <Space>
+        <Space size="small">
+          <Tooltip title="Xem chi tiết">
+            <Button
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewDetail(record)}
+              className="bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100"
+            />
+          </Tooltip>
           <Tooltip title="Sửa">
             <Button
-              type="primary"
               size="small"
               icon={<EditOutlined />}
               onClick={() => handleEdit(record)}
-              style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }}
+              className="bg-green-50 border-green-200 text-green-600 hover:bg-green-100"
             />
           </Tooltip>
         </Space>
@@ -373,235 +400,316 @@ function CertificatePage() {
   ];
 
   return (
-    <div
-      style={{
-        padding: 32,
-        background: "linear-gradient(135deg, #f8fafc 60%, #e6f7ff 100%)",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-      }}
-    >
-      <Card
-        title={
-          <Space>
-            <SafetyCertificateOutlined
-              style={{ color: "#1890ff", fontSize: 28 }}
-            />
-            <Typography.Title
-              level={3}
-              style={{
-                margin: 0,
-                color: "#1890ff",
-                fontWeight: 700,
-                letterSpacing: 0.5,
-              }}
-            >
-              Quản lý chứng chỉ kỹ thuật viên
-            </Typography.Title>
-          </Space>
-        }
-        extra={
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleAdd}
-            size="large"
-            style={{
-              backgroundColor: "#52c41a",
-              borderColor: "#52c41a",
-              borderRadius: 8,
-              fontWeight: 600,
-            }}
-          >
-            Thêm chứng chỉ
-          </Button>
-        }
-        style={{
-          borderRadius: 18,
-          boxShadow: "0 4px 24px rgba(0,0,0,0.09)",
-          border: "none",
-          width: "100%",
-          maxWidth: 1200,
-          margin: "0 auto",
-          marginTop: 32,
-          marginBottom: 32,
-          background: "#fff",
-        }}
-        bodyStyle={{ padding: 0, borderRadius: 18 }}
-      >
-        <div style={{ padding: 28, background: "#f4faff", borderRadius: 14 }}>
-          <Table
-            rowKey="_id"
-            columns={columns}
-            dataSource={certificates}
-            loading={loading}
-            pagination={{
-              pageSize: 10,
-              style: { marginTop: 16 },
-              size: "default",
-              showLessItems: true,
-            }}
-            style={{
-              borderRadius: 10,
-              overflow: "hidden",
-              background: "#fff",
-              fontSize: 15,
-            }}
-          />
-        </div>
-      </Card>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+        {/* Header Section */}
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -translate-y-16 translate-x-16"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full translate-y-12 -translate-x-12"></div>
 
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-2">
+              <SafetyCertificateOutlined className="text-3xl" />
+              <h1 className="text-3xl md:text-4xl font-bold">Quản lý chứng chỉ kỹ thuật viên</h1>
+            </div>
+            <p className="mt-2 opacity-90 flex items-center gap-2">
+              <InfoCircleOutlined />
+              Quản lý và theo dõi chứng chỉ của các kỹ thuật viên
+            </p>
+          </div>
+        </div>
+
+        <div className="p-6">
+          {/* Filter Section */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-xl border border-blue-100 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-blue-800 flex items-center gap-2">
+                <FilterOutlined />
+                Bộ lọc tìm kiếm
+              </h2>
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                <ReloadOutlined />
+                Xóa bộ lọc
+              </button>
+            </div>
+            <Row gutter={[16, 16]}>
+              <Col xs={24} sm={12} md={6}>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <SearchOutlined />
+                  Tìm kiếm
+                </label>
+                <Input
+                  placeholder="Tìm theo tên, cơ quan..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  prefix={<SearchOutlined />}
+                />
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <SafetyCertificateOutlined />
+                  Trạng thái
+                </label>
+                <Select
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  className="w-full"
+                  placeholder="Tất cả trạng thái"
+                >
+                  <Option value="all">Tất cả trạng thái</Option>
+                  <Option value="hoạt động">Hoạt động</Option>
+                  <Option value="hết hạn">Hết hạn</Option>
+                  <Option value="bị thu hồi">Bị thu hồi</Option>
+                </Select>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <CalendarOutlined />
+                  Khoảng thời gian
+                </label>
+                <RangePicker
+                  className="w-full"
+                  value={dateRange}
+                  onChange={handleDateRangeChange}
+                  format="DD/MM/YYYY"
+                />
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <div className="bg-blue-100 text-blue-800 px-4 py-3 rounded-lg w-full text-center h-full flex flex-col justify-center">
+                  <div className="text-sm font-medium">Tổng số chứng chỉ</div>
+                  <div className="text-2xl font-bold">{filteredCertificates.length}</div>
+                </div>
+              </Col>
+            </Row>
+          </div>
+
+          {/* Action Section */}
+          <div className="flex justify-between items-center mb-6">
+            <div className="text-lg font-semibold text-gray-700">
+              Danh sách chứng chỉ ({filteredCertificates.length})
+            </div>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAdd}
+              size="large"
+              className="bg-green-600 border-green-600 hover:bg-green-700 rounded-lg font-semibold"
+            >
+              Thêm chứng chỉ
+            </Button>
+          </div>
+
+          {/* Loading State */}
+          {loading && (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+              <p className="text-gray-600 flex items-center gap-2">
+                <ReloadOutlined />
+                Đang tải dữ liệu...
+              </p>
+            </div>
+          )}
+
+          {/* Certificates Table */}
+          {!loading && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gradient-to-r from-gray-50 to-blue-50">
+                    <tr>
+                      {columns.map((column) => (
+                        <th
+                          key={column.key}
+                          className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                          style={{ width: column.width }}
+                        >
+                          {column.title}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-100">
+                    {paginatedCertificates.map((certificate, index) => (
+                      <tr key={certificate._id} className="hover:bg-blue-50 transition-all duration-200">
+                        {columns.map((column) => (
+                          <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm">
+                            {column.render
+                              ? column.render(
+                                certificate[column.dataIndex as keyof Certificate],
+                                certificate,
+                                index
+                              )
+                              : certificate[column.dataIndex as keyof Certificate]
+                            }
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Empty State */}
+              {paginatedCertificates.length === 0 && !loading && (
+                <div className="text-center py-12">
+                  <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <SearchOutlined className="text-3xl text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Không tìm thấy chứng chỉ</h3>
+                  <p className="text-gray-500 max-w-md mx-auto">
+                    {searchTerm || statusFilter !== "all" || dateRange
+                      ? "Hãy thử điều chỉnh bộ lọc tìm kiếm để xem kết quả khác."
+                      : "Chưa có chứng chỉ nào được thêm vào hệ thống."
+                    }
+                  </p>
+                </div>
+              )}
+
+              {/* Pagination */}
+              {paginatedCertificates.length > 0 && (
+                <div className="px-6 py-4 border-t border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm text-gray-600">
+                      Hiển thị {(currentPage - 1) * pageSize + 1} -{' '}
+                      {Math.min(currentPage * pageSize, filteredCertificates.length)} trên tổng số{' '}
+                      {filteredCertificates.length} chứng chỉ
+                    </div>
+                    <Pagination
+                      current={currentPage}
+                      pageSize={pageSize}
+                      total={filteredCertificates.length}
+                      onChange={(page, size) => {
+                        setCurrentPage(page);
+                        if (size) setPageSize(size);
+                      }}
+                      showSizeChanger
+                      showQuickJumper
+                      pageSizeOptions={['10', '20', '50', '100']}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Add/Edit Certificate Modal */}
       <Modal
         title={
-          <Space>
-            <SafetyCertificateOutlined style={{ color: "#1890ff" }} />
-            <Typography.Title level={4} style={{ margin: 0, fontWeight: 600 }}>
+          <div className="flex items-center gap-2">
+            <SafetyCertificateOutlined className="text-blue-600" />
+            <span className="text-xl font-semibold">
               {editing ? "Cập nhật chứng chỉ" : "Thêm chứng chỉ mới"}
-            </Typography.Title>
-          </Space>
+            </span>
+          </div>
         }
         open={modalOpen}
         onOk={handleOk}
         onCancel={() => setModalOpen(false)}
         confirmLoading={loading}
-        width={520}
-        style={{ top: 40 }}
+        width={600}
         okText={editing ? "Cập nhật" : "Tạo mới"}
         cancelText="Hủy"
-        okButtonProps={{
-          style: {
-            backgroundColor: "#52c41a",
-            borderColor: "#52c41a",
-            borderRadius: 6,
-            fontWeight: 600,
-          },
-        }}
-        cancelButtonProps={{ style: { borderRadius: 6 } }}
-        bodyStyle={{ padding: 24, borderRadius: 12, background: "#f8fafc" }}
       >
-  <Form form={form} layout="vertical">
-          <Form.Item
-            name="certificateName"
-            label={
-              <Space>
-                <SafetyCertificateOutlined style={{ color: "#1890ff" }} />
-                <span>Tên chứng chỉ</span>
-              </Space>
-            }
-            rules={[
-              { required: true, message: "Tên chứng chỉ là bắt buộc" },
-              { max: 100, message: "Tối đa 100 ký tự" },
-            ]}
-          >
-            <Input
-              placeholder="Nhập tên chứng chỉ"
-              style={{ borderRadius: "6px" }}
-            />
-          </Form.Item>
+        <Form form={form} layout="vertical" className="space-y-4">
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="certificateName"
+                label="Tên chứng chỉ"
+                rules={[
+                  { required: true, message: "Tên chứng chỉ là bắt buộc" },
+                  { max: 100, message: "Tối đa 100 ký tự" },
+                ]}
+              >
+                <Input placeholder="Nhập tên chứng chỉ" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="issuingAuthority"
+                label="Cơ quan cấp"
+                rules={[
+                  { required: true, message: "Cơ quan cấp là bắt buộc" },
+                  { max: 100, message: "Tối đa 100 ký tự" }
+                ]}
+              >
+                <Input placeholder="Nhập cơ quan cấp" />
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <Form.Item
-            name="issuingAuthority"
-            label={
-              <Space>
-                <BankOutlined style={{ color: "#52c41a" }} />
-                <span>Cơ quan cấp</span>
-              </Space>
-            }
-            rules={[{ max: 100, message: "Tối đa 100 ký tự" }]}
-          >
-            <Input
-              placeholder="Nhập cơ quan cấp"
-              style={{ borderRadius: "6px" }}
-            />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="issueDate"
+                label="Ngày cấp"
+                rules={[{ required: true, message: "Ngày cấp là bắt buộc" }]}
+              >
+                <DatePicker className="w-full" format="DD/MM/YYYY" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="expiryDate"
+                label="Ngày hết hạn"
+                rules={[{ required: true, message: "Ngày hết hạn là bắt buộc" }]}
+              >
+                <DatePicker className="w-full" format="DD/MM/YYYY" />
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <Form.Item
-            name="issueDate"
-            label={
-              <Space>
-                <CalendarOutlined style={{ color: "#fa8c16" }} />
-                <span>Ngày cấp</span>
-              </Space>
-            }
-            rules={[{ required: true, message: "Ngày cấp là bắt buộc" }]}
-          >
-            <Input type="date" style={{ borderRadius: "6px" }} />
-          </Form.Item>
-
-          <Form.Item
-            name="expiryDate"
-            label={
-              <Space>
-                <CalendarOutlined style={{ color: "#fa8c16" }} />
-                <span>Ngày hết hạn</span>
-              </Space>
-            }
-          >
-            <Input type="date" style={{ borderRadius: "6px" }} />
-          </Form.Item>
-
-          <Form.Item
-            name="certificateNumber"
-            label={
-              <Space>
-                <NumberOutlined style={{ color: "#722ed1" }} />
-                <span>Số chứng chỉ</span>
-              </Space>
-            }
-            rules={[{ max: 50, message: "Tối đa 50 ký tự" }]}
-          >
-            <Input
-              placeholder="Nhập số chứng chỉ"
-              style={{ borderRadius: "6px" }}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="specialization"
-            label={
-              <Space>
-                <ToolOutlined style={{ color: "#13c2c2" }} />
-                <span>Chuyên môn</span>
-              </Space>
-            }
-            rules={[{ max: 100, message: "Tối đa 100 ký tự" }]}
-          >
-            <Input
-              placeholder="Nhập chuyên môn"
-              style={{ borderRadius: "6px" }}
-            />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="certificateNumber"
+                label="Số chứng chỉ"
+                rules={[
+                  { required: true, message: "Số chứng chỉ là bắt buộc" },
+                  { max: 50, message: "Tối đa 50 ký tự" }
+                ]}
+              >
+                <Input placeholder="Nhập số chứng chỉ" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="specialization"
+                label="Chuyên môn"
+                rules={[
+                  { required: true, message: "Chuyên môn là bắt buộc" },
+                  { max: 100, message: "Tối đa 100 ký tự" }
+                ]}
+              >
+                <Input placeholder="Nhập chuyên môn" />
+              </Form.Item>
+            </Col>
+          </Row>
 
           <Form.Item
             name="documentUrl"
-            label={
-              <Space>
-                <LinkOutlined style={{ color: "#eb2f96" }} />
-                <span>Link file</span>
-              </Space>
-            }
-            rules={[{ max: 255, message: "Tối đa 255 ký tự" }]}
+            label="Link file PDF"
+            rules={[
+              { required: true, message: "Link file PDF là bắt buộc" },
+              { max: 255, message: "Tối đa 255 ký tự" },
+              {
+                type: 'url',
+                message: 'Vui lòng nhập URL hợp lệ',
+              }
+            ]}
           >
-            <Input
-              placeholder="Nhập link file PDF"
-              style={{ borderRadius: "6px" }}
-            />
+            <Input placeholder="Nhập link file PDF" />
           </Form.Item>
 
-          {/*
-            Khi tạo mới thì cho chọn kỹ thuật viên, khi sửa thì không cho sửa technicianId nữa
-          */}
           {!editing && (
             <Form.Item
               name="technicianId"
-              label={
-                <Space>
-                  <UserOutlined style={{ color: "#52c41a" }} />
-                  <span>Kỹ thuật viên</span>
-                </Space>
-              }
+              label="Kỹ thuật viên"
               rules={[{ required: true, message: "Kỹ thuật viên là bắt buộc" }]}
             >
               <Select
@@ -609,11 +717,9 @@ function CertificatePage() {
                 placeholder="Chọn kỹ thuật viên"
                 optionFilterProp="children"
                 filterOption={(input, option) => {
-                  const label =
-                    typeof option?.label === "string" ? option.label : "";
+                  const label = typeof option?.label === "string" ? option.label : "";
                   return label.toLowerCase().includes(input.toLowerCase());
                 }}
-                style={{ borderRadius: "6px" }}
               >
                 {technicians.map((tech) => (
                   <Select.Option key={tech._id} value={tech._id}>
@@ -624,6 +730,94 @@ function CertificatePage() {
             </Form.Item>
           )}
         </Form>
+      </Modal>
+
+      {/* Detail Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <InfoCircleOutlined className="text-blue-600" />
+            <span className="text-xl font-semibold">Chi tiết chứng chỉ</span>
+          </div>
+        }
+        open={detailModalOpen}
+        onCancel={() => setDetailModalOpen(false)}
+        footer={
+          <Button onClick={() => setDetailModalOpen(false)}>
+            Đóng
+          </Button>
+        }
+        width={600}
+      >
+        {selectedCertificate && (
+          <div className="space-y-4">
+            <Row gutter={16}>
+              <Col span={12}>
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Tên chứng chỉ</label>
+                    <p className="text-lg font-semibold text-gray-900">{selectedCertificate.certificateName}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Cơ quan cấp</label>
+                    <p className="text-gray-900">{selectedCertificate.issuingAuthority || "N/A"}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Số chứng chỉ</label>
+                    <p className="text-gray-900">{selectedCertificate.certificateNumber || "N/A"}</p>
+                  </div>
+                </div>
+              </Col>
+              <Col span={12}>
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Ngày cấp</label>
+                    <p className="text-gray-900">
+                      {selectedCertificate.issueDate ? dayjs(selectedCertificate.issueDate).format("DD/MM/YYYY") : "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Ngày hết hạn</label>
+                    <p className="text-gray-900">
+                      {selectedCertificate.expiryDate ? dayjs(selectedCertificate.expiryDate).format("DD/MM/YYYY") : "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Trạng thái</label>
+                    <Tag color={getStatusColor(selectedCertificate.status || "", selectedCertificate.expiryDate)}>
+                      {getStatusText(selectedCertificate.status || "", selectedCertificate.expiryDate)}
+                    </Tag>
+                  </div>
+                </div>
+              </Col>
+            </Row>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-500">Chuyên môn</label>
+              <p className="text-gray-900">{selectedCertificate.specialization || "N/A"}</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-500">Kỹ thuật viên</label>
+              <p className="text-green-600 font-medium">
+                {technicians.find(t => t._id === selectedCertificate.technicianId)?.fullName || "Không rõ"}
+              </p>
+            </div>
+
+            {selectedCertificate.documentUrl && (
+              <div>
+                <label className="block text-sm font-medium text-gray-500">File đính kèm</label>
+                <Button
+                  icon={<DownloadOutlined />}
+                  onClick={() => handleDownloadPdf(selectedCertificate.documentUrl!, selectedCertificate.certificateName || "certificate")}
+                  className="mt-2"
+                >
+                  Tải file PDF
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   );
