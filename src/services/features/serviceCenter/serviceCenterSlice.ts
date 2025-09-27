@@ -91,13 +91,14 @@ export const updateServiceCenter = createAsyncThunk<
 });
 
 export const deleteServiceCenter = createAsyncThunk<
-  ServiceCenter,
+  { _id: string },
   string,
   { rejectValue: { message: string } }
 >("serviceCenter/deleteServiceCenter", async (id, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.delete(SERVICE_CENTER_DELETE_ENDPOINT(id));
-    return response.data.data;
+    await axiosInstance.delete(SERVICE_CENTER_DELETE_ENDPOINT(id));
+    // Trả về object với _id để filter
+    return { _id: id };
   } catch (err: unknown) {
     const error = err as any;
     const message = error.response?.data?.message || error.message || "Xóa trung tâm dịch vụ thất bại";
@@ -278,7 +279,12 @@ const serviceCenterSlice = createSlice({
       })
       .addCase(updateServiceCenter.fulfilled, (state, action) => {
         state.loading = false;
-        state.serviceCenters = state.serviceCenters.map((serviceCenter) => serviceCenter._id === action.payload._id ? action.payload : serviceCenter);
+        // Safe access với null check
+        if (action.payload && action.payload._id) {
+          state.serviceCenters = state.serviceCenters.map((serviceCenter) => 
+            serviceCenter && serviceCenter._id === action.payload._id ? action.payload : serviceCenter
+          );
+        }
         state.error = null;
       })
       .addCase(updateServiceCenter.rejected, (state, action) => {
@@ -293,7 +299,12 @@ const serviceCenterSlice = createSlice({
       })
       .addCase(deleteServiceCenter.fulfilled, (state, action) => {
         state.loading = false;
-        state.serviceCenters = state.serviceCenters.filter((serviceCenter) => serviceCenter._id !== action.payload._id);
+        // Safe access với null check
+        if (action.payload && action.payload._id) {
+          state.serviceCenters = state.serviceCenters.filter((serviceCenter) => 
+            serviceCenter && serviceCenter._id !== action.payload._id
+          );
+        }
         state.error = null;
       })
       .addCase(deleteServiceCenter.rejected, (state, action) => {

@@ -96,13 +96,18 @@ export default function ServiceCentersPages() {
   };
 
   const handleDelete = async (id: string) => {
-    const res = await dispatch(deleteServiceCenter(id));
-    if ((res as any).meta.requestStatus === "fulfilled") {
-      message.success("Đã xóa trung tâm");
-      refreshCenters();
-    } else {
-      const errMsg = (res as any).payload?.message || "Xóa thất bại";
-      message.error(errMsg);
+    try {
+      const res = await dispatch(deleteServiceCenter(id));
+      if ((res as any).meta.requestStatus === "fulfilled") {
+        message.success("Đã xóa trung tâm");
+        refreshCenters();
+      } else {
+        const errMsg = (res as any).payload?.message || "Xóa thất bại";
+        message.error(errMsg);
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      message.error("Lỗi khi xóa trung tâm. Vui lòng thử lại.");
     }
   };
 
@@ -161,6 +166,7 @@ export default function ServiceCentersPages() {
           message.error(errMsg);
         }
       } else {
+        // Create mode
         const res = await dispatch(createServiceCenter(payload as ServiceCenterCreatePayload));
         if ((res as any).meta.requestStatus === "fulfilled") {
           message.success("Tạo trung tâm thành công");
@@ -172,6 +178,7 @@ export default function ServiceCentersPages() {
         }
       }
     } catch (e: any) {
+      console.error('Form submit error:', e);
       message.error(e?.message || 'Lỗi khi gửi form');
     }
   };

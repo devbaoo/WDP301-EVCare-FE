@@ -187,6 +187,8 @@ const AppRouter = () => {
                 <Route path="/payment/success" element={<PaymentSuccessPage />} />
                 <Route path="/payment/cancel" element={<PaymentFailurePage />} />
 
+                {/* Demo Routes */}
+
                 {/* Error Routes */}
                 <Route path="/unauthorized" element={<UnauthorizedPage />} />
                 <Route path="*" element={<NotFoundPage />} />

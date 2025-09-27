@@ -169,8 +169,8 @@ const ServiceCenterCard: React.FC<ServiceCenterCardProps> = ({
               <span className="text-sm font-medium text-gray-700">Services:</span>
             </div>
             <div className="flex flex-wrap gap-1">
-              {services.slice(0, 2).map((service) => (
-                <Tag key={service._id} color="blue" className="text-xs">
+              {services.slice(0, 2).map((service, index) => (
+                <Tag key={`service-${service._id}-${index}`} color="blue" className="text-xs">
                   {service.name}
                 </Tag>
               ))}
@@ -189,8 +189,8 @@ const ServiceCenterCard: React.FC<ServiceCenterCardProps> = ({
               <span className="text-sm font-medium text-gray-700">Payment:</span>
             </div>
             <div className="flex flex-wrap gap-1">
-              {paymentMethods.filter(pm => pm.isEnabled).slice(0, 2).map((method) => (
-                <Tag key={method._id} color="green" className="text-xs">
+              {paymentMethods.filter(pm => pm.isEnabled).slice(0, 2).map((method, index) => (
+                <Tag key={`payment-${method._id}-${index}`} color="green" className="text-xs">
                   {method.type === 'cash' ? 'Cash' :
                     method.type === 'card' ? 'Card' :
                       method.type === 'banking' ? 'Bank' :

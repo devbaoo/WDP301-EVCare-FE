@@ -16,7 +16,6 @@ import { useAppDispatch, useAppSelector } from '../../services/store/store';
 import { fetchCompatibleServices, fetchCompatiblePackages, setSelectedService, setSelectedServicePackage, updateBookingData } from '../../services/features/booking/bookingSlice';
 import { ServiceType, ServicePackage } from '../../interfaces/booking';
 
-const { Panel } = Collapse;
 
 interface Step3ServiceSelectionProps {
     onNext: () => void;
@@ -318,84 +317,86 @@ const Step3ServiceSelection: React.FC<Step3ServiceSelectionProps> = ({ onNext, o
                                             </div>
 
                                             {/* Service Details */}
-                                            <Collapse ghost>
-                                                <Panel
-                                                    header={
+                                            <Collapse 
+                                                ghost
+                                                items={[{
+                                                    key: "1",
+                                                    label: (
                                                         <div className="flex items-center space-x-2">
                                                             <Info className="w-4 h-4" />
                                                             <span className="font-medium">Chi tiết dịch vụ</span>
                                                         </div>
-                                                    }
-                                                    key="1"
-                                                >
-                                                    <div className="space-y-4">
-                                                        {/* AI Data */}
-                                                        <div className="bg-gray-50 p-4 rounded-lg">
-                                                            <h4 className="font-semibold text-gray-900 mb-2 flex items-center space-x-2">
-                                                                <Star className="w-4 h-4 text-yellow-500" />
-                                                                <span>Thông tin AI</span>
-                                                            </h4>
-                                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                                                                <div>
-                                                                    <span className="text-gray-600">Thời gian trung bình:</span>
-                                                                    <span className="font-medium ml-2">{formatDuration(service?.aiData?.averageCompletionTime)}</span>
-                                                                </div>
-                                                                <div>
-                                                                    <span className="text-gray-600">Tỷ lệ thành công:</span>
-                                                                    <span className="font-medium ml-2">{formatPercent(service?.aiData?.successRate)}</span>
-                                                                </div>
-                                                                <div>
-                                                                    <span className="text-gray-600">Độ ưu tiên:</span>
-                                                                    <span className="font-medium ml-2">{formatPriority(service?.priority)}</span>
+                                                    ),
+                                                    children: (
+                                                        <div className="space-y-4">
+                                                            {/* AI Data */}
+                                                            <div className="bg-gray-50 p-4 rounded-lg">
+                                                                <h4 className="font-semibold text-gray-900 mb-2 flex items-center space-x-2">
+                                                                    <Star className="w-4 h-4 text-yellow-500" />
+                                                                    <span>Thông tin AI</span>
+                                                                </h4>
+                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                                                    <div>
+                                                                        <span className="text-gray-600">Thời gian trung bình:</span>
+                                                                        <span className="font-medium ml-2">{formatDuration(service?.aiData?.averageCompletionTime)}</span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="text-gray-600">Tỷ lệ thành công:</span>
+                                                                        <span className="font-medium ml-2">{formatPercent(service?.aiData?.successRate)}</span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="text-gray-600">Độ ưu tiên:</span>
+                                                                        <span className="font-medium ml-2">{formatPriority(service?.priority)}</span>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
 
-                                                        {/* Required Parts */}
-                                                        {service.requiredParts.length > 0 && (
-                                                            <div>
-                                                                <h4 className="font-semibold text-gray-900 mb-2 flex items-center space-x-2">
-                                                                    <span className="w-4 h-4 text-blue-500">🔧</span>
-                                                                    <span>Phụ tùng cần thiết</span>
-                                                                </h4>
-                                                                <div className="space-y-2">
-                                                                    {service.requiredParts.map((part, index) => (
-                                                                        <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                                                            <div>
-                                                                                <span className="font-medium">{part.partName}</span>
-                                                                                <span className="text-sm text-gray-600 ml-2">
-                                                                                    ({typeof part.quantity === 'number' ? part.quantity : '—'}x {part.partType || '—'})
+                                                            {/* Required Parts */}
+                                                            {service.requiredParts.length > 0 && (
+                                                                <div>
+                                                                    <h4 className="font-semibold text-gray-900 mb-2 flex items-center space-x-2">
+                                                                        <span className="w-4 h-4 text-blue-500">🔧</span>
+                                                                        <span>Phụ tùng cần thiết</span>
+                                                                    </h4>
+                                                                    <div className="space-y-2">
+                                                                        {service.requiredParts.map((part, index) => (
+                                                                            <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                                                                <div>
+                                                                                    <span className="font-medium">{part.partName}</span>
+                                                                                    <span className="text-sm text-gray-600 ml-2">
+                                                                                        ({typeof part.quantity === 'number' ? part.quantity : '—'}x {part.partType || '—'})
+                                                                                    </span>
+                                                                                    {part.isOptional && (
+                                                                                        <Tag color="orange" className="ml-2">Tùy chọn</Tag>
+                                                                                    )}
+                                                                                </div>
+                                                                                <span className="font-medium text-blue-600">
+                                                                                    {formatPrice(part?.estimatedCost)}
                                                                                 </span>
-                                                                                {part.isOptional && (
-                                                                                    <Tag color="orange" className="ml-2">Tùy chọn</Tag>
-                                                                                )}
                                                                             </div>
-                                                                            <span className="font-medium text-blue-600">
-                                                                                {formatPrice(part?.estimatedCost)}
-                                                                            </span>
-                                                                        </div>
-                                                                    ))}
+                                                                        ))}
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        )}
+                                                            )}
 
-                                                        {/* Safety Requirements */}
-                                                        {service.requirements.safetyRequirements.length > 0 && (
-                                                            <div>
-                                                                <h4 className="font-semibold text-gray-900 mb-2 flex items-center space-x-2">
-                                                                    <AlertCircle className="w-4 h-4 text-red-500" />
-                                                                    <span>Yêu cầu an toàn</span>
-                                                                </h4>
-                                                                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                                                                    {service.requirements.safetyRequirements.map((req, index) => (
-                                                                        <li key={index}>{req}</li>
-                                                                    ))}
-                                                                </ul>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </Panel>
-                                            </Collapse>
+                                                            {/* Safety Requirements */}
+                                                            {service.requirements.safetyRequirements.length > 0 && (
+                                                                <div>
+                                                                    <h4 className="font-semibold text-gray-900 mb-2 flex items-center space-x-2">
+                                                                        <AlertCircle className="w-4 h-4 text-red-500" />
+                                                                        <span>Yêu cầu an toàn</span>
+                                                                    </h4>
+                                                                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                                                                        {service.requirements.safetyRequirements.map((req, index) => (
+                                                                            <li key={index}>{req}</li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )
+                                                }]}
+                                            />
                                         </div>
                                     </Card>
                                 ))}
