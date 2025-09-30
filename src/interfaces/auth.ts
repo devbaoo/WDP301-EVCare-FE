@@ -2,14 +2,18 @@ export type UserRole = "customer" | "staff" | "technician" | "admin";
 
 export interface User {
   id: string;
-  username: string;
   fullName: string;
   email: string;
-  phone: string;
-  address: string;
   role: UserRole;
+  isVerified: boolean;
   avatar?: string;
-  isVerified?: boolean;
+  username?: string;
+  // Optional fields for compatibility
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  address?: string;
+  isVerify?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

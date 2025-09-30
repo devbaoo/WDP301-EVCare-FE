@@ -3,6 +3,7 @@ export const BASE_URL = "https://dolphin-app-pwai8.ondigitalocean.app";
 
 // Auth endpoints
 export const LOGIN_ENDPOINT = `${BASE_URL}/api/auth/login`;
+export const GOOGLE_LOGIN_ENDPOINT = `${BASE_URL}/api/auth/google-login`;
 export const REGISTER_ENDPOINT = `${BASE_URL}/api/auth/register`;
 export const VERIFY_EMAIL_ENDPOINT = `${BASE_URL}/api/auth/verify-email`;
 export const VERIFY_EMAIL_TOKEN_ENDPOINT = (token: string) =>
@@ -24,7 +25,6 @@ export const STAFF_ASSIGNMENT_LIST_ENDPOINT = `${BASE_URL}/api/staff-assignments
 export const CHANGE_ROLE_ENDPOINT = `${BASE_URL}/api/staff-assignments`;
 //get all users endpoint
 export const GET_ALL_USERS_ENDPOINT = `${BASE_URL}/api/users`;
-
 
 // User endpoints
 export const USER_PROFILE_ENDPOINT = `${BASE_URL}/api/user/profile`;

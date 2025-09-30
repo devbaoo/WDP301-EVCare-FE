@@ -3,6 +3,7 @@ import { message } from "antd";
 import axiosInstance from "../../constant/axiosInstance";
 import {
   LOGIN_ENDPOINT,
+  GOOGLE_LOGIN_ENDPOINT,
   REGISTER_ENDPOINT,
   VERIFY_EMAIL_TOKEN_ENDPOINT,
   RESEND_VERIFICATION_ENDPOINT,
@@ -25,6 +26,7 @@ import {
   UpdatePasswordData,
   ChangePasswordData,
 } from "../../../interfaces/auth";
+import { GoogleUser } from "../../../hooks/useGoogleAuth";
 
 // Initial state
 const initialState: AuthState = {
@@ -52,6 +54,28 @@ export const loginUser = createAsyncThunk<
     const error = err as any;
     const message =
       error.response?.data?.message || error.message || "Đăng nhập thất bại";
+    return rejectWithValue({ message });
+  }
+});
+
+export const googleLogin = createAsyncThunk<
+  LoginResponse,
+  GoogleUser,
+  { rejectValue: { message: string } }
+>("auth/googleLogin", async (googleUser, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post(GOOGLE_LOGIN_ENDPOINT, {
+      email: googleUser.email,
+      name: googleUser.name,
+      picture: googleUser.picture,
+    });
+    return response.data;
+  } catch (err: unknown) {
+    const error = err as any;
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Đăng nhập Google thất bại";
     return rejectWithValue({ message });
   }
 });
@@ -135,22 +159,25 @@ export const resetPasswordWithToken = createAsyncThunk<
   { success: boolean; message: string },
   { token: string; data: ResetPasswordWithTokenData },
   { rejectValue: { message: string } }
->("auth/resetPasswordWithToken", async ({ token, data }, { rejectWithValue }) => {
-  try {
-    const response = await axiosInstance.post(
-      RESET_PASSWORD_WITH_TOKEN_ENDPOINT(token),
-      data
-    );
-    return response.data;
-  } catch (err: unknown) {
-    const error = err as any;
-    const message =
-      error.response?.data?.message ||
-      error.message ||
-      "Reset mật khẩu thất bại";
-    return rejectWithValue({ message });
+>(
+  "auth/resetPasswordWithToken",
+  async ({ token, data }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(
+        RESET_PASSWORD_WITH_TOKEN_ENDPOINT(token),
+        data
+      );
+      return response.data;
+    } catch (err: unknown) {
+      const error = err as any;
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Reset mật khẩu thất bại";
+      return rejectWithValue({ message });
+    }
   }
-});
+);
 
 export const verifyResetCode = createAsyncThunk<
   { success: boolean; message: string },
@@ -199,9 +226,7 @@ export const changePassword = createAsyncThunk<
   } catch (err: unknown) {
     const error = err as any;
     const message =
-      error.response?.data?.message ||
-      error.message ||
-      "Đổi mật khẩu thất bại";
+      error.response?.data?.message || error.message || "Đổi mật khẩu thất bại";
     return rejectWithValue({ message });
   }
 });
@@ -276,7 +301,13 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
+        // Map backend response to frontend User interface
+        const backendUser = action.payload.user;
+        const frontendUser = {
+          ...backendUser,
+          username: backendUser.email.split("@")[0],
+        };
+        state.user = frontendUser;
         state.token = action.payload.accessToken;
         state.refreshToken = action.payload.refreshToken;
         state.isAuthenticated = !action.payload.needVerification; // Only authenticated if no verification needed
@@ -286,7 +317,7 @@ const authSlice = createSlice({
         state.needVerification = action.payload.needVerification;
         localStorage.setItem("token", action.payload.accessToken);
         localStorage.setItem("refreshToken", action.payload.refreshToken);
-        localStorage.setItem("user", JSON.stringify(action.payload.user));
+        localStorage.setItem("user", JSON.stringify(frontendUser));
 
         // Only show success message if user doesn't need verification
         if (!action.payload.needVerification) {
@@ -303,6 +334,38 @@ const authSlice = createSlice({
         state.lastFailedAttempt = new Date().toISOString();
         message.error(state.error);
       })
+      // Google login cases
+      .addCase(googleLogin.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(googleLogin.fulfilled, (state, action) => {
+        state.loading = false;
+        // Map backend response to frontend User interface
+        const backendUser = action.payload.user;
+        const frontendUser = {
+          ...backendUser,
+          username: backendUser.email.split("@")[0],
+        };
+        state.user = frontendUser;
+        state.token = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
+        state.isAuthenticated = true; // Google login is always verified
+        state.error = null;
+        state.loginAttempts = 0;
+        state.lastFailedAttempt = null;
+        state.needVerification = action.payload.needVerification || false;
+        localStorage.setItem("token", action.payload.accessToken);
+        localStorage.setItem("refreshToken", action.payload.refreshToken);
+        localStorage.setItem("user", JSON.stringify(frontendUser));
+        message.success("Đăng nhập Google thành công");
+      })
+      .addCase(googleLogin.rejected, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.error = action.payload?.message || "Đăng nhập Google thất bại";
+        message.error(state.error);
+      })
       // Register cases
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
@@ -310,7 +373,13 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
+        // Map backend response to frontend User interface
+        const backendUser = action.payload.user;
+        const frontendUser = {
+          ...backendUser,
+          username: backendUser.email.split("@")[0],
+        };
+        state.user = frontendUser;
         state.isAuthenticated = false; // Chưa cho đăng nhập ngay
         state.needVerification = true; // Yêu cầu xác thực qua email
         state.error = null;
@@ -384,8 +453,7 @@ const authSlice = createSlice({
       })
       .addCase(resetPasswordWithToken.rejected, (state, action) => {
         state.loading = false;
-        state.error =
-          action.payload?.message || "Reset mật khẩu thất bại";
+        state.error = action.payload?.message || "Reset mật khẩu thất bại";
         message.error(state.error);
       })
       // Verify reset code cases
