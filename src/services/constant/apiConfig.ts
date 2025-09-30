@@ -16,7 +16,7 @@ export const UPDATE_PASSWORD_ENDPOINT = `${BASE_URL}/api/auth/update-password`;
 export const CHANGE_PASSWORD_ENDPOINT = `${BASE_URL}/api/auth/change-password`;
 export const VERIFY_RESET_CODE_ENDPOINT = `${BASE_URL}/api/auth/verify-reset-code`;
 export const LOGOUT_ENDPOINT = `${BASE_URL}/api/auth/logout`;
-export const REFRESH_TOKEN_ENDPOINT = `${BASE_URL}/api/auth/refresh`;
+export const REFRESH_TOKEN_ENDPOINT = `${BASE_URL}/api/auth/refresh-token`;
 
 // Staff endpoints
 export const STAFF_LIST_ENDPOINT = `${BASE_URL}/api/staff`;

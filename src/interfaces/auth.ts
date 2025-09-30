@@ -71,6 +71,17 @@ export interface ChangePasswordData {
   newPassword: string;
 }
 
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+export interface RefreshTokenResponse {
+  success: boolean;
+  message: string;
+  accessToken: string;
+  refreshToken: string;
+}
+
 export interface UpdateProfileData {
   username?: string;
   fullName?: string;

@@ -23,6 +23,7 @@ import ScrollToTop from "@/components/ScrollToTop/ScrollToTop";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/services/store/store";
+import { useTokenManager } from "@/hooks/useTokenManager";
 
 import DashboardPage from "@/page/Admin/DashboardPage";
 import CertificatePage from "../page/Admin/Certificate";
@@ -48,6 +49,9 @@ import SchedulePage from "@/page/Technician/SchedulePage";
 
 const AppRouter = () => {
     const { isAuthenticated, user, needVerification } = useSelector((state: RootState) => state.auth);
+
+    // Initialize token manager for automatic refresh
+    useTokenManager();
 
     // Redirect based on user role and verification status
     const getInitialRoute = () => {
@@ -188,7 +192,6 @@ const AppRouter = () => {
                 <Route path="/payment/cancel" element={<PaymentFailurePage />} />
 
                 {/* Demo Routes */}
-
                 {/* Error Routes */}
                 <Route path="/unauthorized" element={<UnauthorizedPage />} />
                 <Route path="*" element={<NotFoundPage />} />

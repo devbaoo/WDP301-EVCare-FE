@@ -25,6 +25,8 @@ import {
   ResetPasswordWithTokenData,
   UpdatePasswordData,
   ChangePasswordData,
+  RefreshTokenRequest,
+  RefreshTokenResponse,
 } from "../../../interfaces/auth";
 import { GoogleUser } from "../../../hooks/useGoogleAuth";
 
@@ -232,12 +234,24 @@ export const changePassword = createAsyncThunk<
 });
 
 export const refreshToken = createAsyncThunk<
-  { accessToken: string; refreshToken: string },
+  RefreshTokenResponse,
   void,
   { rejectValue: { message: string } }
 >("auth/refreshToken", async (_, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.post(REFRESH_TOKEN_ENDPOINT);
+    const refreshTokenValue = localStorage.getItem("refreshToken");
+    if (!refreshTokenValue) {
+      return rejectWithValue({ message: "No refresh token available" });
+    }
+
+    const requestBody: RefreshTokenRequest = {
+      refreshToken: refreshTokenValue,
+    };
+
+    const response = await axiosInstance.post(
+      REFRESH_TOKEN_ENDPOINT,
+      requestBody
+    );
     return response.data;
   } catch (err: unknown) {
     const error = err as any;
