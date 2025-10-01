@@ -6,6 +6,8 @@ import VerifyEmailSuccessPage from "../page/Auth/VerifyEmailSuccessPage";
 import ResetPasswordPage from "../page/Auth/ResetPasswordPage";
 import ServiceCentersPage from "../page/ServiceCenters/ServiceCentersPage";
 import ServiceCenterDetailPage from "../page/ServiceCenterDetail/ServiceCenterDetailPage";
+import AboutPage from "../page/About/AboutPage";
+import ContactPage from "../page/Contact/ContactPage";
 import ProfileCustomer from "@/page/Customer/ProfileCustomer";
 import ManageVehiclesCustomer from "@/page/Customer/ManageVehiclesCustomer";
 import BookingHistory from "@/page/Customer/BookingHistory";
@@ -123,6 +125,16 @@ const AppRouter = () => {
                                 <GuestLayout />
                 }>
                     <Route index element={<ServiceCenterDetailPage />} />
+                </Route>
+
+                {/* About Us Route - Public access */}
+                <Route path="/about" element={<GuestLayout />}>
+                    <Route index element={<AboutPage />} />
+                </Route>
+
+                {/* Contact Route - Public access */}
+                <Route path="/contact" element={<GuestLayout />}>
+                    <Route index element={<ContactPage />} />
                 </Route>
 
                 {/* Customer Routes - Only accessible when authenticated as customer */}
