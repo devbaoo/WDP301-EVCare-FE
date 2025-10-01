@@ -118,20 +118,22 @@ export default function Header() {
             >
               Booking
             </motion.a>
-            <motion.button
+            <motion.a
+              href="/about"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="text-synop-blue-dark font-semibold text-sm tracking-wide hover:text-synop-blue-primary transition-colors"
             >
               About us
-            </motion.button>
-            <motion.button
+            </motion.a>
+            <motion.a
+              href="/contact"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="text-synop-blue-dark font-semibold text-sm tracking-wide hover:text-synop-blue-primary transition-colors"
             >
               Contacts
-            </motion.button>
+            </motion.a>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, x: 20 }}

@@ -82,10 +82,10 @@ const MapboxPicker: React.FC<MapboxPickerProps> = ({
     // Lắng nghe sự kiện click trên map
     mapInstance.on('click', (e) => {
       const { lng, lat } = e.lngLat;
-      
+
       // Cập nhật vị trí marker
       initialMarker.setLngLat([lng, lat]);
-      
+
       // Lấy địa chỉ từ tọa độ
       getAddressFromCoordinates(lat, lng);
     });
@@ -113,7 +113,7 @@ const MapboxPicker: React.FC<MapboxPickerProps> = ({
         (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
-          
+
           if (map && marker) {
             map.setCenter([lng, lat]);
             marker.setLngLat([lng, lat]);
@@ -133,7 +133,7 @@ const MapboxPicker: React.FC<MapboxPickerProps> = ({
         `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_ACCESS_TOKEN}`
       );
       const data = await response.json();
-      
+
       if (data.features && data.features.length > 0) {
         const address = data.features[0].place_name;
         setSearchQuery(address);
@@ -155,17 +155,17 @@ const MapboxPicker: React.FC<MapboxPickerProps> = ({
         `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${MAPBOX_ACCESS_TOKEN}`
       );
       const data = await response.json();
-      
+
       if (data.features && data.features.length > 0) {
         const feature = data.features[0];
         const [lng, lat] = feature.center;
-        
+
         // Cập nhật map và marker
         map.setCenter([lng, lat]);
         if (marker) {
           marker.setLngLat([lng, lat]);
         }
-        
+
         // Lấy địa chỉ chi tiết
         getAddressFromCoordinates(lat, lng);
       } else {
@@ -195,18 +195,18 @@ const MapboxPicker: React.FC<MapboxPickerProps> = ({
             prefix={<SearchOutlined />}
             className="flex-1"
           />
-          <Button 
-            type="primary" 
-            icon={<SearchOutlined />} 
+          <Button
+            type="primary"
+            icon={<SearchOutlined />}
             onClick={handleSearch}
             disabled={!isMapLoaded}
           >
             Tìm kiếm
           </Button>
         </div>
-        <Button 
-          type="default" 
-          icon={<EnvironmentOutlined />} 
+        <Button
+          type="default"
+          icon={<EnvironmentOutlined />}
           onClick={getCurrentLocation}
           disabled={!isMapLoaded}
           className="w-full"
@@ -214,13 +214,13 @@ const MapboxPicker: React.FC<MapboxPickerProps> = ({
           Vị trí hiện tại
         </Button>
       </div>
-      
-      <div 
-        ref={mapRef} 
+
+      <div
+        ref={mapRef}
         className="w-full h-64 border border-gray-300 rounded-md"
         style={{ minHeight: '256px' }}
       />
-      
+
       {!isMapLoaded && (
         <div className="flex items-center justify-center h-64 border border-gray-300 rounded-md bg-gray-50">
           <div className="text-center">

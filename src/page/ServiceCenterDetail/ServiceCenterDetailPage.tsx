@@ -62,16 +62,6 @@ export default function ServiceCenterDetailPage() {
     }
   }, [searchParams]);
 
-  const handleBookAppointment = () => {
-    setShowBookingForm(true);
-    // Scroll to booking form
-    setTimeout(() => {
-      const bookingForm = document.getElementById('booking-form');
-      if (bookingForm) {
-        bookingForm.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 100);
-  };
 
   const handleGetDirections = () => {
     if (!address) return;
@@ -347,7 +337,7 @@ export default function ServiceCenterDetailPage() {
                       <Button
                         size="large"
                         icon={<Calendar />}
-                        onClick={handleBookAppointment}
+                        onClick={() => navigate('/booking')}
                         className="w-full h-12 rounded-full"
                         disabled={status !== 'active' || !isCurrentlyOpenNow}
                       >

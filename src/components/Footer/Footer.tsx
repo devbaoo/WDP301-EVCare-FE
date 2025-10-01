@@ -12,9 +12,9 @@ export default function Footer() {
                 Ready to transform your EV service center?
               </h3>
               <a href="/login">
-              <Button className="bg-white text-synop-blue-primary hover:bg-gray-100 rounded-full px-8">
-                Get Started
-              </Button>
+                <Button className="bg-white text-synop-blue-primary hover:bg-gray-100 rounded-full px-8">
+                  Get Started
+                </Button>
               </a>
             </div>
           </div>
@@ -47,7 +47,7 @@ export default function Footer() {
             <div className="space-y-3 text-sm">
               <p>Email: info@EV CARE.com</p>
               <p>Phone: +1 (555) 123-4567</p>
-              <p>Address: 48 Grattan St, Brooklyn, NY 11237</p>
+              <p>Address: Vinhome Grand Park, Quận 9</p>
             </div>
           </div>
         </div>
@@ -69,7 +69,7 @@ export default function Footer() {
               </div>
             </div>
             <div className="flex items-center space-x-6">
-              <span>48 Grattan St, Brooklyn, NY 11237</span>
+              <span>Vinhome Grand Park, Quận 9</span>
               <div className="flex space-x-4">
                 <a href="#" className="hover:text-synop-blue-light transition-colors underline">Privacy Policy</a>
                 <a href="#" className="hover:text-synop-blue-light transition-colors underline">Terms & Conditions</a>
