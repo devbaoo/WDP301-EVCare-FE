@@ -31,6 +31,7 @@ import { useAppDispatch, useAppSelector } from "../../services/store/store";
 import {
     fetchAwaitingConfirmationBookings,
     confirmBooking,
+    fetchPendingOfflinePaymentBookings,
 } from "../../services/features/booking/bookingSlice";
 import { fetchServiceCenters } from "../../services/features/serviceCenter/serviceCenterSlice";
 import {
@@ -50,6 +51,9 @@ const BookingManagePages: React.FC = () => {
         awaitingConfirmationPagination,
         awaitingConfirmationLoading,
         confirmBookingLoading,
+        pendingOfflinePaymentBookings,
+        pendingOfflinePaymentPagination,
+        pendingOfflinePaymentLoading,
     } = useAppSelector((state) => state.booking);
     const { serviceCenters } = useAppSelector((state) => state.serviceCenter);
 
@@ -83,6 +87,7 @@ const BookingManagePages: React.FC = () => {
         };
 
         dispatch(fetchAwaitingConfirmationBookings(params));
+        dispatch(fetchPendingOfflinePaymentBookings(params));
     }, [selectedServiceCenter, dateRange, currentPage, pageSize, sortBy, sortOrder, dispatch]);
 
     useEffect(() => {
@@ -339,7 +344,7 @@ const BookingManagePages: React.FC = () => {
                 </Row>
             </Card>
 
-            {/* Table */}
+            {/* Table - Awaiting Confirmation */}
             <Card>
                 <Table
                     columns={columns}
@@ -360,6 +365,43 @@ const BookingManagePages: React.FC = () => {
                             current={currentPage}
                             pageSize={pageSize}
                             total={awaitingConfirmationPagination.totalItems}
+                            onChange={(page, size) => {
+                                setCurrentPage(page);
+                                if (size) setPageSize(size);
+                            }}
+                            showSizeChanger
+                            showQuickJumper
+                            showTotal={(total, range) => `${range[0]}-${range[1]} của ${total}`}
+                        />
+                    </div>
+                )}
+            </Card>
+
+            {/* Table - Pending Offline Payment */}
+            <Card className="mt-6">
+                <div className="mb-3">
+                    <Title level={4}>Booking chờ thanh toán offline</Title>
+                    <Text type="secondary">Các booking có phương thức thanh toán offline và đang ở trạng thái pending</Text>
+                </div>
+                <Table
+                    columns={columns}
+                    dataSource={pendingOfflinePaymentBookings}
+                    rowKey="_id"
+                    loading={pendingOfflinePaymentLoading}
+                    pagination={false}
+                    scroll={{ x: 1200 }}
+                />
+
+                {pendingOfflinePaymentPagination && (
+                    <div className="mt-4 flex justify-between items-center">
+                        <Text type="secondary">
+                            Hiển thị {((currentPage - 1) * pageSize) + 1} - {Math.min(currentPage * pageSize, pendingOfflinePaymentPagination.totalItems)}
+                            trong tổng số {pendingOfflinePaymentPagination.totalItems} kết quả
+                        </Text>
+                        <Pagination
+                            current={currentPage}
+                            pageSize={pageSize}
+                            total={pendingOfflinePaymentPagination.totalItems}
                             onChange={(page, size) => {
                                 setCurrentPage(page);
                                 if (size) setPageSize(size);

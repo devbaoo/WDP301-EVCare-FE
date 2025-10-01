@@ -171,6 +171,15 @@ export interface BookingState {
     itemsPerPage: number;
   } | null;
   confirmedBookingsLoading: boolean;
+  // Pending offline payment bookings
+  pendingOfflinePaymentBookings: AwaitingConfirmationBooking[];
+  pendingOfflinePaymentPagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+  } | null;
+  pendingOfflinePaymentLoading: boolean;
 }
 
 export interface TimeSlot {
