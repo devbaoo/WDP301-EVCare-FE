@@ -17,6 +17,7 @@ import {
   BOOKING_AWAITING_CONFIRMATION_ENDPOINT,
   BOOKING_CONFIRM_ENDPOINT,
   BOOKINGS_CONFIRMED_ENDPOINT,
+  BOOKINGS_PENDING_OFFLINE_PAYMENT_ENDPOINT,
   SUBMIT_CUSTOMER_FEEDBACK_ENDPOINT,
   GET_CUSTOMER_FEEDBACK_ENDPOINT,
 } from "../../constant/apiConfig";
@@ -62,6 +63,10 @@ const initialState: BookingState = {
   confirmedBookings: [],
   confirmedBookingsPagination: null,
   confirmedBookingsLoading: false,
+  // Pending offline payment bookings
+  pendingOfflinePaymentBookings: [],
+  pendingOfflinePaymentPagination: null,
+  pendingOfflinePaymentLoading: false,
 };
 
 // Async thunks
@@ -408,12 +413,34 @@ export const fetchConfirmedBookings = createAsyncThunk(
   }
 );
 
+// Fetch bookings pending offline payment (same params as awaiting confirmation)
+export const fetchPendingOfflinePaymentBookings = createAsyncThunk(
+  "booking/fetchPendingOfflinePayment",
+  async (params: AwaitingConfirmationQueryParams, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(
+        BOOKINGS_PENDING_OFFLINE_PAYMENT_ENDPOINT,
+        { params }
+      );
+      return response.data;
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message ||
+          "Failed to fetch pending offline payment bookings"
+      );
+    }
+  }
+);
 
 export const getCustomerFeedback = createAsyncThunk(
   "booking/getCustomerFeedback",
   async (appointmentId: string, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(GET_CUSTOMER_FEEDBACK_ENDPOINT(appointmentId));
+      const response = await axiosInstance.get(
+        GET_CUSTOMER_FEEDBACK_ENDPOINT(appointmentId)
+      );
       return response.data;
     } catch (err: unknown) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -428,11 +455,26 @@ export const getCustomerFeedback = createAsyncThunk(
 export const submitCustomerFeedback = createAsyncThunk(
   "booking/submitCustomerFeedback",
   async (
-    { appointmentId, feedback }: { appointmentId: string; feedback: { overall: number; service: number; technician: number; facility: number; comment: string } },
+    {
+      appointmentId,
+      feedback,
+    }: {
+      appointmentId: string;
+      feedback: {
+        overall: number;
+        service: number;
+        technician: number;
+        facility: number;
+        comment: string;
+      };
+    },
     { rejectWithValue }
   ) => {
     try {
-      const response = await axiosInstance.post(SUBMIT_CUSTOMER_FEEDBACK_ENDPOINT(appointmentId), feedback);
+      const response = await axiosInstance.post(
+        SUBMIT_CUSTOMER_FEEDBACK_ENDPOINT(appointmentId),
+        feedback
+      );
       return response.data;
     } catch (err: unknown) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -495,9 +537,14 @@ const bookingSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    updateBookingFeedback: (state, action: PayloadAction<{ bookingId: string; feedback: any }>) => {
+    updateBookingFeedback: (
+      state,
+      action: PayloadAction<{ bookingId: string; feedback: any }>
+    ) => {
       const { bookingId, feedback } = action.payload;
-      const bookingIndex = state.myBookings.findIndex(booking => booking._id === bookingId);
+      const bookingIndex = state.myBookings.findIndex(
+        (booking) => booking._id === bookingId
+      );
       if (bookingIndex !== -1) {
         state.myBookings[bookingIndex].feedback = feedback;
       }
@@ -760,6 +807,25 @@ const bookingSlice = createSlice({
         state.confirmedBookingsLoading = false;
         state.error = action.payload as string;
       })
+      // Fetch pending offline payment bookings
+      .addCase(fetchPendingOfflinePaymentBookings.pending, (state) => {
+        state.pendingOfflinePaymentLoading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchPendingOfflinePaymentBookings.fulfilled,
+        (state, action) => {
+          state.pendingOfflinePaymentLoading = false;
+          state.pendingOfflinePaymentBookings =
+            action.payload.data.appointments;
+          state.pendingOfflinePaymentPagination =
+            action.payload.data.pagination;
+        }
+      )
+      .addCase(fetchPendingOfflinePaymentBookings.rejected, (state, action) => {
+        state.pendingOfflinePaymentLoading = false;
+        state.error = action.payload as string;
+      })
       // Fetch customer feedback
       .addCase(getCustomerFeedback.pending, (state) => {
         state.loading = true;
@@ -770,10 +836,12 @@ const bookingSlice = createSlice({
         // Store feedback data in state
         const feedbackData = action.payload.data;
         const appointmentId = action.meta.arg;
-        
+
         // Update feedback in myBookings if it exists
         if (state.myBookings && Array.isArray(state.myBookings)) {
-          const bookingIndex = state.myBookings.findIndex(booking => booking._id === appointmentId);
+          const bookingIndex = state.myBookings.findIndex(
+            (booking) => booking._id === appointmentId
+          );
           if (bookingIndex !== -1) {
             state.myBookings[bookingIndex].feedback = feedbackData;
           }
@@ -793,14 +861,16 @@ const bookingSlice = createSlice({
         // Update the booking with feedback data
         const feedbackData = action.payload.data;
         const appointmentId = action.meta.arg.appointmentId;
-        
+
         // Update feedback in myBookings if it exists
         if (state.myBookings && Array.isArray(state.myBookings)) {
-          const bookingIndex = state.myBookings.findIndex(booking => booking._id === appointmentId);
+          const bookingIndex = state.myBookings.findIndex(
+            (booking) => booking._id === appointmentId
+          );
           if (bookingIndex !== -1) {
             state.myBookings[bookingIndex].feedback = {
               ...feedbackData,
-              submittedAt: new Date().toISOString()
+              submittedAt: new Date().toISOString(),
             };
           }
         }

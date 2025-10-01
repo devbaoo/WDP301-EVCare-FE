@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Card, DatePicker, Button, Modal, Form, Input, Typography, message, Tag, Tooltip, Space, Calendar, Badge, Spin, ConfigProvider, Alert, Divider } from "antd";
+import { Card, DatePicker, Button, Modal, Form, Input, Typography, message, Tag, Tooltip, Space, Calendar, Badge, Spin, ConfigProvider, Alert, Divider, Radio } from "antd";
 import type { BadgeProps, TagProps } from "antd";
 import viVN from "antd/locale/vi_VN";
 import type { Dayjs } from "dayjs";
@@ -42,11 +42,13 @@ export default function TechnicianWorkProgressPage() {
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailSchedule, setDetailSchedule] = useState<ScheduleLike | null>(null);
     const [detailProgress, setDetailProgress] = useState<WorkProgress | null>(null);
+    const [detailSelectedAppointmentId, setDetailSelectedAppointmentId] = useState<string | null>(null);
     const [quoteOpen, setQuoteOpen] = useState(false);
     const [quoteForm] = Form.useForm();
     const [completeOpen, setCompleteOpen] = useState(false);
     const [completeForm] = Form.useForm();
     const [progressExistSet, setProgressExistSet] = useState<Set<string>>(new Set());
+    const [dayModalSelectedAppt, setDayModalSelectedAppt] = useState<Record<string, string>>({});
 
     const startDate = useMemo(() => currentMonth.startOf("month").format("YYYY-MM-DD"), [currentMonth]);
     const endDate = useMemo(() => currentMonth.endOf("month").format("YYYY-MM-DD"), [currentMonth]);
@@ -136,10 +138,15 @@ export default function TechnicianWorkProgressPage() {
         return (
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {items.map((item) => (
-                    <li key={item._id}>
-                        <Space size={4} align="center">
-                            <Badge status={statusColor(item.status) as BadgeProps['status']} text={`${item.shiftStart} - ${item.shiftEnd}`} />
-                        </Space>
+                    <li key={item._id} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                            <Badge status={statusColor(item.status) as BadgeProps['status']} text={`${item.shiftStart}-${item.shiftEnd}`} />
+                            {Array.isArray(item.assignedAppointments) && item.assignedAppointments.length > 0 && (
+                                <Tooltip title="Có booking">
+                                    <span style={{ width: 6, height: 6, background: '#1677ff', borderRadius: '50%', display: 'inline-block' }} />
+                                </Tooltip>
+                            )}
+                        </div>
                     </li>
                 ))}
             </ul>
@@ -158,8 +165,8 @@ export default function TechnicianWorkProgressPage() {
         setDayModalOpen(true);
     };
 
-    const openCreateProgress = async (schedule: ScheduleLike) => {
-        const apptId = schedule.appointmentId || schedule.assignedAppointments?.[0]?._id || null;
+    const openCreateProgress = async (schedule: ScheduleLike, explicitAppointmentId?: string) => {
+        const apptId = explicitAppointmentId || schedule.appointmentId || schedule.assignedAppointments?.[0]?._id || null;
         setSelectedAppointmentId(apptId);
         if (!apptId) {
             message.warning("Lịch này chưa gắn booking - không thể tạo tiến trình");
@@ -173,7 +180,8 @@ export default function TechnicianWorkProgressPage() {
         // Prefill serviceDate and startTime from booking if available
         let serviceDateValue: dayjs.Dayjs | undefined;
         let startTimeValue: dayjs.Dayjs | undefined;
-        const aTime = schedule.assignedAppointments?.[0]?.appointmentTime as { date?: string; startTime?: string } | undefined;
+        const selectedAppt = schedule.assignedAppointments?.find((a) => a._id === apptId) || schedule.assignedAppointments?.[0];
+        const aTime = selectedAppt?.appointmentTime as { date?: string; startTime?: string } | undefined;
         const dateISO = aTime?.date || schedule.workDate;
         if (dateISO) {
             serviceDateValue = dayjs(dateISO);
@@ -201,8 +209,11 @@ export default function TechnicianWorkProgressPage() {
         setDetailOpen(true);
         setDetailLoading(true);
         setDetailProgress(null);
+        // preselect first assigned appointment if available
+        const apptPreset = sch.assignedAppointments?.[0]?._id || sch.appointmentId || null;
+        setDetailSelectedAppointmentId(typeof apptPreset === 'string' ? apptPreset : null);
         try {
-            const apptId = getAppointmentIdFromSchedule(sch);
+            const apptId = (sch.assignedAppointments?.[0]?._id as string | undefined) || getAppointmentIdFromSchedule(sch);
             if (apptId) {
                 const result = await dispatch(getProgressByAppointment(apptId));
                 if (getProgressByAppointment.fulfilled.match(result) && result.payload.success) {
@@ -214,31 +225,21 @@ export default function TechnicianWorkProgressPage() {
         }
     };
 
-    const createProgressFromDetails = async () => {
-        if (!detailSchedule || !technicianId) return;
+    const onChangeDetailAppointment = async (appointmentId: string) => {
+        setDetailSelectedAppointmentId(appointmentId);
+        setDetailLoading(true);
+        setDetailProgress(null);
         try {
-            const apptId = getAppointmentIdFromSchedule(detailSchedule);
-            if (!apptId) return;
-            const existed = await ensureProgressChecked(apptId);
-            if (existed) {
-                message.info("Booking đã có tiến trình.");
-                return;
+            const result = await dispatch(getProgressByAppointment(appointmentId));
+            if (getProgressByAppointment.fulfilled.match(result) && result.payload.success) {
+                setDetailProgress(result.payload.data as WorkProgress);
             }
-            const aTime = detailSchedule.assignedAppointments?.[0]?.appointmentTime as { date?: string; startTime?: string } | undefined;
-            const dateISO = aTime?.date || detailSchedule.workDate || new Date().toISOString();
-            const result = await dispatch(createWorkProgress({ technicianId, appointmentId: apptId, serviceDate: dateISO }));
-            if (createWorkProgress.fulfilled.match(result) && (result.payload as { success?: boolean })?.success) {
-                message.success("Đã tạo tiến trình");
-                setProgressExistSet((prev) => new Set(prev).add(apptId));
-            } else {
-                const errMsg = (result.payload as string) || "Tạo tiến trình thất bại";
-                message.error(String(errMsg));
-            }
-            await openDetails(detailSchedule);
-        } catch {
-            message.error("Tạo tiến trình thất bại");
+        } finally {
+            setDetailLoading(false);
         }
     };
+
+
 
     const submitInspectionQuote = async () => {
         try {
@@ -394,20 +395,7 @@ export default function TechnicianWorkProgressPage() {
                         </div>
                         <div className="border-t pt-3">
                             <Space wrap>
-                                {(() => {
-                                    const apptId = detailSchedule ? getAppointmentIdFromSchedule(detailSchedule) : null;
-                                    const hasBooking = !!apptId;
-                                    const hasProgress = !!detailProgress;
-                                    const disabled = !hasBooking || hasProgress;
-                                    const tip = hasProgress
-                                        ? "Đã có tiến trình cho booking này"
-                                        : (!hasBooking ? "Lịch này chưa gắn booking - không thể tạo tiến trình" : undefined);
-                                    return (
-                                        <Tooltip title={tip}>
-                                            <Button type="primary" onClick={createProgressFromDetails} disabled={disabled}>Tạo tiến trình</Button>
-                                        </Tooltip>
-                                    );
-                                })()}
+                                {null}
                                 {detailProgress && (
                                     <>
                                         <Button onClick={() => { quoteForm.resetFields(); setQuoteOpen(true); }}>Gửi Inspection & Quote</Button>
@@ -417,6 +405,75 @@ export default function TechnicianWorkProgressPage() {
                                 )}
                             </Space>
                         </div>
+                        {/* Chọn booking nếu có nhiều */}
+                        {detailSchedule && Array.isArray(detailSchedule.assignedAppointments) && detailSchedule.assignedAppointments.length > 0 && (
+                            <div className="bg-gray-50 p-3 rounded border">
+                                <div className="mb-2 text-sm text-gray-600">Chọn booking theo giờ hẹn</div>
+                                <Radio.Group
+                                    value={detailSelectedAppointmentId || undefined}
+                                    onChange={(e) => onChangeDetailAppointment(e.target.value)}
+                                >
+                                    <Space direction="vertical">
+                                        {detailSchedule.assignedAppointments.map((a) => (
+                                            <Radio key={a._id} value={a._id}>
+                                                {(a.appointmentTime?.startTime || '')}{a.appointmentTime?.endTime ? ` - ${a.appointmentTime.endTime}` : ''}
+                                                {a.status ? ` • ${a.status}` : ''}
+                                            </Radio>
+                                        ))}
+                                    </Space>
+                                </Radio.Group>
+                            </div>
+                        )}
+                        {detailSchedule && Array.isArray(detailSchedule.assignedAppointments) && detailSchedule.assignedAppointments.length > 0 && (
+                            <div className="bg-gray-50 p-3 rounded border">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                    <div>
+                                        <p className="text-gray-500">Giờ hẹn</p>
+                                        <p className="font-medium">
+                                            {(() => {
+                                                const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId) || detailSchedule.assignedAppointments[0];
+                                                return `${current?.appointmentTime?.startTime || ''}${current?.appointmentTime?.endTime ? ` - ${current.appointmentTime.endTime}` : ''}`;
+                                            })()}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500">Priority</p>
+                                        <p className="font-medium">{(() => {
+                                            const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId) || detailSchedule.assignedAppointments[0];
+                                            return current?.serviceDetails?.priority || '—';
+                                        })()}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500">Quote status</p>
+                                        <p className="font-medium">{(() => {
+                                            const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId) || detailSchedule.assignedAppointments[0];
+                                            return current?.inspectionAndQuote?.quoteStatus || 'pending';
+                                        })()}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500">Payment</p>
+                                        <p className="font-medium">{(() => {
+                                            const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId) || detailSchedule.assignedAppointments[0];
+                                            return current?.payment?.status || '—';
+                                        })()}</p>
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <p className="text-gray-500">Mô tả</p>
+                                        <p className="font-medium break-words">{(() => {
+                                            const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId) || detailSchedule.assignedAppointments[0];
+                                            return current?.serviceDetails?.description || '—';
+                                        })()}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500">Xác nhận</p>
+                                        <p className="font-medium">{(() => {
+                                            const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId) || detailSchedule.assignedAppointments[0];
+                                            return current?.confirmation?.isConfirmed ? 'Đã xác nhận' : 'Chưa xác nhận';
+                                        })()}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         {!detailProgress && (
                             <div className="bg-gray-50 p-3 rounded border">
                                 <p className="text-gray-600">Chưa có tiến trình cho lịch này. Nhấn "Tạo tiến trình" để bắt đầu.</p>
@@ -456,7 +513,6 @@ export default function TechnicianWorkProgressPage() {
                                 {items.map((item) => {
                                     const apptId = item.appointmentId || (item.assignedAppointments?.[0]?._id as string | undefined);
                                     const hasBooking = !!apptId;
-                                    const hasProgress = apptId ? progressExistSet.has(apptId) : false;
                                     return (
                                         <Card key={item._id} size="small">
                                             <Space split={<Divider type="vertical" />} wrap>
@@ -465,14 +521,53 @@ export default function TechnicianWorkProgressPage() {
                                                 {item.centerId?.name && (
                                                     <Text type="secondary">{item.centerId.name}</Text>
                                                 )}
+                                                {Array.isArray(item.assignedAppointments) && item.assignedAppointments.length > 0 && (
+                                                    <>
+                                                        <Tag color="blue">Có booking</Tag>
+
+                                                    </>
+                                                )}
                                             </Space>
-                                            <div className="mt-2 flex gap-2">
-                                                <Button onClick={() => openDetails(item)}>Chi tiết</Button>
-                                                <Tooltip title={hasProgress ? "Đã có tiến trình cho booking này" : (hasBooking ? undefined : "Lịch này chưa gắn booking - không thể tạo tiến trình")}>
-                                                    <Button type="primary" disabled={!hasBooking || hasProgress} onClick={() => openCreateProgress(item)}>
-                                                        Tạo tiến trình
-                                                    </Button>
-                                                </Tooltip>
+                                            <div className="mt-2 flex gap-2 flex-col">
+                                                {Array.isArray(item.assignedAppointments) && item.assignedAppointments.length > 1 && (
+                                                    <div className="flex items-center gap-2">
+                                                        <Text type="secondary">Chọn giờ:</Text>
+                                                        <Radio.Group
+                                                            value={dayModalSelectedAppt[item._id] || (item.assignedAppointments?.[0]?._id as string | undefined)}
+                                                            onChange={(e) => setDayModalSelectedAppt((prev) => ({ ...prev, [item._id]: e.target.value }))}
+                                                        >
+                                                            <Space size={4} wrap>
+                                                                {item.assignedAppointments.map((a) => (
+                                                                    <Radio key={a._id} value={a._id}>
+                                                                        {(a.appointmentTime?.startTime || '')}{a.appointmentTime?.endTime ? ` - ${a.appointmentTime.endTime}` : ''}
+                                                                    </Radio>
+                                                                ))}
+                                                            </Space>
+                                                        </Radio.Group>
+                                                    </div>
+                                                )}
+                                                <div className="flex gap-2">
+                                                    <Button onClick={() => openDetails(item)}>Chi tiết</Button>
+                                                    <Tooltip title={(() => {
+                                                        const chosen = dayModalSelectedAppt[item._id] || (item.assignedAppointments?.[0]?._id as string | undefined) || (item.appointmentId as string | undefined);
+                                                        const has = chosen ? progressExistSet.has(chosen) : false;
+                                                        return has ? "Đã có tiến trình cho booking này" : (hasBooking ? undefined : "Lịch này chưa gắn booking - không thể tạo tiến trình");
+                                                    })()}>
+                                                        <Button
+                                                            type="primary"
+                                                            disabled={!hasBooking || (() => {
+                                                                const chosen = dayModalSelectedAppt[item._id] || (item.assignedAppointments?.[0]?._id as string | undefined) || (item.appointmentId as string | undefined);
+                                                                return chosen ? progressExistSet.has(chosen) : false;
+                                                            })()}
+                                                            onClick={() => {
+                                                                const chosen = dayModalSelectedAppt[item._id] || (item.assignedAppointments?.[0]?._id as string | undefined) || (item.appointmentId as string | undefined);
+                                                                openCreateProgress(item, chosen);
+                                                            }}
+                                                        >
+                                                            Tạo tiến trình
+                                                        </Button>
+                                                    </Tooltip>
+                                                </div>
                                             </div>
                                         </Card>
                                     );

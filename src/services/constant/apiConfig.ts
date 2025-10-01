@@ -1,5 +1,5 @@
-export const BASE_URL = "https://dolphin-app-pwai8.ondigitalocean.app";
-// export const BASE_URL = "http://localhost:8080";
+// export const BASE_URL = "https://dolphin-app-pwai8.ondigitalocean.app";
+export const BASE_URL = "http://localhost:8080";
 
 // Auth endpoints
 export const LOGIN_ENDPOINT = `${BASE_URL}/api/auth/login`;
@@ -86,6 +86,9 @@ export const BOOKING_RESCHEDULE_ENDPOINT = (bookingId: string) =>
 export const BOOKING_AWAITING_CONFIRMATION_ENDPOINT = `${BASE_URL}/api/booking/awaiting-confirmation`;
 export const BOOKING_CONFIRM_ENDPOINT = (bookingId: string) =>
   `${BASE_URL}/api/booking/${bookingId}/confirm`;
+
+// Pending offline payment bookings
+export const BOOKINGS_PENDING_OFFLINE_PAYMENT_ENDPOINT = `${BASE_URL}/api/bookings/pending-offline-payment`;
 
 //Feeback endpoints by customer
 export const CUSTOMER_FEEDBACK_ENDPOINT = (appointmentId: string) =>
