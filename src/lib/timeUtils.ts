@@ -2,6 +2,17 @@
  * Utility functions for time-related operations
  */
 
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+// Configure dayjs with timezone support
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+// Set default timezone to Vietnam
+const VIETNAM_TIMEZONE = "Asia/Ho_Chi_Minh";
+
 export interface OperatingHours {
   open: string;
   close: string;
@@ -19,18 +30,46 @@ export interface WeeklyOperatingHours {
 }
 
 /**
- * Get current day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+ * Get current day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday) in Vietnam timezone
  */
 export const getCurrentDayOfWeek = (): number => {
-  return new Date().getDay();
+  return dayjs().tz(VIETNAM_TIMEZONE).day();
 };
 
 /**
- * Get current time in HH:MM format
+ * Get current time in HH:MM format in Vietnam timezone
  */
 export const getCurrentTime = (): string => {
-  const now = new Date();
-  return now.toTimeString().slice(0, 5); // HH:MM format
+  return dayjs().tz(VIETNAM_TIMEZONE).format("HH:mm");
+};
+
+/**
+ * Get current date in YYYY-MM-DD format in Vietnam timezone
+ */
+export const getCurrentDate = (): string => {
+  return dayjs().tz(VIETNAM_TIMEZONE).format("YYYY-MM-DD");
+};
+
+/**
+ * Check if a time slot has passed (for today only)
+ */
+export const isTimeSlotPassed = (timeSlot: string, date?: string): boolean => {
+  const currentDate = getCurrentDate();
+  const checkDate = date || currentDate;
+
+  // Only check for today
+  if (checkDate !== currentDate) {
+    return false;
+  }
+
+  const currentTime = getCurrentTime();
+  const [slotStartTime] = timeSlot.split("-");
+
+  // Convert times to minutes for comparison
+  const currentMinutes = timeToMinutes(currentTime);
+  const slotMinutes = timeToMinutes(slotStartTime);
+
+  return slotMinutes <= currentMinutes;
 };
 
 /**

@@ -21,7 +21,7 @@ import PaymentModal from '../Payment/PaymentModal';
 import { TimeSlot } from '../../interfaces/booking';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { getNextOpeningTime } from '../../lib/timeUtils';
+import { getNextOpeningTime, isTimeSlotPassed, getCurrentDate } from '../../lib/timeUtils';
 
 const { TextArea } = Input;
 
@@ -50,7 +50,7 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
     const [serviceDescription, setServiceDescription] = useState<string>('');
     const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
     const [paymentPreference, setPaymentPreference] = useState<'online' | 'offline'>('offline');
-    
+
     // Time slot filtering
     const [timeFilter, setTimeFilter] = useState<'all' | 'morning' | 'afternoon' | 'evening'>('all');
     const [showMoreSlots, setShowMoreSlots] = useState(false);
@@ -128,7 +128,8 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
 
     const handleDateChange = (date: dayjs.Dayjs | null) => {
         if (date) {
-            const formattedDate = date.format('YYYY-MM-DD');
+            // Convert to Vietnam timezone and format
+            const formattedDate = date.tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD');
             setSelectedDate(formattedDate);
             setSelectedTime(''); // Reset time when date changes
             setTimeFilter('all'); // Reset time filter
@@ -203,7 +204,7 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                 // No payment required, booking is complete
                 message.success('Đặt lịch thành công!');
                 dispatch(resetBooking());
-                navigate('/customer/profile');
+                navigate('/customer/bookings');
             }
         } catch (error: unknown) {
             message.error((error as string) || 'Có lỗi xảy ra khi đặt lịch');
@@ -225,19 +226,32 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
     };
 
     const isDateDisabled = (current: dayjs.Dayjs) => {
-        // Disable past dates
-        return current && current < dayjs().startOf('day');
+        // Disable past dates using Vietnam timezone
+        const currentDate = getCurrentDate();
+        const selectedDateStr = current.format('YYYY-MM-DD');
+        return current && selectedDateStr < currentDate;
     };
 
 
     const isTimeSlotAvailable = (slot: TimeSlot) => {
-        return slot.availableTechnicians && slot.availableTechnicians.length > 0;
+        const hasTechnicians = slot.availableTechnicians && slot.availableTechnicians.length > 0;
+        const timeSlotString = `${slot.startTime}-${slot.endTime}`;
+        const isPassed = isTimeSlotPassed(timeSlotString, selectedDate);
+        return hasTechnicians && !isPassed;
     };
 
     const getTimeSlotReason = (slot: TimeSlot) => {
-        if (!isTimeSlotAvailable(slot)) {
+        const timeSlotString = `${slot.startTime}-${slot.endTime}`;
+        const isPassed = isTimeSlotPassed(timeSlotString, selectedDate);
+
+        if (isPassed) {
+            return 'Khung giờ đã qua';
+        }
+
+        if (!slot.availableTechnicians || slot.availableTechnicians.length === 0) {
             return 'Không có kỹ thuật viên khả dụng';
         }
+
         return `${slot.availableTechnicians.length} kỹ thuật viên khả dụng`;
     };
 
@@ -247,7 +261,8 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
             return false;
         }
 
-        const selectedDay = dayjs(date).day(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+        // Use Vietnam timezone for day calculation
+        const selectedDay = dayjs.tz(date, 'Asia/Ho_Chi_Minh').day(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
         const dayMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
         const dayName = dayMap[selectedDay] as keyof typeof selectedServiceCenter.operatingHours;
         const dayHours = selectedServiceCenter.operatingHours[dayName];
@@ -261,7 +276,8 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
             return null;
         }
 
-        const selectedDay = dayjs(date).day();
+        // Use Vietnam timezone for day calculation
+        const selectedDay = dayjs.tz(date, 'Asia/Ho_Chi_Minh').day();
         const dayMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
         const dayName = dayMap[selectedDay] as keyof typeof selectedServiceCenter.operatingHours;
         const dayHours = selectedServiceCenter.operatingHours[dayName];
@@ -277,9 +293,9 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
     // Filter time slots by period
     const getFilteredTimeSlots = () => {
         if (!availableTimeSlots || availableTimeSlots.length === 0) return [];
-        
+
         let filtered = availableTimeSlots;
-        
+
         if (timeFilter !== 'all') {
             filtered = availableTimeSlots.filter(slot => {
                 const hour = parseInt(slot.startTime.split(':')[0]);
@@ -295,12 +311,12 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                 }
             });
         }
-        
+
         // Show only first 8 slots initially, or all if showMoreSlots is true
         if (!showMoreSlots && filtered.length > 8) {
             return filtered.slice(0, 8);
         }
-        
+
         return filtered;
     };
 
@@ -315,9 +331,9 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
 
     const getTimeFilterCount = (filter: string) => {
         if (!availableTimeSlots || availableTimeSlots.length === 0) return 0;
-        
+
         if (filter === 'all') return availableTimeSlots.length;
-        
+
         const filtered = availableTimeSlots.filter(slot => {
             const hour = parseInt(slot.startTime.split(':')[0]);
             switch (filter) {
@@ -331,7 +347,7 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                     return true;
             }
         });
-        
+
         return filtered.length;
     };
 
@@ -355,7 +371,7 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                         </h3>
                         <DatePicker
                             placeholder="Chọn ngày hẹn"
-                            value={selectedDate ? dayjs(selectedDate) : null}
+                            value={selectedDate ? dayjs.tz(selectedDate, 'Asia/Ho_Chi_Minh') : null}
                             onChange={handleDateChange}
                             disabledDate={isDateDisabled}
                             className="w-full h-12"
@@ -381,7 +397,7 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                                         Trung tâm không hoạt động
                                     </h4>
                                     <p className="text-gray-600 mb-4">
-                                        Trung tâm đóng cửa vào ngày {dayjs(selectedDate).format('DD/MM/YYYY')}
+                                        Trung tâm đóng cửa vào ngày {dayjs.tz(selectedDate, 'Asia/Ho_Chi_Minh').format('DD/MM/YYYY')}
                                     </p>
                                     {getNextOpeningForDate(selectedDate) && (
                                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -423,13 +439,12 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                                                 type={selectedTime === `${slot.startTime}-${slot.endTime}` ? 'primary' : 'default'}
                                                 disabled={!isTimeSlotAvailable(slot)}
                                                 onClick={() => handleTimeSelect(`${slot.startTime}-${slot.endTime}`)}
-                                                className={`h-12 flex items-center justify-center p-2 ${
-                                                    selectedTime === `${slot.startTime}-${slot.endTime}`
-                                                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                                        : isTimeSlotAvailable(slot)
-                                                            ? 'hover:bg-blue-50 border-gray-200'
-                                                            : 'opacity-50 cursor-not-allowed bg-gray-50'
-                                                }`}
+                                                className={`h-12 flex items-center justify-center p-2 ${selectedTime === `${slot.startTime}-${slot.endTime}`
+                                                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                                    : isTimeSlotAvailable(slot)
+                                                        ? 'hover:bg-blue-50 border-gray-200'
+                                                        : 'opacity-50 cursor-not-allowed bg-gray-50'
+                                                    }`}
                                                 title={getTimeSlotReason(slot)}
                                             >
                                                 <div className="text-sm font-medium">
@@ -592,7 +607,7 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                         <span className="text-gray-600">Ngày giờ:</span>
                         <span className="font-medium ml-2">
                             {selectedDate && selectedTime
-                                ? `${dayjs(selectedDate).format('DD/MM/YYYY')} lúc ${selectedTime}`
+                                ? `${dayjs.tz(selectedDate, 'Asia/Ho_Chi_Minh').format('DD/MM/YYYY')} lúc ${selectedTime}`
                                 : 'Chưa chọn'
                             }
                         </span>
