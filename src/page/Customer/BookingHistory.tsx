@@ -47,7 +47,7 @@ import dayjs from 'dayjs';
 const { Option } = Select;
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
-const { TextArea } = AntInput;  
+const { TextArea } = AntInput;
 
 function BookingHistory() {
     const dispatch = useAppDispatch();
@@ -109,13 +109,13 @@ function BookingHistory() {
         }
 
         const result = await dispatch(fetchMyBookings(params) as any);
-        
+
         // Sau khi fetch bookings, fetch feedback cho các booking completed
         if (result.type.endsWith('/fulfilled') && result.payload?.appointments) {
-            const completedBookings = result.payload.appointments.filter((booking: Booking) => 
+            const completedBookings = result.payload.appointments.filter((booking: Booking) =>
                 booking.status === 'completed' && (!booking.feedback || !booking.feedback.overall)
             );
-            
+
             // Fetch feedback cho từng booking completed chưa có feedback
             for (const booking of completedBookings) {
                 try {
@@ -326,10 +326,10 @@ function BookingHistory() {
 
     const openFeedback = async (booking: Booking) => {
         setSelectedBooking(booking);
-        
+
         // Kiểm tra xem có feedback không
         const hasExistingFeedback = !!(booking.feedback && booking.feedback.overall);
-        
+
         if (hasExistingFeedback) {
             // Đã có feedback, hiển thị để xem
             setIsViewingFeedback(true);
@@ -351,7 +351,7 @@ function BookingHistory() {
                 comment: ""
             });
         }
-        
+
         setIsFeedbackOpen(true);
     };
 
@@ -370,22 +370,22 @@ function BookingHistory() {
 
     const submitFeedback = async () => {
         if (!selectedBooking) return;
-        
+
         // Validation
         if (feedbackData.overall < 1 || feedbackData.overall > 5) {
             message.error("Vui lòng đánh giá tổng thể từ 1-5 sao");
             return;
         }
-        
+
         try {
-            const result = await dispatch(submitCustomerFeedback({ 
-                appointmentId: selectedBooking._id, 
-                feedback: feedbackData 
+            const result = await dispatch(submitCustomerFeedback({
+                appointmentId: selectedBooking._id,
+                feedback: feedbackData
             }) as any);
-            
+
             if (result.type.endsWith('/fulfilled')) {
                 message.success("Cảm ơn bạn đã đánh giá dịch vụ!");
-                
+
                 // Cập nhật selectedBooking với feedback mới
                 const updatedBooking = {
                     ...selectedBooking,
@@ -395,16 +395,16 @@ function BookingHistory() {
                     }
                 };
                 setSelectedBooking(updatedBooking);
-                
+
                 // Cập nhật state trực tiếp
-                dispatch(updateBookingFeedback({ 
-                    bookingId: selectedBooking._id, 
+                dispatch(updateBookingFeedback({
+                    bookingId: selectedBooking._id,
                     feedback: {
                         ...feedbackData,
                         submittedAt: new Date().toISOString()
                     }
                 }));
-                
+
                 closeFeedback();
             } else {
                 message.error("Gửi đánh giá thất bại. Vui lòng thử lại.");
@@ -611,7 +611,7 @@ function BookingHistory() {
                             />
                         </Tooltip>
                     )}
-                    
+
                 </Space>
             ),
         },
@@ -624,18 +624,18 @@ function BookingHistory() {
                     if (record.feedback && (record.feedback.service || record.feedback.technician || record.feedback.facility || record.feedback.overall)) {
                         const avg = getAverageDetailedRating(record.feedback);
                         return (
-                            <div 
+                            <div
                                 className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
                                 onClick={() => openFeedback(record)}
                                 title="Bấm để xem chi tiết đánh giá"
                             >
-                                <StarRating 
-                                    rating={avg} 
-                                    size="small" 
+                                <StarRating
+                                    rating={avg}
+                                    size="small"
                                     showNumber={true}
                                     tooltip={`Đã đánh giá: ${avg}/5 sao - Bấm để xem chi tiết`}
                                 />
-                                
+
                             </div>
                         );
                     } else {
@@ -658,11 +658,15 @@ function BookingHistory() {
     ];
 
     const canCancelBooking = (status: string) => {
-        return status !== "cancelled" && status !== "completed" && status !== "confirmed";
+        // Chỉ cho phép cancel khi booking chưa được confirm và chưa bắt đầu maintenance
+        const allowedStatuses = ["pending_confirmation", "in_progress", "inspection_completed", "quote_provided", "quote_rejected", "payment_pending"];
+        return allowedStatuses.includes(status);
     };
 
     const canRescheduleBooking = (status: string) => {
-        return status !== "cancelled" && status !== "completed";
+        // Chỉ cho phép reschedule khi booking ở trạng thái pending hoặc confirmed
+        const allowedStatuses = ["pending_confirmation", "confirmed"];
+        return allowedStatuses.includes(status);
     };
 
     const getStatusColor = (status: string) => {
@@ -928,27 +932,27 @@ function BookingHistory() {
                             { icon: <CheckCircleOutlined />, label: "Trạng thái", value: getStatusTag(selectedBooking.status), status: true },
                             { icon: <EditOutlined />, label: "Mô tả", value: selectedBooking.serviceDetails?.description || "N/A" },
                             ...(selectedBooking.feedback ? [
-                            { 
-                                icon: <StarOutlined />, 
-                                label: "Đánh giá trung bình", 
-                                value: (() => {
-                                    const avg = getAverageDetailedRating(selectedBooking.feedback || {});
-                                    return (
-                                        <div 
-                                            className="cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
-                                            onClick={() => openFeedback(selectedBooking)}
-                                            title="Bấm để xem chi tiết đánh giá"
-                                        >
-                                            <StarRating rating={avg} size="small" showNumber={true} />
-                                        </div>
-                                    );
-                                })(), 
-                                status: true 
-                            },
-                                { 
-                                    icon: <MessageOutlined />, 
-                                    label: "Nhận xét", 
-                                    value: selectedBooking.feedback.comment || "Không có nhận xét" 
+                                {
+                                    icon: <StarOutlined />,
+                                    label: "Đánh giá trung bình",
+                                    value: (() => {
+                                        const avg = getAverageDetailedRating(selectedBooking.feedback || {});
+                                        return (
+                                            <div
+                                                className="cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                                                onClick={() => openFeedback(selectedBooking)}
+                                                title="Bấm để xem chi tiết đánh giá"
+                                            >
+                                                <StarRating rating={avg} size="small" showNumber={true} />
+                                            </div>
+                                        );
+                                    })(),
+                                    status: true
+                                },
+                                {
+                                    icon: <MessageOutlined />,
+                                    label: "Nhận xét",
+                                    value: selectedBooking.feedback.comment || "Không có nhận xét"
                                 }
                             ] : [])
                         ].map((item, index) => (
@@ -1294,8 +1298,8 @@ function BookingHistory() {
                                 <Text strong className="block mb-2">
                                     Đánh giá tổng thể {!isViewingFeedback && <span className="text-red-500">*</span>}
                                 </Text>
-                                <StarRating 
-                                    rating={feedbackData.overall} 
+                                <StarRating
+                                    rating={feedbackData.overall}
                                     size="large"
                                     showNumber={true}
                                     interactive={!isViewingFeedback}
@@ -1310,8 +1314,8 @@ function BookingHistory() {
                                 <Col xs={24} md={12}>
                                     <div>
                                         <Text strong className="block mb-2">Chất lượng dịch vụ</Text>
-                                        <StarRating 
-                                            rating={feedbackData.service} 
+                                        <StarRating
+                                            rating={feedbackData.service}
                                             size="default"
                                             showNumber={true}
                                             interactive={!isViewingFeedback}
@@ -1322,8 +1326,8 @@ function BookingHistory() {
                                 <Col xs={24} md={12}>
                                     <div>
                                         <Text strong className="block mb-2">Thái độ kỹ thuật viên</Text>
-                                        <StarRating 
-                                            rating={feedbackData.technician} 
+                                        <StarRating
+                                            rating={feedbackData.technician}
                                             size="default"
                                             showNumber={true}
                                             interactive={!isViewingFeedback}
@@ -1334,8 +1338,8 @@ function BookingHistory() {
                                 <Col xs={24} md={12}>
                                     <div>
                                         <Text strong className="block mb-2">Cơ sở vật chất</Text>
-                                        <StarRating 
-                                            rating={feedbackData.facility} 
+                                        <StarRating
+                                            rating={feedbackData.facility}
                                             size="default"
                                             showNumber={true}
                                             interactive={!isViewingFeedback}
