@@ -34,7 +34,7 @@ export default function HomePage() {
           (error) => {
             console.error('Error getting location:', error);
             setLocationPermissionDenied(true);
-            
+
             // Handle different types of geolocation errors
             switch (error.code) {
               case error.PERMISSION_DENIED:
@@ -54,7 +54,7 @@ export default function HomePage() {
                 message.warning('Lỗi không xác định khi lấy vị trí. Sử dụng vị trí mặc định (TP.HCM).');
                 break;
             }
-            
+
             // Fallback to Ho Chi Minh City coordinates
             setUserLocation({ lat: 10.762622, lng: 106.660172 });
           },
@@ -333,7 +333,166 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      {/* Service Centers Section */}
+      <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              whileInView={{ scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6"
+            >
+              <Wrench className="w-8 h-8 text-blue-600" />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              viewport={{ once: true }}
+            >
+              <Title level={2} className="text-4xl font-black text-synop-blue-dark mb-4">
+                Service Centers Near You
+              </Title>
+              <Paragraph className="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
+                {locationPermissionDenied
+                  ? "Showing service centers near Ho Chi Minh City (default location)"
+                  : "Discover EV service centers near your location with advanced technology"
+                }
+              </Paragraph>
+            </motion.div>
 
+            {/* Radius Selection */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              viewport={{ once: true }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            >
+              <span className="text-gray-700 font-medium">Search within radius:</span>
+              <Select
+                value={searchRadius}
+                onChange={handleRadiusChange}
+                size="large"
+                className="min-w-32"
+                loading={loading}
+              >
+                <Option value={5}>5 km</Option>
+                <Option value={10}>10 km</Option>
+                <Option value={15}>15 km</Option>
+                <Option value={20}>20 km</Option>
+                <Option value={30}>30 km</Option>
+                <Option value={50}>50 km</Option>
+              </Select>
+            </motion.div>
+          </motion.div>
+
+
+
+
+          {/* Service Centers Grid */}
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex justify-center items-center py-20"
+              >
+                <Spin size="large" />
+              </motion.div>
+            ) : error ? (
+              <motion.div
+                key="error"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="text-center py-20"
+              >
+                <Empty
+                  description={`Error: ${error}`}
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                />
+                <div className="mt-4 text-sm text-gray-500">
+                  Location: {userLocation ? `${userLocation.lat.toFixed(6)}, ${userLocation.lng.toFixed(6)}` : 'Location not available'}
+                  <br />
+                  Radius: {searchRadius}km
+                </div>
+              </motion.div>
+            ) : nearbyServiceCenters.length === 0 ? (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="text-center py-20"
+              >
+                <Empty
+                  description={`No service centers found within ${searchRadius}km radius`}
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="grid"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr"
+              >
+                {nearbyServiceCenters.map((serviceCenter, index) => (
+                  <motion.div
+                    key={serviceCenter._id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                    className="h-full"
+                  >
+                    <ServiceCenterCardSimple
+                      serviceCenter={serviceCenter}
+                      onViewDetails={handleViewDetails}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* View All Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            viewport={{ once: true }}
+            className="text-center mt-12"
+          >
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button
+                type="primary"
+                size="large"
+                onClick={handleViewAllServiceCenters}
+                className="bg-synop-blue-primary hover:bg-synop-blue-dark border-0 rounded-full px-8 py-4 h-auto text-lg font-semibold"
+              >
+                View All Service Centers
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
       {/* All-in-one Platform Section */}
       <section className="py-20 bg-gradient-to-b from-[#3864f333] via-[#86a0f882] to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -518,166 +677,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Service Centers Section */}
-      <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <motion.div
-              initial={{ scale: 0 }}
-              whileInView={{ scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              viewport={{ once: true }}
-              className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6"
-            >
-              <Wrench className="w-8 h-8 text-blue-600" />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              viewport={{ once: true }}
-            >
-              <Title level={2} className="text-4xl font-black text-synop-blue-dark mb-4">
-                Service Centers Near You
-              </Title>
-              <Paragraph className="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
-                {locationPermissionDenied
-                  ? "Showing service centers near Ho Chi Minh City (default location)"
-                  : "Discover EV service centers near your location with advanced technology"
-                }
-              </Paragraph>
-            </motion.div>
 
-            {/* Radius Selection */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              viewport={{ once: true }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
-            >
-              <span className="text-gray-700 font-medium">Search within radius:</span>
-              <Select
-                value={searchRadius}
-                onChange={handleRadiusChange}
-                size="large"
-                className="min-w-32"
-                loading={loading}
-              >
-                <Option value={5}>5 km</Option>
-                <Option value={10}>10 km</Option>
-                <Option value={15}>15 km</Option>
-                <Option value={20}>20 km</Option>
-                <Option value={30}>30 km</Option>
-                <Option value={50}>50 km</Option>
-              </Select>
-            </motion.div>
-          </motion.div>
-
-
-
-
-          {/* Service Centers Grid */}
-          <AnimatePresence mode="wait">
-            {loading ? (
-              <motion.div
-                key="loading"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex justify-center items-center py-20"
-              >
-                <Spin size="large" />
-              </motion.div>
-            ) : error ? (
-              <motion.div
-                key="error"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="text-center py-20"
-              >
-                <Empty
-                  description={`Error: ${error}`}
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                />
-                <div className="mt-4 text-sm text-gray-500">
-                  Location: {userLocation ? `${userLocation.lat.toFixed(6)}, ${userLocation.lng.toFixed(6)}` : 'Location not available'}
-                  <br />
-                  Radius: {searchRadius}km
-                </div>
-              </motion.div>
-            ) : nearbyServiceCenters.length === 0 ? (
-              <motion.div
-                key="empty"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="text-center py-20"
-              >
-                <Empty
-                  description={`No service centers found within ${searchRadius}km radius`}
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="grid"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr"
-              >
-                {nearbyServiceCenters.map((serviceCenter, index) => (
-                  <motion.div
-                    key={serviceCenter._id}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                    className="h-full"
-                  >
-                    <ServiceCenterCardSimple
-                      serviceCenter={serviceCenter}
-                      onViewDetails={handleViewDetails}
-                    />
-                  </motion.div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* View All Button */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            viewport={{ once: true }}
-            className="text-center mt-12"
-          >
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button
-                type="primary"
-                size="large"
-                onClick={handleViewAllServiceCenters}
-                className="bg-synop-blue-primary hover:bg-synop-blue-dark border-0 rounded-full px-8 py-4 h-auto text-lg font-semibold"
-              >
-                View All Service Centers
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
 
       {/* Customer Testimonials */}
       <section className="py-20 bg-white">
