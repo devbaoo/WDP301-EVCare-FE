@@ -11,6 +11,12 @@ export interface VehicleModel {
   };
 }
 
+export interface VehicleModelsResponse {
+  success: boolean;
+  message: string;
+  data: VehicleModel[];
+}
+
 export interface VehicleInfo {
   vehicleModel: VehicleModel;
   year: number;
