@@ -187,3 +187,28 @@ export const PAYOS_PAYMENT_INFO_ENDPOINT = (orderCode: string) =>
   `${BASE_URL}/api/payment/${orderCode}`;
 export const PAYOS_CANCEL_ENDPOINT = (orderCode: string) =>
   `${BASE_URL}/api/payment/${orderCode}/cancel`;
+
+// Chat endpoints
+const CHAT_BASE_ENDPOINT = `${BASE_URL}/api/chat`;
+export const CHAT_BOOKINGS_ENDPOINT = `${CHAT_BASE_ENDPOINT}/bookings`;
+export const CHAT_CONVERSATIONS_ENDPOINT = `${CHAT_BASE_ENDPOINT}/conversations`;
+export const CHAT_UNREAD_COUNT_ENDPOINT = `${CHAT_BASE_ENDPOINT}/unread-count`;
+export const CHAT_CONVERSATION_MESSAGES_ENDPOINT = (
+  conversationId: string,
+  page?: number,
+  limit?: number
+) => {
+  const params: string[] = [];
+  if (typeof page === "number") {
+    params.push(`page=${page}`);
+  }
+  if (typeof limit === "number") {
+    params.push(`limit=${limit}`);
+  }
+  const queryString = params.length ? `?${params.join("&")}` : "";
+  return `${CHAT_CONVERSATIONS_ENDPOINT}/${conversationId}/messages${queryString}`;
+};
+export const CHAT_CONVERSATION_MARK_READ_ENDPOINT = (conversationId: string) =>
+  `${CHAT_CONVERSATIONS_ENDPOINT}/${conversationId}/read`;
+export const CHAT_CONVERSATION_SEND_MESSAGE_ENDPOINT = (conversationId: string) =>
+  `${CHAT_CONVERSATIONS_ENDPOINT}/${conversationId}/messages`;

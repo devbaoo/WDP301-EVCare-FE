@@ -4,8 +4,16 @@ import {
   fetchConversationMessages,
   markConversationAsRead,
   sendChatMessage,
+  receiveIncomingMessage,
 } from "@/services/features/chat/chatSlice";
 import { message as antdMessage, Spin, Empty } from "antd";
+import {
+  getChatSocket,
+  joinConversationRoom,
+  leaveConversationRoom,
+} from "@/services/features/chat/chatSocket";
+import { ChatMessage } from "@/interfaces/chat";
+
 
 interface ChatWindowProps {
   conversationId: string;
@@ -44,6 +52,38 @@ const ChatWindow = ({ conversationId, onClose }: ChatWindowProps) => {
   }, [conversationId, dispatch]);
 
   useEffect(() => {
+    const socket = getChatSocket();
+    if (!socket || !conversationId) return;
+
+    const eventName = `conversation:${conversationId}`;
+
+    const handleConversationMessage = (message: ChatMessage) => {
+      dispatch(
+        receiveIncomingMessage({
+          message,
+          currentUserId,
+        })
+      );
+
+      const isMessageFromOtherUser =
+        message.senderId?._id && message.senderId._id !== currentUserId;
+
+      if (isMessageFromOtherUser) {
+        void dispatch(markConversationAsRead(conversationId));
+      }
+    };
+
+    joinConversationRoom(conversationId);
+    socket.on(eventName, handleConversationMessage);
+
+    return () => {
+      socket.off(eventName, handleConversationMessage);
+      leaveConversationRoom(conversationId);
+    };
+  }, [conversationId, dispatch, currentUserId]);
+
+  useEffect(() => {
+
     setNewMessage("");
   }, [conversationId]);
 

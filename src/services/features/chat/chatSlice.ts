@@ -55,6 +55,8 @@ const initialState: ChatState = {
   sendingMessage: false,
   unreadCount: 0,
   error: null,
+  activeConversationId: null,
+
 };
 
 const getErrorMessage = (error: unknown): string => {
@@ -226,6 +228,65 @@ const chatSlice = createSlice({
       delete state.participantsByConversation[conversationId];
       delete state.paginationByConversation[conversationId];
     },
+    setActiveConversationId(state, action: PayloadAction<string | null>) {
+      state.activeConversationId = action.payload;
+    },
+    receiveIncomingMessage(
+      state,
+      action: PayloadAction<{ message: ChatMessage; currentUserId?: string | null }>
+    ) {
+      const { message, currentUserId } = action.payload;
+      if (!message?.conversationId || !message._id) {
+        return;
+      }
+
+      const conversationId = message.conversationId;
+      const existingMessages = state.messagesByConversation[conversationId] ?? [];
+      const messageAlreadyExists = existingMessages.some(
+        (item) => item._id === message._id
+      );
+
+      if (!messageAlreadyExists) {
+        state.messagesByConversation[conversationId] = [
+          ...existingMessages,
+          message,
+        ];
+      }
+
+      const conversationIndex = state.conversations.findIndex(
+        (item) => item.conversationId === conversationId
+      );
+
+      const isSentByCurrentUser =
+        message.senderId?._id && message.senderId._id === currentUserId;
+      const isActiveConversation = state.activeConversationId === conversationId;
+
+      if (conversationIndex >= 0) {
+        const conversation = state.conversations[conversationIndex];
+        const previousUnread = conversation.unreadCount ?? 0;
+
+        conversation.lastMessage = {
+          content: message.content,
+          senderId: message.senderId?._id ?? "",
+          sentAt: message.sentAt,
+          messageType: message.messageType,
+        };
+        conversation.updatedAt = message.sentAt;
+
+        if (!isSentByCurrentUser) {
+          if (isActiveConversation) {
+            if (previousUnread > 0) {
+              state.unreadCount = Math.max(0, state.unreadCount - previousUnread);
+            }
+            conversation.unreadCount = 0;
+          } else {
+            conversation.unreadCount = previousUnread + 1;
+            state.unreadCount += 1;
+          }
+        }
+      }
+    },
+
   },
   extraReducers: (builder) => {
     builder
@@ -387,6 +448,13 @@ const chatSlice = createSlice({
   },
 });
 
-export const { prependMessage, setChatError, clearConversation } = chatSlice.actions;
+export const {
+  prependMessage,
+  setChatError,
+  clearConversation,
+  setActiveConversationId,
+  receiveIncomingMessage,
+} = chatSlice.actions;
+
 
 export default chatSlice.reducer;
