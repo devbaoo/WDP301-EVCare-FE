@@ -56,6 +56,7 @@ const initialState: ChatState = {
   unreadCount: 0,
   error: null,
   activeConversationId: null,
+
 };
 
 const getErrorMessage = (error: unknown): string => {
@@ -285,6 +286,7 @@ const chatSlice = createSlice({
         }
       }
     },
+
   },
   extraReducers: (builder) => {
     builder
@@ -453,5 +455,6 @@ export const {
   setActiveConversationId,
   receiveIncomingMessage,
 } = chatSlice.actions;
+
 
 export default chatSlice.reducer;

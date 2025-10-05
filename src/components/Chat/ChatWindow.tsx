@@ -14,6 +14,7 @@ import {
 } from "@/services/features/chat/chatSocket";
 import { ChatMessage } from "@/interfaces/chat";
 
+
 interface ChatWindowProps {
   conversationId: string;
   onClose: () => void;
@@ -82,6 +83,7 @@ const ChatWindow = ({ conversationId, onClose }: ChatWindowProps) => {
   }, [conversationId, dispatch, currentUserId]);
 
   useEffect(() => {
+
     setNewMessage("");
   }, [conversationId]);
 

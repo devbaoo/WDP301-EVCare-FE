@@ -112,4 +112,5 @@ export interface ChatState {
   unreadCount: number;
   error: string | null;
   activeConversationId: string | null;
+
 }

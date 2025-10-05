@@ -17,6 +17,7 @@ import {
 } from "@/services/features/chat/chatSocket";
 import { ChatMessage } from "@/interfaces/chat";
 
+
 const ChatMain = () => {
   const dispatch = useAppDispatch();
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -28,6 +29,7 @@ const ChatMain = () => {
   const currentUserId = useAppSelector((state) => state.auth.user?.id ?? null);
   const conversations = useAppSelector((state) => state.chat.conversations);
   const [socket, setSocket] = useState<Socket | null>(null);
+
 
   useEffect(() => {
     void dispatch(fetchChatConversations());
@@ -104,6 +106,7 @@ const ChatMain = () => {
       socket.off("chat:new-message", handleIncomingMessage);
     };
   }, [socket, dispatch, currentUserId, conversations]);
+
 
   const handleOpenConversation = (conversationId: string) => {
     setSelectedConversationId(conversationId);
