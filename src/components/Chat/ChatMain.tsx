@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Socket } from "socket.io-client";
 import ChatList from "./ChatList";
 import ChatWindow from "./ChatWindow";
 import BookingChatList from "./BookingChatList";
@@ -7,7 +8,14 @@ import {
   fetchChatConversations,
   fetchUnreadCount,
   fetchChatBookings,
+  receiveIncomingMessage,
+  setActiveConversationId,
 } from "@/services/features/chat/chatSlice";
+import {
+  connectChatSocket,
+  disconnectChatSocket,
+} from "@/services/features/chat/chatSocket";
+import { ChatMessage } from "@/interfaces/chat";
 
 const ChatMain = () => {
   const dispatch = useAppDispatch();
@@ -16,6 +24,10 @@ const ChatMain = () => {
     "conversations"
   );
   const unreadCount = useAppSelector((state) => state.chat.unreadCount);
+  const token = useAppSelector((state) => state.auth.token);
+  const currentUserId = useAppSelector((state) => state.auth.user?.id ?? null);
+  const conversations = useAppSelector((state) => state.chat.conversations);
+  const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
     void dispatch(fetchChatConversations());
@@ -27,6 +39,71 @@ const ChatMain = () => {
       void dispatch(fetchChatBookings());
     }
   }, [activeTab, dispatch]);
+
+  useEffect(() => {
+    dispatch(setActiveConversationId(selectedConversationId));
+  }, [dispatch, selectedConversationId]);
+
+  useEffect(() => {
+    if (!token) {
+      setSocket(null);
+      disconnectChatSocket();
+      return;
+    }
+
+    const socketInstance = connectChatSocket(token);
+    if (!socketInstance) {
+      setSocket(null);
+      return;
+    }
+
+    setSocket(socketInstance);
+
+    const handleConnect = () => {
+      setSocket(socketInstance);
+    };
+
+    const handleDisconnect = () => {
+      setSocket(null);
+    };
+
+    socketInstance.on("connect", handleConnect);
+    socketInstance.on("disconnect", handleDisconnect);
+
+    return () => {
+      socketInstance.off("connect", handleConnect);
+      socketInstance.off("disconnect", handleDisconnect);
+      disconnectChatSocket();
+      setSocket(null);
+    };
+  }, [token]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleIncomingMessage = (message: ChatMessage) => {
+      dispatch(
+        receiveIncomingMessage({
+          message,
+          currentUserId,
+        })
+      );
+
+      const conversationExists = conversations.some(
+        (conversation) => conversation.conversationId === message.conversationId
+      );
+
+      if (!conversationExists) {
+        void dispatch(fetchChatConversations());
+      }
+    };
+
+    socket.on("chat:new-message", handleIncomingMessage);
+
+    return () => {
+      socket.off("chat:new-message", handleIncomingMessage);
+    };
+  }, [socket, dispatch, currentUserId, conversations]);
 
   const handleOpenConversation = (conversationId: string) => {
     setSelectedConversationId(conversationId);
