@@ -12,6 +12,9 @@ import paymentReducer from "../features/payment/paymentSlice";
 import technicianReducer from "../features/technician/technicianSlice";
 import workProgressReducer from "../features/technician/workProgressSlice";
 import chatReducer from "../features/chat/chatSlice";
+import partsReducer from "../features/parts/partsSlice";
+import inventoryReducer from "../features/inventory/inventorySlice";
+import aiReducer from "../features/ai/aiSlice";
 
 const presistConfig = {
   key: "root",
@@ -39,6 +42,9 @@ const rootReducer = combineReducers({
   technician: technicianReducer,
   workProgress: workProgressReducer,
   chat: chatReducer,
+  parts: partsReducer,
+  inventory: inventoryReducer,
+  ai: aiReducer,
 });
 
 const persistedReducer = persistReducer(presistConfig, rootReducer);

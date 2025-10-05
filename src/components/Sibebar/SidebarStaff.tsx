@@ -15,6 +15,9 @@ import {
     type LucideIcon,
     Calendar,
     MessageSquare,
+    Package,
+    Boxes,
+    Sparkles,
 } from 'lucide-react';
 
 type MenuItem = {
@@ -36,6 +39,9 @@ const SidebarStaff = () => {
         { icon: ShieldCheck, label: 'Certificate', path: '/staff/certificate' },
         { icon: CalendarDays, label: 'Bookings', path: '/staff/booking' },
         { icon: DollarSign, label: 'Payments', path: '/staff/payment' },
+        { icon: Package, label: 'Parts', path: '/staff/parts' },
+        { icon: Boxes, label: 'Inventory', path: '/staff/inventory' },
+        { icon: Sparkles, label: 'AI Optimization', path: '/staff/ai' },
         { icon: Wrench, label: 'Technicians', path: '/staff/technicians' },
         { icon: MessageSquare, label: 'Chat', path: '/staff/chat' },
         { icon: Calendar, label: 'Schedules', path: '/staff/schedules' },

@@ -49,6 +49,9 @@ import StaffPaymentPage from "@/page/Staff/StaffPaymentPage";
 import TechnicianWorkProgressPage from "@/page/Technician/TechnicianWorkProgressPage";
 import SchedulePage from "@/page/Technician/SchedulePage";
 import ChatPage from "@/page/Chat/ChatPage";
+import StaffPartsPage from "@/page/Staff/StaffPartsPage";
+import StaffInventoryPage from "@/page/Staff/StaffInventoryPage";
+import StaffAiInventoryPage from "@/page/Staff/StaffAiInventoryPage";
 
 const AppRouter = () => {
     const { isAuthenticated, user, needVerification } = useSelector((state: RootState) => state.auth);
@@ -181,6 +184,9 @@ const AppRouter = () => {
                             <Route path="booking" element={<StaffBookingManagePage />} />
                             <Route path="payment" element={<StaffPaymentPage />} />
                             <Route path="certificate" element={<CertificatePage />} />
+                            <Route path="parts" element={<StaffPartsPage />} />
+                            <Route path="inventory" element={<StaffInventoryPage />} />
+                            <Route path="ai" element={<StaffAiInventoryPage />} />
                             <Route path="technicians" element={<StaffTechnicianPage />} />
                             <Route path="chat" element={<ChatPage />} />
                             <Route path="schedules" element={<StaffSchedulesTechnicianPage />} />

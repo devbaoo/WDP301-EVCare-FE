@@ -51,6 +51,7 @@ export const UPDATE_VEHICLE_ENDPOINT = (vehicleId: string) =>
   `${BASE_URL}/api/vehicles/${vehicleId}`;
 export const DELETE_VEHICLE_ENDPOINT = (vehicleId: string) =>
   `${BASE_URL}/api/vehicles/${vehicleId}`;
+export const VEHICLE_MODELS_ENDPOINT = `${BASE_URL}/api/vehicle-models`;
 
 // Service types endpoints
 export const POPULAR_SERVICE_TYPES_ENDPOINT = `${BASE_URL}/api/service-types/popular/list`;
@@ -187,6 +188,32 @@ export const PAYOS_PAYMENT_INFO_ENDPOINT = (orderCode: string) =>
   `${BASE_URL}/api/payment/${orderCode}`;
 export const PAYOS_CANCEL_ENDPOINT = (orderCode: string) =>
   `${BASE_URL}/api/payment/${orderCode}/cancel`;
+
+// Parts management endpoints
+export const PARTS_ENDPOINT = `${BASE_URL}/api/parts`;
+export const PART_DETAIL_ENDPOINT = (partId: string) =>
+  `${BASE_URL}/api/parts/${partId}`;
+export const PARTS_BY_CATEGORY_ENDPOINT = (category: string) =>
+  `${BASE_URL}/api/parts/category/${category}`;
+export const COMPATIBLE_PARTS_BY_MODEL_ENDPOINT = (vehicleModelId: string) =>
+  `${BASE_URL}/api/vehicle-models/${vehicleModelId}/compatible-parts`;
+
+// Inventory management endpoints
+export const INVENTORY_ENDPOINT = `${BASE_URL}/api/inventory`;
+export const INVENTORY_DETAIL_ENDPOINT = (inventoryId: string) =>
+  `${BASE_URL}/api/inventory/${inventoryId}`;
+export const INVENTORY_LOW_STOCK_ALERTS_ENDPOINT = `${BASE_URL}/api/inventory/alerts/low-stock`;
+export const INVENTORY_STATS_ENDPOINT = (centerId: string) =>
+  `${BASE_URL}/api/service-centers/${centerId}/inventory-stats`;
+export const INVENTORY_TRANSACTIONS_ENDPOINT = `${BASE_URL}/api/inventory/transactions`;
+
+// AI optimization endpoints
+export const AI_PREDICTIONS_ENDPOINT = `${BASE_URL}/api/ai/predictions`;
+export const AI_PREDICTION_DETAIL_ENDPOINT = (predictionId: string) =>
+  `${BASE_URL}/api/ai/predictions/${predictionId}`;
+export const AI_DEMAND_FORECAST_ENDPOINT = `${BASE_URL}/api/ai/demand-forecast`;
+export const AI_STOCK_OPTIMIZATION_ENDPOINT = `${BASE_URL}/api/ai/stock-optimization`;
+export const AI_APPLY_RECOMMENDATIONS_ENDPOINT = `${BASE_URL}/api/ai/apply-recommendations`;
 
 // Chat endpoints
 const CHAT_BASE_ENDPOINT = `${BASE_URL}/api/chat`;
