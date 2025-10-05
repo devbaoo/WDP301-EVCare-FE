@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Card, DatePicker, Button, Modal, Form, Input, Typography, message, Tag, Tooltip, Space, Calendar, Badge, Spin, ConfigProvider, Alert, Divider, Radio } from "antd";
+import { Card, DatePicker, Button, Modal, Form, Input, Typography, message, Tag, Tooltip, Space, Calendar, Badge, Spin, ConfigProvider, Alert, Divider, Radio, Select, InputNumber } from "antd";
 import type { BadgeProps, TagProps } from "antd";
 import viVN from "antd/locale/vi_VN";
 import type { Dayjs } from "dayjs";
@@ -16,6 +16,7 @@ import {
 } from "../../services/features/technician/workProgressSlice";
 import { TechnicianSchedule } from "@/interfaces/technician";
 import { WorkProgress } from "@/interfaces/workProgress";
+import { fetchParts, fetchPartsByCategory } from "../../services/features/parts/partsSlice";
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -49,6 +50,8 @@ export default function TechnicianWorkProgressPage() {
     const [completeForm] = Form.useForm();
     const [progressExistSet, setProgressExistSet] = useState<Set<string>>(new Set());
     const [dayModalSelectedAppt, setDayModalSelectedAppt] = useState<Record<string, string>>({});
+    const { parts: allParts, loading: partsLoading } = useAppSelector((s) => s.parts);
+    const [selectedPartCategory, setSelectedPartCategory] = useState<string | undefined>(undefined);
 
     const startDate = useMemo(() => currentMonth.startOf("month").format("YYYY-MM-DD"), [currentMonth]);
     const endDate = useMemo(() => currentMonth.endOf("month").format("YYYY-MM-DD"), [currentMonth]);
@@ -100,6 +103,46 @@ export default function TechnicianWorkProgressPage() {
         loadSchedules();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [technicianId, startDate, endDate]);
+
+    // Load parts list when opening quote modal (for items selection)
+    useEffect(() => {
+        if (quoteOpen && (!allParts || allParts.length === 0)) {
+            dispatch(fetchParts(undefined));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [quoteOpen]);
+
+    const categoryOptions = useMemo(() => {
+        const set = new Set<string>();
+        (allParts || []).forEach((p) => {
+            if (p?.category) set.add(p.category);
+        });
+        return Array.from(set).sort().map((c) => ({ label: c, value: c }));
+    }, [allParts]);
+
+    const handleSelectCategory = (category?: string) => {
+        setSelectedPartCategory(category);
+        if (!category) {
+            dispatch(fetchParts(undefined));
+        } else {
+            dispatch(fetchPartsByCategory(category));
+        }
+    };
+
+    const handleSelectPartForItem = (itemIndex: number, partId: string) => {
+        const part = (allParts || []).find((p) => p._id === partId);
+        const currentQuote = quoteForm.getFieldValue(["quoteDetails"]) || {} as { items?: Array<{ partId?: string; name?: string; unitPrice?: number; quantity?: number }> };
+        const items: Array<{ partId?: string; name?: string; unitPrice?: number; quantity?: number }> = Array.isArray(currentQuote.items) ? [...currentQuote.items] : [];
+        const existing = items[itemIndex] || {};
+        items[itemIndex] = {
+            ...existing,
+            partId,
+            name: existing.name ?? part?.partName ?? "",
+            unitPrice: part?.unitPrice ?? existing.unitPrice ?? 0,
+            quantity: existing.quantity ?? 1,
+        };
+        quoteForm.setFieldsValue({ quoteDetails: { ...currentQuote, items } });
+    };
 
     const ensureProgressChecked = async (appointmentId: string): Promise<boolean> => {
         try {
@@ -584,23 +627,93 @@ export default function TechnicianWorkProgressPage() {
                 onCancel={() => setQuoteOpen(false)}
                 onOk={submitInspectionQuote}
                 okText="Gửi báo giá"
+                width={860}
+                destroyOnClose
             >
-                <Form layout="vertical" form={quoteForm}>
-                    <Form.Item name="vehicleCondition" label="Tình trạng xe" rules={[{ required: true }]}>
+                <Form layout="vertical" form={quoteForm} size="small">
+                    <Form.Item name="vehicleCondition" label="Tình trạng xe" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
                         <Input placeholder="Ví dụ: Ắc quy yếu, đèn báo động cơ..." />
                     </Form.Item>
-                    <Form.Item name="diagnosisDetails" label="Chẩn đoán" rules={[{ required: true }]}>
+                    <Form.Item name="diagnosisDetails" label="Chẩn đoán" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
                         <Input placeholder="Chi tiết chẩn đoán" />
                     </Form.Item>
-                    <Form.Item name="inspectionNotes" label="Ghi chú kiểm tra">
+                    <Form.Item name="inspectionNotes" label="Ghi chú kiểm tra" style={{ marginBottom: 8 }}>
                         <Input placeholder="Ghi chú" />
                     </Form.Item>
-                    <Form.Item name="quoteAmount" label="Giá báo (VND)" rules={[{ required: true }]}>
+                    <Form.Item name="quoteAmount" label="Giá báo (VND)" rules={[{ required: true }]} style={{ marginBottom: 12 }}>
                         <Input type="number" placeholder="1500000" />
                     </Form.Item>
-                    <Form.Item name="quoteDetails" label="Chi tiết báo giá" rules={[{ required: true }]}>
-                        <Input.TextArea rows={3} placeholder="Chi phí bao gồm..." />
-                    </Form.Item>
+                    <Card size="small" className="mb-3">
+                        <div className="flex items-center justify-between">
+                            <Typography.Text strong>Hạng mục linh kiện</Typography.Text>
+                            <Space>
+                                <Typography.Text type="secondary">Danh mục:</Typography.Text>
+                                <Select
+                                    allowClear
+                                    placeholder="Tất cả"
+                                    options={categoryOptions}
+                                    loading={partsLoading}
+                                    value={selectedPartCategory}
+                                    style={{ minWidth: 200 }}
+                                    onChange={(v) => handleSelectCategory(v)}
+                                />
+                            </Space>
+                        </div>
+                        <Form.List name={["quoteDetails", "items"]}>
+                            {(fields, { add, remove }) => (
+                                <div className="space-y-2 mt-2 max-h-[320px] overflow-y-auto pr-1">
+                                    {fields.map((field) => (
+                                        <Card key={field.key} size="small">
+                                            <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
+                                                <div className="md:col-span-4">
+                                                    <Form.Item name={[field.name, "partId"]} label="Linh kiện" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
+                                                        <Select
+                                                            loading={partsLoading}
+                                                            showSearch
+                                                            optionFilterProp="label"
+                                                            placeholder="Chọn linh kiện"
+                                                            options={(allParts || []).map((p) => ({ label: `${p.partName} (${p.partNumber})`, value: p._id }))}
+                                                            onChange={(v) => handleSelectPartForItem(field.name, v)}
+                                                        />
+                                                    </Form.Item>
+                                                </div>
+                                                <div className="md:col-span-4">
+                                                    <Form.Item name={[field.name, "name"]} label="Tên hiển thị" style={{ marginBottom: 8 }}>
+                                                        <Input placeholder="Ví dụ: Dầu, Lọc dầu" />
+                                                    </Form.Item>
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <Form.Item name={[field.name, "quantity"]} label="Số lượng" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
+                                                        <InputNumber min={1} className="w-full" />
+                                                    </Form.Item>
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <Form.Item name={[field.name, "unitPrice"]} label="Đơn giá (VND)" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
+                                                        <InputNumber min={0} step={1000} className="w-full" />
+                                                    </Form.Item>
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-end">
+                                                <Button size="small" type="link" danger onClick={() => remove(field.name)}>Xóa mục</Button>
+                                            </div>
+                                        </Card>
+                                    ))}
+                                    <Button size="small" type="dashed" onClick={() => add({ quantity: 1, unitPrice: 0 })}>Thêm linh kiện</Button>
+                                </div>
+                            )}
+                        </Form.List>
+                    </Card>
+                    <Card size="small">
+                        <Typography.Text strong>Công lao động</Typography.Text>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                            <Form.Item name={["quoteDetails", "labor", "minutes"]} label="Số phút" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
+                                <InputNumber min={0} step={5} className="w-full" />
+                            </Form.Item>
+                            <Form.Item name={["quoteDetails", "labor", "rate"]} label="Đơn giá/phút (VND)" initialValue={0} rules={[{ required: true }]} style={{ marginBottom: 8 }}>
+                                <InputNumber min={0} step={1000} className="w-full" />
+                            </Form.Item>
+                        </div>
+                    </Card>
                 </Form>
             </Modal>
 

@@ -138,7 +138,18 @@ export interface InspectionQuotePayload {
   diagnosisDetails: string;
   inspectionNotes?: string;
   quoteAmount: number;
-  quoteDetails: string;
+  quoteDetails: {
+    items: Array<{
+      partId: string;
+      quantity: number;
+      unitPrice: number;
+      name?: string;
+    }>;
+    labor: {
+      minutes: number;
+      rate: number;
+    };
+  };
   customerResponseNotes?: string;
 }
 
