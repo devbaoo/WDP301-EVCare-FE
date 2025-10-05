@@ -16,6 +16,7 @@ import {
   Wrench,
   Package,
   Car,
+  MessageSquare,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -56,6 +57,7 @@ const Sidebar = () => {
     },
     { icon: Building2, label: 'Centers', path: '/admin/service-centers' },
     { icon: CalendarDays  , label: 'Bookings', path: '/admin/booking' },
+    { icon: MessageSquare, label: 'Chat', path: '/admin/chat' },
     { icon: Settings, label: 'Settings', path: '/admin/settings' },
   ];
 

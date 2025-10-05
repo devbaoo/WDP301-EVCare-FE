@@ -1,5 +1,5 @@
 import { Button, Dropdown } from "antd";
-import { UserOutlined, LogoutOutlined, CarOutlined, HistoryOutlined, CreditCardOutlined } from "@ant-design/icons";
+import { UserOutlined, LogoutOutlined, CarOutlined, HistoryOutlined, CreditCardOutlined, MessageOutlined } from "@ant-design/icons";
 import type { MenuProps } from 'antd';
 import { useAppSelector, useAppDispatch } from "../../services/store/store";
 import { logout } from "../../services/features/auth/authSlice";
@@ -32,12 +32,25 @@ export default function Header() {
     navigate("/customer/payments");
   };
 
+  const handleNavigateToChat = () => {
+    navigate("/customer/chat");
+  };
+
   const userMenuItems: MenuProps['items'] = [
     {
       key: 'profile',
       icon: <UserOutlined />,
       label: 'Profile',
       onClick: handleNavigateToProfile,
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'chat',
+      icon: <MessageOutlined />,
+      label: 'Trung tâm chat',
+      onClick: handleNavigateToChat,
     },
     {
       type: 'divider',

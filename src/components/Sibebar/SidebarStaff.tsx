@@ -14,6 +14,7 @@ import {
     CalendarDays,
     type LucideIcon,
     Calendar,
+    MessageSquare,
 } from 'lucide-react';
 
 type MenuItem = {
@@ -36,6 +37,7 @@ const SidebarStaff = () => {
         { icon: CalendarDays, label: 'Bookings', path: '/staff/booking' },
         { icon: DollarSign, label: 'Payments', path: '/staff/payment' },
         { icon: Wrench, label: 'Technicians', path: '/staff/technicians' },
+        { icon: MessageSquare, label: 'Chat', path: '/staff/chat' },
         { icon: Calendar, label: 'Schedules', path: '/staff/schedules' },
         { icon: Settings, label: 'Settings', path: '/staff/settings' },
     ];
