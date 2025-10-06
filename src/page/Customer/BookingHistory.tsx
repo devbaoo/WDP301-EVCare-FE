@@ -437,30 +437,29 @@ function BookingHistory() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [newDate, isRescheduleOpen]);
 
+    // Centralized status config for consistent, readable display
+    const STATUS_CONFIG: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
+        "pending_confirmation": { color: "orange", icon: <ClockCircleOutlined />, label: "Chờ xác nhận" },
+        "confirmed": { color: "blue", icon: <CheckCircleOutlined />, label: "Đã xác nhận" },
+        "in_progress": { color: "processing", icon: <ClockCircleOutlined />, label: "Đang thực hiện" },
+        "inspection_completed": { color: "purple", icon: <InfoCircleOutlined />, label: "Hoàn thành kiểm tra" },
+        "quote_provided": { color: "cyan", icon: <TagOutlined />, label: "Đã báo giá" },
+        "quote_approved": { color: "green", icon: <CheckCircleOutlined />, label: "Đã duyệt giá" },
+        "quote_rejected": { color: "red", icon: <CloseOutlined />, label: "Từ chối giá" },
+        "maintenance_in_progress": { color: "blue", icon: <ClockCircleOutlined />, label: "Đang bảo trì" },
+        "maintenance_completed": { color: "green", icon: <CheckCircleOutlined />, label: "Hoàn thành bảo trì" },
+        "payment_pending": { color: "orange", icon: <ClockCircleOutlined />, label: "Chờ thanh toán" },
+        "completed": { color: "success", icon: <CheckCircleOutlined />, label: "Hoàn thành" },
+        "cancelled": { color: "error", icon: <CloseOutlined />, label: "Đã hủy" },
+        "rescheduled": { color: "warning", icon: <EditOutlined />, label: "Đã đổi lịch" },
+        "no_show": { color: "default", icon: <ExclamationCircleOutlined />, label: "Không đến" },
+    };
+
     const getStatusTag = (status: string) => {
-        const statusConfig: Record<string, { color: string; icon: React.ReactNode }> = {
-            "pending_confirmation": { color: "orange", icon: <ClockCircleOutlined /> },
-            "confirmed": { color: "blue", icon: <CheckCircleOutlined /> },
-            "in_progress": { color: "processing", icon: <ClockCircleOutlined /> },
-            "inspection_completed": { color: "purple", icon: <InfoCircleOutlined /> },
-            "quote_provided": { color: "cyan", icon: <TagOutlined /> },
-            "quote_approved": { color: "green", icon: <CheckCircleOutlined /> },
-            "quote_rejected": { color: "red", icon: <CloseOutlined /> },
-            "maintenance_in_progress": { color: "blue", icon: <ClockCircleOutlined /> },
-            "maintenance_completed": { color: "green", icon: <CheckCircleOutlined /> },
-            "payment_pending": { color: "orange", icon: <ClockCircleOutlined /> },
-            "completed": { color: "success", icon: <CheckCircleOutlined /> },
-            "cancelled": { color: "error", icon: <CloseOutlined /> },
-            "rescheduled": { color: "warning", icon: <EditOutlined /> },
-            "no_show": { color: "default", icon: <ExclamationCircleOutlined /> },
-        };
-
-        const config = statusConfig[status] || { color: "default", icon: <InfoCircleOutlined /> };
-        const displayStatus = status.replace(/_/g, ' ').toUpperCase();
-
+        const cfg = STATUS_CONFIG[status] || { color: "default", icon: <InfoCircleOutlined />, label: status.replace(/_/g, ' ') };
         return (
-            <Tag color={config.color} icon={config.icon}>
-                {displayStatus}
+            <Tag color={cfg.color} icon={cfg.icon}>
+                {cfg.label}
             </Tag>
         );
     };
@@ -670,32 +669,31 @@ function BookingHistory() {
     };
 
     const getStatusColor = (status: string) => {
-        const statusColors: Record<string, string> = {
-            "pending": "#faad14",
-            "confirmed": "#1890ff",
-            "in progress": "#722ed1",
-            "inspection completed": "#13c2c2",
-            "quote provided": "#52c41a",
-            "quote approved": "#52c41a",
-            "quote rejected": "#ff4d4f",
-            "maintenance in progress": "#1890ff",
-            "maintenance completed": "#52c41a",
-            "payment pending": "#faad14",
-            "completed": "#52c41a",
-            "cancelled": "#ff4d4f",
-            "rescheduled": "#faad14",
-            "no show": "#8c8c8c"
+        // Accept inputs with or without underscore/space
+        const normalized = status.toLowerCase().replace(/ /g, '_');
+        const cfg = STATUS_CONFIG[normalized];
+        if (!cfg) return "#8c8c8c";
+        // Map Ant Tag color tokens to hex approximations for Statistic color
+        const colorMap: Record<string, string> = {
+            processing: "#1677ff",
+            orange: "#faad14",
+            blue: "#1890ff",
+            purple: "#722ed1",
+            cyan: "#13c2c2",
+            green: "#52c41a",
+            success: "#52c41a",
+            red: "#ff4d4f",
+            error: "#ff4d4f",
+            warning: "#faad14",
+            default: "#8c8c8c",
         };
-        return statusColors[status.toLowerCase()] || "#8c8c8c";
+        return colorMap[cfg.color] || cfg.color || "#8c8c8c";
     };
 
-    const getQuoteStatusColor = (status: string) => {
-        const quoteColors: Record<string, string> = {
-            "pending": "#faad14",
-            "approved": "#52c41a",
-            "rejected": "#ff4d4f"
-        };
-        return quoteColors[status.toLowerCase()] || "#8c8c8c";
+    const QUOTE_STATUS_CONFIG: Record<string, { color: string; label: string }> = {
+        pending: { color: "#faad14", label: "Đang chờ" },
+        approved: { color: "#52c41a", label: "Đã duyệt" },
+        rejected: { color: "#ff4d4f", label: "Từ chối" },
     };
 
 
@@ -1023,13 +1021,75 @@ function BookingHistory() {
                                         </Col>
                                         <Col xs={24} md={12}>
                                             <Text type="secondary" className="block text-xs">Trạng thái báo giá</Text>
-                                            <Tag color="blue">{(iq.quoteStatus || 'pending').replaceAll('_', ' ')}</Tag>
+                                            {(() => {
+                                                const qs = String(iq.quoteStatus || 'pending').toLowerCase();
+                                                const qc = QUOTE_STATUS_CONFIG[qs] || { color: '#8c8c8c', label: qs };
+                                                // Use Tag with inline color style to reflect hex color
+                                                return (
+                                                    <Tag style={{ borderColor: qc.color, color: qc.color }}>
+                                                        {qc.label}
+                                                    </Tag>
+                                                );
+                                            })()}
                                         </Col>
                                     </Row>
                                     <Divider />
                                     <div>
                                         <Text type="secondary" className="block text-xs mb-2">Chi tiết báo giá</Text>
-                                        <Text className="block">{iq.quoteDetails || '-'}</Text>
+                                        {(() => {
+                                            const qd: any = iq.quoteDetails;
+                                            if (!qd) {
+                                                return <Text className="block">-</Text>;
+                                            }
+                                            // If server returns a string, show directly
+                                            if (typeof qd === 'string') {
+                                                return <Text className="block">{qd}</Text>;
+                                            }
+                                            // Otherwise, assume object shape { items: [...], labor: { minutes, rate } }
+                                            const items = Array.isArray(qd.items) ? qd.items : [];
+                                            const labor = qd.labor || {};
+                                            const laborMinutes = Number(labor.minutes || 0);
+                                            const laborRate = Number(labor.rate || 0);
+                                            const laborCost = laborMinutes * laborRate;
+
+                                            return (
+                                                <div className="space-y-2">
+                                                    {items.length > 0 && (
+                                                        <div>
+                                                            <Text strong className="block">Linh kiện</Text>
+                                                            <ul className="list-disc list-inside space-y-1">
+                                                                {items.map((it: any, idx: number) => {
+                                                                    const qty = Number(it.quantity || 0);
+                                                                    const unit = Number(it.unitPrice || 0);
+                                                                    const lineTotal = qty * unit;
+                                                                    return (
+                                                                        <li key={`${it.partId || it.name || idx}-${idx}`}>
+                                                                            <Text>
+                                                                                {(it.name || it.partId || 'Linh kiện')} x{qty > 0 ? qty : 1} - {formatCurrency(unit)} mỗi cái
+                                                                                {lineTotal > 0 && (
+                                                                                    <span> (Tổng: {formatCurrency(lineTotal)})</span>
+                                                                                )}
+                                                                            </Text>
+                                                                        </li>
+                                                                    );
+                                                                })}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                    {(laborMinutes > 0 || laborRate > 0) && (
+                                                        <div>
+                                                            <Text strong className="block">Công thợ</Text>
+                                                            <Text>
+                                                                {laborMinutes} phút x {formatCurrency(laborRate)} = {formatCurrency(laborCost)}
+                                                            </Text>
+                                                        </div>
+                                                    )}
+                                                    {items.length === 0 && !(laborMinutes > 0 || laborRate > 0) && (
+                                                        <Text className="block">-</Text>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
                                 </Card>
                             );
@@ -1038,24 +1098,34 @@ function BookingHistory() {
                         <Row gutter={[16, 16]} className="mb-4">
                             <Col xs={24} md={12}>
                                 <Card size="small">
-                                    <Statistic
-                                        title="Trạng thái hiện tại"
-                                        value={((progressData as any)?.currentStatus || "").replaceAll("_", " ")}
-                                        valueStyle={{
-                                            color: getStatusColor(((progressData as any)?.currentStatus || "").replaceAll("_", " "))
-                                        }}
-                                    />
+                                    <Text type="secondary" className="block text-xs mb-1">Trạng thái hiện tại</Text>
+                                    {(() => {
+                                        const st = String(((progressData as any)?.currentStatus || '')).toLowerCase();
+                                        const cfg = STATUS_CONFIG[st] || { color: 'default', icon: <InfoCircleOutlined />, label: st.split('_').join(' ') };
+                                        // Compute hex from the status key, not the localized label, to avoid default gray
+                                        const hex = getStatusColor(st.split('_').join(' '));
+                                        return (
+                                            <Tag icon={cfg.icon} style={{ borderColor: hex, color: hex }}>
+                                                {cfg.label}
+                                            </Tag>
+                                        );
+                                    })()}
                                 </Card>
+
+
                             </Col>
                             <Col xs={24} md={12}>
                                 <Card size="small">
-                                    <Statistic
-                                        title="Trạng thái báo giá"
-                                        value={(progressData as any)?.appointmentId?.inspectionAndQuote?.quoteStatus || (progressData as any)?.quote?.quoteStatus || "pending"}
-                                        valueStyle={{
-                                            color: getQuoteStatusColor((progressData as any)?.appointmentId?.inspectionAndQuote?.quoteStatus || (progressData as any)?.quote?.quoteStatus || "pending")
-                                        }}
-                                    />
+                                    <Text type="secondary" className="block text-xs mb-1">Trạng thái báo giá</Text>
+                                    {(() => {
+                                        const qs = String((progressData as any)?.appointmentId?.inspectionAndQuote?.quoteStatus || (progressData as any)?.quote?.quoteStatus || 'pending').toLowerCase();
+                                        const qc = QUOTE_STATUS_CONFIG[qs] || { color: '#8c8c8c', label: qs };
+                                        return (
+                                            <Tag style={{ borderColor: qc.color, color: qc.color }}>
+                                                {qc.label}
+                                            </Tag>
+                                        );
+                                    })()}
                                 </Card>
                             </Col>
                         </Row>
@@ -1065,7 +1135,11 @@ function BookingHistory() {
                                 <ul className="list-disc list-inside space-y-2">
                                     {progressData.milestones.map((m: Record<string, any>) => (
                                         <li key={m._id || m.name}>
-                                            <Text strong>{m.name}:</Text> {m.description} {m.status && <Tag>{m.status}</Tag>}
+                                            <Text strong>{m.name}:</Text> {m.description} {m.status && (
+                                                <Tag color={String(m.status).toLowerCase() === 'completed' ? 'green' : 'default'}>
+                                                    {String(m.status).toLowerCase() === 'completed' ? 'hoàn thành' : 'pending'}
+                                                </Tag>
+                                            )}
                                         </li>
                                     ))}
                                 </ul>
