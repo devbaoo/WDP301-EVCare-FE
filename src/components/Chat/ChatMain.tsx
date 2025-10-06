@@ -114,15 +114,14 @@ const ChatMain = () => {
   };
 
   return (
-    <div className="grid h-[700px] grid-cols-1 gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+    <div className="grid h-full grid-cols-1 gap-6 lg:grid-cols-[450px_minmax(0,1fr)]">
       <div className="flex h-full flex-col gap-4">
         <div className="flex rounded-full bg-gray-100 p-1">
           <button
-            className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${
-              activeTab === "conversations"
-                ? "bg-white text-blue-600 shadow"
-                : "text-gray-600 hover:text-blue-600"
-            }`}
+            className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${activeTab === "conversations"
+              ? "bg-white text-blue-600 shadow"
+              : "text-gray-600 hover:text-blue-600"
+              }`}
             onClick={() => setActiveTab("conversations")}
           >
             Cuộc trò chuyện
@@ -133,18 +132,17 @@ const ChatMain = () => {
             )}
           </button>
           <button
-            className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${
-              activeTab === "bookings"
-                ? "bg-white text-blue-600 shadow"
-                : "text-gray-600 hover:text-blue-600"
-            }`}
+            className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${activeTab === "bookings"
+              ? "bg-white text-blue-600 shadow"
+              : "text-gray-600 hover:text-blue-600"
+              }`}
             onClick={() => setActiveTab("bookings")}
           >
             Lịch hẹn
           </button>
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 min-h-0">
           {activeTab === "conversations" ? (
             <ChatList
               onSelectConversation={setSelectedConversationId}

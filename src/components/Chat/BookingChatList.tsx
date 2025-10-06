@@ -1,10 +1,12 @@
-import { useEffect } from "react";
-import { Spin, Empty, message, Tooltip } from "antd";
+import { useEffect, useMemo } from "react";
+import { Spin, Empty, message, Tooltip, Pagination, Select } from "antd";
 import { useAppDispatch, useAppSelector } from "@/services/store/store";
 import {
   fetchChatBookings,
   fetchChatConversations,
   startConversation,
+  setBookingsPage,
+  setBookingsItemsPerPage,
 } from "@/services/features/chat/chatSlice";
 
 interface BookingChatListProps {
@@ -13,13 +15,33 @@ interface BookingChatListProps {
 
 const BookingChatList = ({ onOpenConversation }: BookingChatListProps) => {
   const dispatch = useAppDispatch();
-  const { bookings, bookingsLoading } = useAppSelector((state) => state.chat);
+  const {
+    bookings,
+    bookingsLoading,
+    bookingsPagination
+  } = useAppSelector((state) => state.chat);
 
   useEffect(() => {
     if (!bookings.length) {
       void dispatch(fetchChatBookings());
     }
   }, [bookings.length, dispatch]);
+
+  // Calculate paginated bookings
+  const paginatedBookings = useMemo(() => {
+    const { currentPage, itemsPerPage } = bookingsPagination;
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return bookings.slice(startIndex, endIndex);
+  }, [bookings, bookingsPagination]);
+
+  const handlePageChange = (page: number) => {
+    dispatch(setBookingsPage(page));
+  };
+
+  const handleItemsPerPageChange = (itemsPerPage: number) => {
+    dispatch(setBookingsItemsPerPage(itemsPerPage));
+  };
 
   const handleStartChat = async (bookingId: string, conversationId?: string | null) => {
     try {
@@ -74,45 +96,79 @@ const BookingChatList = ({ onOpenConversation }: BookingChatListProps) => {
 
   return (
     <div className="flex h-full flex-col divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="bg-gray-50 px-4 py-3">
-        <h3 className="text-base font-semibold text-gray-800">
+      <div className="bg-gray-50 px-6 py-4 flex-shrink-0">
+        <h3 className="text-lg font-semibold text-gray-800">
           Lịch hẹn
         </h3>
       </div>
-      <div className="flex-1 overflow-y-auto">
-        {bookings.map((booking) => (
-          <div key={booking.bookingId} className="flex flex-col gap-3 px-4 py-3">
-            <div className="flex items-center justify-between text-sm text-gray-600">
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {paginatedBookings.map((booking) => (
+          <div key={booking.bookingId} className="flex flex-col gap-4 px-6 py-4">
+            <div className="flex items-center justify-between text-base text-gray-600">
               <span className="font-semibold text-gray-800">
                 {new Date(booking.appointmentDate).toLocaleDateString("vi-VN")}
               </span>
               <span>{booking.appointmentStartTime}</span>
             </div>
-            <div className="text-sm font-medium text-gray-700">
+            <div className="text-base font-medium text-gray-700">
               {booking.serviceType?.name ?? "Dịch vụ"}
             </div>
             <Tooltip title={booking.vehicle?.licensePlate ?? ""}>
-              <div className="text-sm text-gray-500">
+              <div className="text-base text-gray-500">
                 {booking.vehicle?.brand} {booking.vehicle?.model}
               </div>
             </Tooltip>
-            <div className="text-xs uppercase tracking-wide text-gray-400">
+            <div className="text-sm uppercase tracking-wide text-gray-400">
               Trạng thái: {booking.status}
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-base text-gray-600">
               Có thể chat với: {booking.otherParticipants.map((p) => p.name).join(", ")}
             </div>
             <button
               onClick={() =>
                 handleStartChat(booking.bookingId, booking.conversationId ?? undefined)
               }
-              className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
+              className="rounded-full bg-emerald-500 px-6 py-3 text-base font-semibold text-white transition hover:bg-emerald-600"
             >
               {booking.hasConversation ? "Tiếp tục chat" : "Bắt đầu chat"}
             </button>
           </div>
         ))}
       </div>
+
+      {/* Pagination Controls */}
+      {bookingsPagination.totalPages > 1 && (
+        <div className="border-t border-gray-200 bg-gray-50 px-6 py-4 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span>Hiển thị:</span>
+              <Select
+                value={bookingsPagination.itemsPerPage}
+                onChange={handleItemsPerPageChange}
+                size="small"
+                className="w-20"
+                options={[
+                  { value: 3, label: "3" },
+                  { value: 5, label: "5" },
+                  { value: 10, label: "10" },
+                  { value: 20, label: "20" },
+                  { value: 50, label: "50" },
+                ]}
+              />
+              <span>trên {bookingsPagination.totalItems} lịch hẹn</span>
+            </div>
+            <Pagination
+              current={bookingsPagination.currentPage}
+              total={bookingsPagination.totalItems}
+              pageSize={bookingsPagination.itemsPerPage}
+              onChange={handlePageChange}
+              showSizeChanger={false}
+              showQuickJumper
+              size="small"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

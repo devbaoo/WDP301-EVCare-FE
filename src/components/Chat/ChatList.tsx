@@ -74,12 +74,12 @@ const ChatList = ({ onSelectConversation, activeConversationId }: ChatListProps)
 
   return (
     <div className="flex h-full flex-col divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="bg-gray-50 px-4 py-3">
+      <div className="bg-gray-50 px-4 py-3 flex-shrink-0">
         <h3 className="text-base font-semibold text-gray-800">
           Cuộc trò chuyện
         </h3>
       </div>
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto min-h-0">
         {sortedConversations.map((conversation) => {
           const isActive =
             conversation.conversationId === activeConversationId;
@@ -87,11 +87,10 @@ const ChatList = ({ onSelectConversation, activeConversationId }: ChatListProps)
             <button
               key={conversation.conversationId}
               onClick={() => onSelectConversation(conversation.conversationId)}
-              className={`flex w-full flex-col gap-2 px-4 py-3 text-left transition-colors ${
-                isActive
-                  ? "bg-blue-50"
-                  : "hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
-              }`}
+              className={`flex w-full flex-col gap-2 px-4 py-3 text-left transition-colors ${isActive
+                ? "bg-blue-50"
+                : "hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+                }`}
             >
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <span className="font-medium text-gray-700">
