@@ -56,7 +56,13 @@ const initialState: ChatState = {
   unreadCount: 0,
   error: null,
   activeConversationId: null,
-
+  // Frontend pagination for bookings
+  bookingsPagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 2,
+  },
 };
 
 const getErrorMessage = (error: unknown): string => {
@@ -66,9 +72,7 @@ const getErrorMessage = (error: unknown): string => {
     response?: { data?: { message?: string } };
     message?: string;
   };
-  return (
-    err.response?.data?.message || err.message || fallback
-  );
+  return err.response?.data?.message || err.message || fallback;
 };
 
 export const fetchChatBookings = createAsyncThunk<
@@ -152,16 +156,19 @@ export const markConversationAsRead = createAsyncThunk<
   { conversationId: string },
   string,
   { rejectValue: string }
->("chat/markConversationAsRead", async (conversationId, { rejectWithValue }) => {
-  try {
-    await axiosInstance.put(
-      CHAT_CONVERSATION_MARK_READ_ENDPOINT(conversationId)
-    );
-    return { conversationId };
-  } catch (error: unknown) {
-    return rejectWithValue(getErrorMessage(error));
+>(
+  "chat/markConversationAsRead",
+  async (conversationId, { rejectWithValue }) => {
+    try {
+      await axiosInstance.put(
+        CHAT_CONVERSATION_MARK_READ_ENDPOINT(conversationId)
+      );
+      return { conversationId };
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error));
+    }
   }
-});
+);
 
 export const fetchUnreadCount = createAsyncThunk<
   number,
@@ -216,8 +223,12 @@ const chatSlice = createSlice({
       action: PayloadAction<{ conversationId: string; message: ChatMessage }>
     ) {
       const { conversationId, message } = action.payload;
-      const currentMessages = state.messagesByConversation[conversationId] ?? [];
-      state.messagesByConversation[conversationId] = [...currentMessages, message];
+      const currentMessages =
+        state.messagesByConversation[conversationId] ?? [];
+      state.messagesByConversation[conversationId] = [
+        ...currentMessages,
+        message,
+      ];
     },
     setChatError(state, action: PayloadAction<string | null>) {
       state.error = action.payload;
@@ -233,7 +244,10 @@ const chatSlice = createSlice({
     },
     receiveIncomingMessage(
       state,
-      action: PayloadAction<{ message: ChatMessage; currentUserId?: string | null }>
+      action: PayloadAction<{
+        message: ChatMessage;
+        currentUserId?: string | null;
+      }>
     ) {
       const { message, currentUserId } = action.payload;
       if (!message?.conversationId || !message._id) {
@@ -241,7 +255,8 @@ const chatSlice = createSlice({
       }
 
       const conversationId = message.conversationId;
-      const existingMessages = state.messagesByConversation[conversationId] ?? [];
+      const existingMessages =
+        state.messagesByConversation[conversationId] ?? [];
       const messageAlreadyExists = existingMessages.some(
         (item) => item._id === message._id
       );
@@ -259,7 +274,8 @@ const chatSlice = createSlice({
 
       const isSentByCurrentUser =
         message.senderId?._id && message.senderId._id === currentUserId;
-      const isActiveConversation = state.activeConversationId === conversationId;
+      const isActiveConversation =
+        state.activeConversationId === conversationId;
 
       if (conversationIndex >= 0) {
         const conversation = state.conversations[conversationIndex];
@@ -276,7 +292,10 @@ const chatSlice = createSlice({
         if (!isSentByCurrentUser) {
           if (isActiveConversation) {
             if (previousUnread > 0) {
-              state.unreadCount = Math.max(0, state.unreadCount - previousUnread);
+              state.unreadCount = Math.max(
+                0,
+                state.unreadCount - previousUnread
+              );
             }
             conversation.unreadCount = 0;
           } else {
@@ -286,7 +305,14 @@ const chatSlice = createSlice({
         }
       }
     },
-
+    // Frontend pagination for bookings
+    setBookingsPage(state, action: PayloadAction<number>) {
+      state.bookingsPagination.currentPage = action.payload;
+    },
+    setBookingsItemsPerPage(state, action: PayloadAction<number>) {
+      state.bookingsPagination.itemsPerPage = action.payload;
+      state.bookingsPagination.currentPage = 1; // Reset to first page
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -298,6 +324,15 @@ const chatSlice = createSlice({
       .addCase(fetchChatBookings.fulfilled, (state, action) => {
         state.bookingsLoading = false;
         state.bookings = action.payload;
+        // Update pagination info
+        const totalItems = action.payload.length;
+        const itemsPerPage = state.bookingsPagination.itemsPerPage;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        state.bookingsPagination = {
+          ...state.bookingsPagination,
+          totalItems,
+          totalPages,
+        };
       })
       .addCase(fetchChatBookings.rejected, (state, action) => {
         state.bookingsLoading = false;
@@ -310,8 +345,9 @@ const chatSlice = createSlice({
       })
       .addCase(fetchChatConversations.fulfilled, (state, action) => {
         state.conversationsLoading = false;
-        state.conversations = [...action.payload].sort((a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        state.conversations = [...action.payload].sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         );
         state.unreadCount = state.conversations.reduce(
           (total, item) => total + (item.unreadCount ?? 0),
@@ -330,12 +366,14 @@ const chatSlice = createSlice({
       .addCase(fetchConversationMessages.fulfilled, (state, action) => {
         state.messagesLoading = false;
         const { conversationId, data, append } = action.payload;
-        const existingMessages = state.messagesByConversation[conversationId] ?? [];
+        const existingMessages =
+          state.messagesByConversation[conversationId] ?? [];
         state.messagesByConversation[conversationId] = append
           ? [...data.messages, ...existingMessages]
           : data.messages;
         state.participantsByConversation[conversationId] = data.participants;
-        state.paginationByConversation[conversationId] = data.pagination ?? null;
+        state.paginationByConversation[conversationId] =
+          data.pagination ?? null;
       })
       .addCase(fetchConversationMessages.rejected, (state, action) => {
         state.messagesLoading = false;
@@ -347,7 +385,7 @@ const chatSlice = createSlice({
         if (!payload) return;
 
         const existingIndex = state.conversations.findIndex(
-        (conversation) =>
+          (conversation) =>
             conversation.conversationId === payload.conversationId
         );
 
@@ -422,7 +460,8 @@ const chatSlice = createSlice({
         const message = action.payload;
         if (!message) return;
         const conversationId = message.conversationId;
-        const existingMessages = state.messagesByConversation[conversationId] ?? [];
+        const existingMessages =
+          state.messagesByConversation[conversationId] ?? [];
         state.messagesByConversation[conversationId] = [
           ...existingMessages,
           message,
@@ -454,7 +493,8 @@ export const {
   clearConversation,
   setActiveConversationId,
   receiveIncomingMessage,
+  setBookingsPage,
+  setBookingsItemsPerPage,
 } = chatSlice.actions;
-
 
 export default chatSlice.reducer;

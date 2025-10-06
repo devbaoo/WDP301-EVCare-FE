@@ -112,5 +112,11 @@ export interface ChatState {
   unreadCount: number;
   error: string | null;
   activeConversationId: string | null;
-
+  // Frontend pagination for bookings
+  bookingsPagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+  };
 }
