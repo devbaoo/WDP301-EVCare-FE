@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ServiceCenter, ServiceCenterCreatePayload, ServiceCenterUpdatePayload } from "@/interfaces/serviceCenter";
 import ServiceCenterForm from "@/components/Admin/ServiceCenterForm";
+import { useServiceCenterRatings } from "@/hooks/useServiceCenterRatings";
 
 const { Option } = Select;
 
@@ -25,6 +26,9 @@ export default function ServiceCentersPages() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingCenter, setEditingCenter] = useState<ServiceCenter | null>(null);
+
+  // Use the ratings hook
+  const { getEnhancedServiceCenters, loading: ratingsLoading } = useServiceCenterRatings(serviceCenters);
 
   const refreshCenters = () => {
     dispatch(fetchServiceCenters({ page: 1, limit: 1000 } as any));
@@ -54,8 +58,11 @@ export default function ServiceCentersPages() {
     setStatusFilter(value);
   };
 
+  // Get enhanced service centers with ratings
+  const enhancedServiceCenters = getEnhancedServiceCenters();
+
   // Filter service centers by status and search term
-  const filteredServiceCenters = serviceCenters.filter(center => {
+  const filteredServiceCenters = enhancedServiceCenters.filter(center => {
     // Filter by status
     const statusMatch = statusFilter === "all" || center.status === statusFilter;
 
@@ -264,7 +271,7 @@ export default function ServiceCentersPages() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatePresence mode="wait">
-            {loading ? (
+            {loading || ratingsLoading ? (
               <motion.div
                 key="loading"
                 initial={{ opacity: 0 }}

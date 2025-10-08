@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Table, Typography, Input, Select, Space, Tag, Spin, message, Popover, Tooltip, Button, DatePicker } from "antd";
+import { Table, Typography, Input, Select, Space, Tag, Spin, message, Popover, Tooltip, Button, DatePicker, Pagination } from "antd";
 import { EllipsisOutlined } from "@ant-design/icons";
 import { fetchAllUsers, AppUser } from "@/services/features/admin/userService";
 import { useAppDispatch, useAppSelector } from "@/services/store/store";
@@ -14,6 +14,12 @@ const AllUserPage: React.FC = () => {
     const dispatch = useAppDispatch();
     const { serviceCenters } = useAppSelector((state) => state.serviceCenter);
     const [users, setUsers] = useState<AppUser[]>([]);
+    const [pagination, setPagination] = useState({
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        itemsPerPage: 10
+    });
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>("");
     const [keyword, setKeyword] = useState<string>("");
@@ -23,13 +29,56 @@ const AllUserPage: React.FC = () => {
     const [selectedPositionByUser, setSelectedPositionByUser] = useState<Record<string, string>>({});
     const [selectedStartByUser, setSelectedStartByUser] = useState<Record<string, string>>({});
     const [selectedEndByUser, setSelectedEndByUser] = useState<Record<string, string>>({});
-    const [createdSort, setCreatedSort] = useState<string>("none");
+    const [createdSort, setCreatedSort] = useState<string>("createdAt:desc");
+    const [pageSize, setPageSize] = useState(10);
+    const [allRoles, setAllRoles] = useState<string[]>([]);
 
-    const loadUsers = async () => {
+    const loadUsers = async (page: number = 1, limit: number = 10, search?: string, role?: string, sort?: string) => {
         try {
             setLoading(true);
-            const data = await fetchAllUsers();
-            setUsers(Array.isArray(data) ? data : []);
+            
+            // Load all users first for proper sorting across all pages
+            const allUsersData = await fetchAllUsers({ 
+                page: 1, 
+                limit: 10000, // Load a large number to get all users
+                search: search || undefined, 
+                role: role !== "all" ? role : undefined,
+                sort: sort
+            });
+            
+            // Load all roles separately (without any filters) to get complete role list
+            if (allRoles.length === 0) {
+                const allRolesData = await fetchAllUsers({ 
+                    page: 1, 
+                    limit: 10000,
+                    search: undefined,
+                    role: undefined,
+                    sort: undefined
+                });
+                const uniqueRoles = Array.from(new Set(allRolesData.data.users.map(u => u.role).filter(Boolean)));
+                setAllRoles(uniqueRoles);
+            }
+            
+            // Sort all users if needed
+            let allUsers = allUsersData.data.users;
+            if (sort === 'createdAt:asc') {
+                allUsers = [...allUsersData.data.users].sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+            } else if (sort === 'createdAt:desc') {
+                allUsers = [...allUsersData.data.users].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+            }
+            
+            // Paginate the sorted results
+            const startIndex = (page - 1) * limit;
+            const endIndex = startIndex + limit;
+            const paginatedUsers = allUsers.slice(startIndex, endIndex);
+            
+            setUsers(paginatedUsers);
+            setPagination({
+                currentPage: page,
+                totalPages: Math.ceil(allUsers.length / limit),
+                totalItems: allUsers.length,
+                itemsPerPage: limit
+            });
             setError("");
         } catch (e: any) {
             const msg = e?.message || "Không thể tải danh sách người dùng";
@@ -41,37 +90,34 @@ const AllUserPage: React.FC = () => {
     };
 
     useEffect(() => {
-        loadUsers();
+        loadUsers(1, pageSize);
         dispatch(fetchServiceCenters({ page: 1, limit: 1000 } as any));
     }, [dispatch]);
 
     const roleOptions = useMemo(() => {
-        const roles = Array.from(new Set((users || []).map(u => u.role).filter(Boolean)));
-        return ["all", ...roles];
-    }, [users]);
+        return ["all", ...allRoles];
+    }, [allRoles]);
 
-    const filteredUsers = useMemo(() => {
-        const k = keyword.trim().toLowerCase();
-        const base = (users || [])
-            .filter(u => roleFilter === "all" || u.role === roleFilter)
-            .filter(u => {
-                if (!k) return true;
-                return (
-                    (u.fullName || "").toLowerCase().includes(k) ||
-                    (u.username || "").toLowerCase().includes(k) ||
-                    (u.email || "").toLowerCase().includes(k) ||
-                    (u.phone || "").toLowerCase().includes(k) ||
-                    (u.address || "").toLowerCase().includes(k)
-                );
-            });
-        if (createdSort === 'none' || createdSort === 'createdAt-desc') {
-            return [...base].sort((a: any, b: any) => new Date(b?.createdAt || 0).getTime() - new Date(a?.createdAt || 0).getTime());
-        }
-        if (createdSort === 'createdAt-asc') {
-            return [...base].sort((a: any, b: any) => new Date(a?.createdAt || 0).getTime() - new Date(b?.createdAt || 0).getTime());
-        }
-        return base;
-    }, [users, keyword, roleFilter, createdSort]);
+    const handlePageChange = (page: number, size?: number) => {
+        const newPageSize = size || pageSize;
+        if (size) setPageSize(newPageSize);
+        loadUsers(page, newPageSize, keyword, roleFilter, createdSort);
+    };
+
+    const handleSearch = (value: string) => {
+        setKeyword(value);
+        loadUsers(1, pageSize, value, roleFilter, createdSort);
+    };
+
+    const handleRoleFilter = (value: string) => {
+        setRoleFilter(value);
+        loadUsers(1, pageSize, keyword, value, createdSort);
+    };
+
+    const handleSort = (value: string) => {
+        setCreatedSort(value);
+        loadUsers(1, pageSize, keyword, roleFilter, value);
+    };
 
     const columns = [
         { title: "Họ và tên", dataIndex: "fullName", key: "fullName", render: (v: string) => v || "—" },
@@ -205,15 +251,21 @@ const AllUserPage: React.FC = () => {
                 
 
             <Space style={{ marginBottom: 16 }}>
-                <Input placeholder="Tìm theo tên, username, email, sđt, địa chỉ" allowClear value={keyword} onChange={(e) => setKeyword(e.target.value)} style={{ width: 360 }} />
-                <Select value={roleFilter} onChange={setRoleFilter} style={{ minWidth: 180 }}>
+                <Input 
+                    placeholder="Tìm theo tên, username, email, sđt, địa chỉ" 
+                    allowClear 
+                    value={keyword} 
+                    onChange={(e) => handleSearch(e.target.value)} 
+                    style={{ width: 360 }} 
+                />
+                <Select value={roleFilter} onChange={handleRoleFilter} style={{ minWidth: 180 }}>
                     {roleOptions.map((r) => (
                         <Option key={r} value={r}>{r === 'all' ? 'Tất cả vai trò' : r}</Option>
                     ))}
                 </Select>
-                <Select value={createdSort} onChange={setCreatedSort} style={{ minWidth: 240 }}>
-                    <Option value="none">Ngày tạo: Mới nhất</Option>
-                    <Option value="createdAt-asc">Ngày tạo: Cũ nhất</Option>
+                <Select value={createdSort} onChange={handleSort} style={{ minWidth: 240 }}>
+                    <Option value="createdAt:desc">Ngày tạo: Mới nhất</Option>
+                    <Option value="createdAt:asc">Ngày tạo: Cũ nhất</Option>
                 </Select>
             </Space>
 
@@ -221,7 +273,28 @@ const AllUserPage: React.FC = () => {
                 <Typography.Text type="danger">{error}</Typography.Text>
             ) : (
                 <Spin spinning={loading}>
-                    <Table rowKey="_id" columns={columns as any} dataSource={filteredUsers as any} pagination={{ pageSize: 10, showSizeChanger: true }} />
+                    <Table 
+                        rowKey="_id" 
+                        columns={columns as any} 
+                        dataSource={users as any} 
+                        pagination={false}
+                    />
+                    {/* Custom Pagination */}
+                    {pagination.totalItems > pageSize && (
+                        <div className="flex justify-end mt-4 ">
+                            <Pagination
+                                current={pagination.currentPage}
+                                total={pagination.totalItems}
+                                pageSize={pageSize}
+                                onChange={handlePageChange}
+                                showSizeChanger={true}
+                                showTotal={(total, range) =>
+                                    `${range[0]}-${range[1]} of ${total} users`
+                                }
+                                className="pagination-custom"
+                            />
+                        </div>
+                    )}
                 </Spin>
             )}
         </div>

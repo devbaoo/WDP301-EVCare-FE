@@ -41,6 +41,9 @@ export const SERVICE_CENTER_UPDATE_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/service-centers/${id}`;
 export const SERVICE_CENTER_DELETE_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/service-centers/${id}`;
+// get rating by service center id
+export const GET_RATING_BY_SERVICE_CENTER_ID_ENDPOINT = (centerId: string) =>
+  `${BASE_URL}/api/service-centers/${centerId}/ratings`;
 
 // Vehicle endpoints
 export const VEHICLES_ENDPOINT = `${BASE_URL}/api/vehicles`;

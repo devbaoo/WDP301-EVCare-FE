@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { SearchOutlined, FilterOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useServiceCenterRatings } from "@/hooks/useServiceCenterRatings";
 
 const { Option } = Select;
 
@@ -18,6 +19,9 @@ export default function ServiceCentersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(8);
+
+  // Use the ratings hook
+  const { getEnhancedServiceCenters, loading: ratingsLoading } = useServiceCenterRatings(serviceCenters);
 
   useEffect(() => {
     // Load all service centers for local filtering and pagination
@@ -43,8 +47,11 @@ export default function ServiceCentersPage() {
     setStatusFilter(value);
   };
 
+  // Get enhanced service centers with ratings
+  const enhancedServiceCenters = getEnhancedServiceCenters();
+
   // Filter service centers by status and search term
-  const filteredServiceCenters = serviceCenters.filter(center => {
+  const filteredServiceCenters = enhancedServiceCenters.filter(center => {
     // Filter by status
     const statusMatch = statusFilter === "all" || center.status === statusFilter;
 
@@ -174,7 +181,7 @@ export default function ServiceCentersPage() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatePresence mode="wait">
-            {loading ? (
+            {loading || ratingsLoading ? (
               <motion.div
                 key="loading"
                 initial={{ opacity: 0 }}
