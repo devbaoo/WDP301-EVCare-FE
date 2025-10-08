@@ -92,6 +92,12 @@ function ManageVehiclesCustomer() {
         if (!v.year) errors.year = 'Bắt buộc';
         const y = Number(v.year);
         if (v.year && (y < 1970 || y > new Date().getFullYear() + 1)) errors.year = 'Năm không hợp lệ';
+        // License plate format: 1-2 digits + 1 letter + '-' + 4-5 digits (e.g., 30A-12345 or 9B-1234)
+        const plate = String(v.licensePlate || '').trim().toUpperCase();
+        const plateOk = /^\d{1,2}[A-Z]-\d{4,5}$/.test(plate);
+        if (v.licensePlate && !plateOk) {
+            errors.licensePlate = 'Biển số phải có định dạng: (VD: 30A-12345 hoặc 9B-1234)';
+        }
         setFieldErrors(errors);
         if (Object.keys(errors).length > 0) return 'Vui lòng điền đầy đủ thông tin.';
         return null;
@@ -106,7 +112,15 @@ function ManageVehiclesCustomer() {
         }
         setFormError(null);
         setSuccessMsg(null);
-        const action = await dispatch(createVehicle(form));
+        // normalize plate to uppercase/no surrounding spaces to match booking format
+        const normalizedForm: CreateVehicleData = {
+            ...form,
+            vehicleInfo: {
+                ...form.vehicleInfo,
+                licensePlate: String(form.vehicleInfo.licensePlate || '').trim().toUpperCase(),
+            },
+        };
+        const action = await dispatch(createVehicle(normalizedForm));
         if ((action as any).error) {
             const msg = (action as any).payload || 'Không thể thêm xe.';
             setFormError(msg);
@@ -159,6 +173,13 @@ function ManageVehiclesCustomer() {
             errors.year = 'Năm không hợp lệ';
         }
 
+        // validate plate format same as booking: 1-2 digits + letter + '-' + 4-5 digits
+        const plate = String(editPlate || '').trim().toUpperCase();
+        const plateOk = /^\d{1,2}[A-Z]-\d{4,5}$/.test(plate);
+        if (editPlate && !plateOk) {
+            errors.licensePlate = 'Biển số phải có định dạng: (VD: 30A-12345 hoặc 9B-1234)';
+        }
+
         if (Object.keys(errors).length > 0) {
             setEditFieldErrors(errors);
             return;
@@ -167,7 +188,7 @@ function ManageVehiclesCustomer() {
         setEditSaving(true);
         const payload = {
             vehicleInfo: {
-                licensePlate: editPlate,
+                licensePlate: plate,
                 color: editColor,
                 year: editYear,
             },
@@ -359,7 +380,7 @@ function ManageVehiclesCustomer() {
                                     <input
                                         type="text"
                                         className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${fieldErrors.licensePlate ? 'border-red-400' : 'border-gray-300'}`}
-                                        placeholder="VD: 30G-123.45"
+                                        placeholder="30A-12345"
                                         value={form.vehicleInfo.licensePlate}
                                         onChange={(e) => handleChange('licensePlate', e.target.value)}
                                     />
@@ -479,7 +500,7 @@ function ManageVehiclesCustomer() {
                                     <input
                                         value={editPlate}
                                         onChange={(e) => setEditPlate(e.target.value)}
-                                        placeholder="VD: 30G-123.45"
+                                        placeholder="30A-12345"
                                         className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${editFieldErrors.licensePlate ? 'border-red-400' : 'border-gray-300'}`}
                                     />
                                     {editFieldErrors.licensePlate && <p className="mt-1 text-xs text-red-600">{editFieldErrors.licensePlate}</p>}
