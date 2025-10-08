@@ -64,7 +64,6 @@ export interface AssignedAppointment {
   };
   serviceDetails: {
     description: string;
-    priority: string;
     estimatedCost: number;
     isInspectionOnly: boolean;
     isFromPackage: boolean;

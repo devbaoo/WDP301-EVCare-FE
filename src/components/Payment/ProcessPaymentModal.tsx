@@ -46,7 +46,8 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
         }
     }, [workProgress, visible, form]);
 
-    const handleSubmit = async (values: any) => {
+    type FormValues = { paidAmount: number; notes?: string };
+    const handleSubmit = async (values: FormValues) => {
         if (!workProgress || !user?.id) {
             message.error('Thiếu thông tin cần thiết');
             return;
@@ -70,7 +71,7 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
                 onSuccess?.();
                 onCancel();
             }
-        } catch (err) {
+        } catch {
             message.error('Xử lý thanh toán thất bại');
         }
     };
@@ -103,7 +104,7 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
             onCancel={handleCancel}
             footer={null}
             width={600}
-            destroyOnClose
+            destroyOnHidden
         >
             <div className="space-y-4">
                 {/* Work Progress Info */}

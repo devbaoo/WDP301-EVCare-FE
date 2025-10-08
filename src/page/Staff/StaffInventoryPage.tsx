@@ -715,7 +715,7 @@ const StaffInventoryPage = () => {
         width={520}
         open={drawerOpen}
         onClose={handleCloseDrawer}
-        destroyOnClose
+        destroyOnHidden
       >
         {!currentInventory ? (
           <Spin />

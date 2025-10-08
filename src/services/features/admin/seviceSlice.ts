@@ -1,7 +1,13 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { message } from "antd";
 import axiosInstance from "../../constant/axiosInstance";
-import { CHANGE_ROLE_ENDPOINT, SERVICE_TYPE_CREATE_ENDPOINT, SERVICE_TYPE_DELETE_ENDPOINT, SERVICE_TYPE_ENDPOINT, SERVICE_TYPE_UPDATE_ENDPOINT } from "../../constant/apiConfig";
+import {
+  CHANGE_ROLE_ENDPOINT,
+  SERVICE_TYPE_CREATE_ENDPOINT,
+  SERVICE_TYPE_DELETE_ENDPOINT,
+  SERVICE_TYPE_ENDPOINT,
+  SERVICE_TYPE_UPDATE_ENDPOINT,
+} from "../../constant/apiConfig";
 import {
   ServiceType,
   PaginationInfo,
@@ -32,25 +38,31 @@ export const fetchServiceTypes = createAsyncThunk<
   ServiceTypesResponse,
   { page?: number; limit?: number; search?: string },
   { rejectValue: { message: string } }
->("adminService/fetchServiceTypes", async (params = {}, { rejectWithValue }) => {
-  try {
-    const query = new URLSearchParams();
-    if (params.page) query.append("page", String(params.page));
-    if (params.limit) query.append("limit", String(params.limit));
-    if (params.search) query.append("search", params.search);
+>(
+  "adminService/fetchServiceTypes",
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const query = new URLSearchParams();
+      if (params.page) query.append("page", String(params.page));
+      if (params.limit) query.append("limit", String(params.limit));
+      if (params.search) query.append("search", params.search);
 
-    const url = query.toString()
-      ? `${SERVICE_TYPE_ENDPOINT}?${query.toString()}`
-      : SERVICE_TYPE_ENDPOINT;
+      const url = query.toString()
+        ? `${SERVICE_TYPE_ENDPOINT}?${query.toString()}`
+        : SERVICE_TYPE_ENDPOINT;
 
-    const response = await axiosInstance.get(url);
-    return response.data as ServiceTypesResponse;
-  } catch (err: unknown) {
-    const anyErr = err as any;
-    const msg = anyErr?.response?.data?.message || anyErr?.message || "Lấy danh sách dịch vụ thất bại";
-    return rejectWithValue({ message: msg });
+      const response = await axiosInstance.get(url);
+      return response.data as ServiceTypesResponse;
+    } catch (err: unknown) {
+      const anyErr = err as any;
+      const msg =
+        anyErr?.response?.data?.message ||
+        anyErr?.message ||
+        "Lấy danh sách dịch vụ thất bại";
+      return rejectWithValue({ message: msg });
+    }
   }
-});
+);
 
 //change role
 export const changeRole = createAsyncThunk<
@@ -63,7 +75,10 @@ export const changeRole = createAsyncThunk<
     return response.data;
   } catch (err: unknown) {
     const anyErr = err as any;
-    const msg = anyErr?.response?.data?.message || anyErr?.message || "Thay đổi vai trò thất bại";
+    const msg =
+      anyErr?.response?.data?.message ||
+      anyErr?.message ||
+      "Thay đổi vai trò thất bại";
     return rejectWithValue({ message: msg });
   }
 });
@@ -75,13 +90,19 @@ export const createServiceType = createAsyncThunk<
   { rejectValue: { message: string } }
 >("adminService/createServiceType", async (payload, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.post(SERVICE_TYPE_CREATE_ENDPOINT, payload);
+    const response = await axiosInstance.post(
+      SERVICE_TYPE_CREATE_ENDPOINT,
+      payload
+    );
     const created: ServiceType = response.data?.data || response.data;
     message.success("Tạo dịch vụ thành công");
     return created;
   } catch (err: unknown) {
     const anyErr = err as any;
-    const msg = anyErr?.response?.data?.message || anyErr?.message || "Tạo dịch vụ thất bại";
+    const msg =
+      anyErr?.response?.data?.message ||
+      anyErr?.message ||
+      "Tạo dịch vụ thất bại";
     message.error(msg);
     return rejectWithValue({ message: msg });
   }
@@ -92,19 +113,28 @@ export const updateServiceType = createAsyncThunk<
   ServiceType,
   { id: string; data: Partial<ServiceType> },
   { rejectValue: { message: string } }
->("adminService/updateServiceType", async ({ id, data }, { rejectWithValue }) => {
-  try {
-    const response = await axiosInstance.put(SERVICE_TYPE_UPDATE_ENDPOINT(id), data);
-    const updated: ServiceType = response.data?.data || response.data;
-    message.success("Cập nhật dịch vụ thành công");
-    return updated;
-  } catch (err: unknown) {
-    const anyErr = err as any;
-    const msg = anyErr?.response?.data?.message || anyErr?.message || "Cập nhật dịch vụ thất bại";
-    message.error(msg);
-    return rejectWithValue({ message: msg });
+>(
+  "adminService/updateServiceType",
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(
+        SERVICE_TYPE_UPDATE_ENDPOINT(id),
+        data
+      );
+      const updated: ServiceType = response.data?.data || response.data;
+      message.success("Cập nhật dịch vụ thành công");
+      return updated;
+    } catch (err: unknown) {
+      const anyErr = err as any;
+      const msg =
+        anyErr?.response?.data?.message ||
+        anyErr?.message ||
+        "Cập nhật dịch vụ thất bại";
+      message.error(msg);
+      return rejectWithValue({ message: msg });
+    }
   }
-});
+);
 
 // Delete service type
 export const deleteServiceType = createAsyncThunk<
@@ -118,7 +148,10 @@ export const deleteServiceType = createAsyncThunk<
     return { id };
   } catch (err: unknown) {
     const anyErr = err as any;
-    const msg = anyErr?.response?.data?.message || anyErr?.message || "Xóa dịch vụ thất bại";
+    const msg =
+      anyErr?.response?.data?.message ||
+      anyErr?.message ||
+      "Xóa dịch vụ thất bại";
     message.error(msg);
     return rejectWithValue({ message: msg });
   }
@@ -156,7 +189,8 @@ const adminServiceSlice = createSlice({
       })
       .addCase(fetchServiceTypes.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || "Lấy danh sách dịch vụ thất bại";
+        state.error =
+          action.payload?.message || "Lấy danh sách dịch vụ thất bại";
         message.error(state.error);
       })
       //change role
@@ -217,6 +251,6 @@ const adminServiceSlice = createSlice({
   },
 });
 
-export const { setPage, setLimit, setSearch, clearError } = adminServiceSlice.actions;
+export const { setPage, setLimit, setSearch, clearError } =
+  adminServiceSlice.actions;
 export default adminServiceSlice.reducer;
-

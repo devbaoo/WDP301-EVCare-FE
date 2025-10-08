@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     Card,
     Table,
@@ -13,7 +13,7 @@ import {
     Pagination,
     Typography,
     List,
-    Radio,
+    Checkbox,
     message,
 } from "antd";
 import {
@@ -51,18 +51,7 @@ const StaffTechnicianPage: React.FC = () => {
     const techLoading = useSelector((s: RootState) => s.technician.fetchSchedulesLoading);
     const techSchedules = useSelector((s: RootState) => s.technician.schedules);
 
-    // Build a Set of appointmentIds already assigned to any technician in the center
-    const assignedAppointmentIds = useMemo(() => {
-        const ids = new Set<string>();
-        for (const sch of techSchedules) {
-            if (Array.isArray(sch.assignedAppointments)) {
-                sch.assignedAppointments.forEach((a) => {
-                    if (a && a._id) ids.add(a._id);
-                });
-            }
-        }
-        return ids;
-    }, [techSchedules]);
+    // Previously used to disable re-assignment; now allow multiple assignments -> keep for future analytics if needed
 
     const [selectedServiceCenter, setSelectedServiceCenter] = useState<string>("");
     const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>([
@@ -136,7 +125,7 @@ const StaffTechnicianPage: React.FC = () => {
                         ? { fullName: "N/A" }
                         : record.customer;
                 return (
-                    <div className="font-medium">{customer.fullName}</div>
+                    <div className="font-medium">{customer?.fullName || "N/A"}</div>
                 );
             },
         },
@@ -155,9 +144,9 @@ const StaffTechnicianPage: React.FC = () => {
                         : record.vehicle;
                 return (
                     <div>
-                        <div className="font-medium">{vehicle.vehicleInfo.licensePlate}</div>
+                        <div className="font-medium">{vehicle?.vehicleInfo?.licensePlate || "N/A"}</div>
                         <div className="text-sm text-gray-500">
-                            {vehicle.vehicleInfo.vehicleModel?.brand} {vehicle.vehicleInfo.vehicleModel?.modelName}
+                            {vehicle?.vehicleInfo?.vehicleModel?.brand || "N/A"} {vehicle?.vehicleInfo?.vehicleModel?.modelName || "N/A"}
                         </div>
                     </div>
                 );
@@ -172,7 +161,7 @@ const StaffTechnicianPage: React.FC = () => {
                         ? { name: "N/A" }
                         : record.serviceType;
                 return (
-                    <div className="font-medium">{serviceType.name}</div>
+                    <div className="font-medium">{serviceType?.name || "N/A"}</div>
                 );
             },
         },
@@ -214,7 +203,7 @@ const StaffTechnicianPage: React.FC = () => {
                     <Button size="small" onClick={() => setDetailBooking(record)} icon={<UserOutlined />}>
                         Chi tiết
                     </Button>
-                    <Button size="small" type="primary" onClick={() => openAssignModal(record)} disabled={assignedAppointmentIds.has(record._id)}>
+                    <Button size="small" type="primary" onClick={() => openAssignModal(record)}>
                         Gán nhân viên
                     </Button>
                 </Space>
@@ -225,7 +214,7 @@ const StaffTechnicianPage: React.FC = () => {
     const [detailBooking, setDetailBooking] = useState<AwaitingConfirmationBooking | null>(null);
     const [assignVisible, setAssignVisible] = useState(false);
     const [assignLoading, setAssignLoading] = useState(false);
-    const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
+    const [selectedScheduleIds, setSelectedScheduleIds] = useState<string[]>([]);
     const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
 
     const openAssignModal = async (booking: AwaitingConfirmationBooking) => {
@@ -238,18 +227,22 @@ const StaffTechnicianPage: React.FC = () => {
         const workDate = dateISO ? dayjs(dateISO).format("YYYY-MM-DD") : dayjs().format("YYYY-MM-DD");
         setAssignVisible(true);
         setSelectedAppointmentId(booking._id);
-        setSelectedScheduleId(null);
+        setSelectedScheduleIds([]);
         dispatch(fetchTechnicianSchedules({ centerId, workDate, status: "working", availability: "available" }));
     };
 
     const handleAssign = async () => {
-        if (!selectedAppointmentId || !selectedScheduleId) return;
+        if (!selectedAppointmentId || selectedScheduleIds.length === 0) return;
         setAssignLoading(true);
         try {
-            await dispatch(addAppointmentToSchedule({ scheduleId: selectedScheduleId, appointmentId: selectedAppointmentId })).unwrap();
+            await Promise.all(
+                selectedScheduleIds.map((sid) =>
+                    dispatch(addAppointmentToSchedule({ scheduleId: sid, appointmentId: selectedAppointmentId })).unwrap()
+                )
+            );
             message.success("Đã gán kỹ thuật viên cho booking");
             setAssignVisible(false);
-            setSelectedScheduleId(null);
+            setSelectedScheduleIds([]);
             setSelectedAppointmentId(null);
             // Refresh list
             fetchBookings();
@@ -415,8 +408,8 @@ const StaffTechnicianPage: React.FC = () => {
                 footer={
                     <Space>
                         <Button onClick={() => setAssignVisible(false)}>Hủy</Button>
-                        <Button type="primary" onClick={handleAssign} loading={assignLoading} disabled={!selectedScheduleId}>
-                            Xác nhận gán
+                        <Button type="primary" onClick={handleAssign} loading={assignLoading} disabled={selectedScheduleIds.length === 0}>
+                            Gán {selectedScheduleIds.length > 1 ? `(${selectedScheduleIds.length})` : ''}
                         </Button>
                     </Space>
                 }
@@ -426,21 +419,31 @@ const StaffTechnicianPage: React.FC = () => {
                 ) : techSchedules.length === 0 ? (
                     <div className="py-6 text-gray-600">Hiện tại không có nhân viên phù hợp với booking.</div>
                 ) : (
-                    <Radio.Group value={selectedScheduleId} onChange={(e) => setSelectedScheduleId(e.target.value)} className="w-full">
-                        <List
-                            dataSource={techSchedules}
-                            renderItem={(item) => (
+                    <List
+                        dataSource={techSchedules}
+                        renderItem={(item) => {
+                            const checked = selectedScheduleIds.includes(item._id);
+                            return (
                                 <List.Item className="!px-0">
-                                    <Radio value={item._id} className="w-full">
+                                    <Checkbox
+                                        checked={checked}
+                                        onChange={(e) => {
+                                            setSelectedScheduleIds((prev) =>
+                                                e.target.checked
+                                                    ? Array.from(new Set([...prev, item._id]))
+                                                    : prev.filter((id) => id !== item._id)
+                                            );
+                                        }}
+                                    >
                                         <div className="flex flex-col">
                                             <span className="font-medium">{item.technicianId.fullName || item.technicianId.email}</span>
                                             <span className="text-sm text-gray-500">Ca: {item.shiftStart} - {item.shiftEnd} • Trạng thái: {item.status}</span>
                                         </div>
-                                    </Radio>
+                                    </Checkbox>
                                 </List.Item>
-                            )}
-                        />
-                    </Radio.Group>
+                            );
+                        }}
+                    />
                 )}
             </Modal>
 

@@ -184,7 +184,7 @@ export default function TechnicianWorkProgressPage() {
                     <li key={item._id} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
                             <Badge status={statusColor(item.status) as BadgeProps['status']} text={`${item.shiftStart}-${item.shiftEnd}`} />
-                            {Array.isArray(item.assignedAppointments) && item.assignedAppointments.length > 0 && (
+                            {Array.isArray(item.assignedAppointments) && item.assignedAppointments.some((a) => a.status !== 'cancelled') && (
                                 <Tooltip title="Có booking">
                                     <span style={{ width: 6, height: 6, background: '#1677ff', borderRadius: '50%', display: 'inline-block' }} />
                                 </Tooltip>
@@ -253,10 +253,13 @@ export default function TechnicianWorkProgressPage() {
         setDetailLoading(true);
         setDetailProgress(null);
         // preselect first assigned appointment if available
-        const apptPreset = sch.assignedAppointments?.[0]?._id || sch.appointmentId || null;
+        const firstNonCancelled = Array.isArray(sch.assignedAppointments)
+            ? sch.assignedAppointments.find((a) => a.status !== 'cancelled')?._id
+            : undefined;
+        const apptPreset = firstNonCancelled || sch.appointmentId || null;
         setDetailSelectedAppointmentId(typeof apptPreset === 'string' ? apptPreset : null);
         try {
-            const apptId = (sch.assignedAppointments?.[0]?._id as string | undefined) || getAppointmentIdFromSchedule(sch);
+            const apptId = (firstNonCancelled as string | undefined) || getAppointmentIdFromSchedule(sch);
             if (apptId) {
                 const result = await dispatch(getProgressByAppointment(apptId));
                 if (getProgressByAppointment.fulfilled.match(result) && result.payload.success) {
@@ -289,6 +292,19 @@ export default function TechnicianWorkProgressPage() {
             const values = await quoteForm.validateFields();
             const progressId = detailProgress?._id;
             if (!progressId) return;
+            // Build payload without quoteAmount and without labor
+            type QuoteItemForm = { partId?: string; quantity?: number; unitPrice?: number; name?: string };
+            const itemsSource: QuoteItemForm[] = Array.isArray(values?.quoteDetails?.items)
+                ? (values.quoteDetails.items as QuoteItemForm[])
+                : [];
+            const items = itemsSource
+                .filter((it) => !!it?.partId)
+                .map((it) => ({
+                    partId: it.partId as string,
+                    quantity: Number(it?.quantity || 0),
+                    unitPrice: Number(it?.unitPrice || 0),
+                    name: it?.name,
+                }));
             const result = await dispatch(
                 submitInspectionQuoteThunk({
                     progressId,
@@ -296,8 +312,7 @@ export default function TechnicianWorkProgressPage() {
                         vehicleCondition: values.vehicleCondition,
                         diagnosisDetails: values.diagnosisDetails,
                         inspectionNotes: values.inspectionNotes,
-                        quoteAmount: Number(values.quoteAmount || 0),
-                        quoteDetails: values.quoteDetails,
+                        quoteDetails: { items },
                     },
                 })
             );
@@ -441,15 +456,37 @@ export default function TechnicianWorkProgressPage() {
                                 {null}
                                 {detailProgress && (
                                     <>
-                                        <Button onClick={() => { quoteForm.resetFields(); setQuoteOpen(true); }}>Gửi Inspection & Quote</Button>
-                                        <Button onClick={startMaintenance} disabled={!(detailProgress?.currentStatus === 'quote_provided' || detailProgress?.quote?.quoteStatus === 'approved' || (typeof detailProgress?.appointmentId === 'object' && detailProgress?.appointmentId?.inspectionAndQuote?.quoteStatus === 'approved'))}>Bắt đầu bảo dưỡng</Button>
+                                        <Button onClick={() => { quoteForm.resetFields(); setQuoteOpen(true); }} disabled={(() => {
+                                            const progressStatus = detailProgress?.currentStatus || '';
+                                            const currentAppt = (detailSchedule && Array.isArray(detailSchedule.assignedAppointments))
+                                                ? (detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId) || detailSchedule.assignedAppointments[0])
+                                                : undefined;
+                                            const apptStatus = currentAppt?.status || '';
+                                            // Disable if appointment itself is completed
+                                            if (apptStatus === 'completed') return true;
+                                            // If progress is completed but appointment is maintenance_completed, allow sending again
+                                            if (progressStatus === 'completed' && apptStatus === 'maintenance_completed') return false;
+                                            // Otherwise disable only when progress is completed
+                                            return progressStatus === 'completed';
+                                        })()}>Gửi Inspection & Quote</Button>
+                                        {(() => {
+                                            const status = detailProgress?.currentStatus || '';
+                                            const maintenanceStartedOrBeyond = ['in_progress', 'paused', 'completed', 'delayed'].includes(status);
+                                            const quoteApproved = detailProgress?.quote?.quoteStatus === 'approved'
+                                                || (typeof detailProgress?.appointmentId === 'object' && detailProgress?.appointmentId?.inspectionAndQuote?.quoteStatus === 'approved')
+                                                || status === 'quote_provided';
+                                            const canStart = !maintenanceStartedOrBeyond && !!quoteApproved;
+                                            return (
+                                                <Button onClick={startMaintenance} disabled={!canStart}>Bắt đầu bảo dưỡng</Button>
+                                            );
+                                        })()}
                                         <Button danger onClick={() => { completeForm.resetFields(); setCompleteOpen(true); }} disabled={detailProgress?.currentStatus !== 'in_progress'}>Hoàn thành</Button>
                                     </>
                                 )}
                             </Space>
                         </div>
                         {/* Chọn booking nếu có nhiều */}
-                        {detailSchedule && Array.isArray(detailSchedule.assignedAppointments) && detailSchedule.assignedAppointments.length > 0 && (
+                        {detailSchedule && Array.isArray(detailSchedule.assignedAppointments) && detailSchedule.assignedAppointments.some((a) => a.status !== 'cancelled') && (
                             <div className="bg-gray-50 p-3 rounded border">
                                 <div className="mb-2 text-sm text-gray-600">Chọn booking theo giờ hẹn</div>
                                 <Radio.Group
@@ -457,7 +494,7 @@ export default function TechnicianWorkProgressPage() {
                                     onChange={(e) => onChangeDetailAppointment(e.target.value)}
                                 >
                                     <Space direction="vertical">
-                                        {detailSchedule.assignedAppointments.map((a) => (
+                                        {detailSchedule.assignedAppointments.filter((a) => a.status !== 'cancelled').map((a) => (
                                             <Radio key={a._id} value={a._id}>
                                                 {(a.appointmentTime?.startTime || '')}{a.appointmentTime?.endTime ? ` - ${a.appointmentTime.endTime}` : ''}
                                                 {a.status ? ` • ${a.status}` : ''}
@@ -467,50 +504,48 @@ export default function TechnicianWorkProgressPage() {
                                 </Radio.Group>
                             </div>
                         )}
-                        {detailSchedule && Array.isArray(detailSchedule.assignedAppointments) && detailSchedule.assignedAppointments.length > 0 && (
+                        {detailSchedule && Array.isArray(detailSchedule.assignedAppointments) && detailSchedule.assignedAppointments.some((a) => a.status !== 'cancelled') && (
                             <div className="bg-gray-50 p-3 rounded border">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                                     <div>
                                         <p className="text-gray-500">Giờ hẹn</p>
                                         <p className="font-medium">
                                             {(() => {
-                                                const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId) || detailSchedule.assignedAppointments[0];
+                                                const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId && a.status !== 'cancelled')
+                                                    || detailSchedule.assignedAppointments.find(a => a.status !== 'cancelled');
                                                 return `${current?.appointmentTime?.startTime || ''}${current?.appointmentTime?.endTime ? ` - ${current.appointmentTime.endTime}` : ''}`;
                                             })()}
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-gray-500">Priority</p>
-                                        <p className="font-medium">{(() => {
-                                            const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId) || detailSchedule.assignedAppointments[0];
-                                            return current?.serviceDetails?.priority || '—';
-                                        })()}</p>
-                                    </div>
-                                    <div>
                                         <p className="text-gray-500">Quote status</p>
                                         <p className="font-medium">{(() => {
-                                            const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId) || detailSchedule.assignedAppointments[0];
+                                            const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId && a.status !== 'cancelled')
+                                                || detailSchedule.assignedAppointments.find(a => a.status !== 'cancelled');
                                             return current?.inspectionAndQuote?.quoteStatus || 'pending';
                                         })()}</p>
                                     </div>
                                     <div>
                                         <p className="text-gray-500">Payment</p>
                                         <p className="font-medium">{(() => {
-                                            const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId) || detailSchedule.assignedAppointments[0];
+                                            const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId && a.status !== 'cancelled')
+                                                || detailSchedule.assignedAppointments.find(a => a.status !== 'cancelled');
                                             return current?.payment?.status || '—';
                                         })()}</p>
                                     </div>
                                     <div className="md:col-span-2">
                                         <p className="text-gray-500">Mô tả</p>
                                         <p className="font-medium break-words">{(() => {
-                                            const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId) || detailSchedule.assignedAppointments[0];
+                                            const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId && a.status !== 'cancelled')
+                                                || detailSchedule.assignedAppointments.find(a => a.status !== 'cancelled');
                                             return current?.serviceDetails?.description || '—';
                                         })()}</p>
                                     </div>
                                     <div>
                                         <p className="text-gray-500">Xác nhận</p>
                                         <p className="font-medium">{(() => {
-                                            const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId) || detailSchedule.assignedAppointments[0];
+                                            const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId && a.status !== 'cancelled')
+                                                || detailSchedule.assignedAppointments.find(a => a.status !== 'cancelled');
                                             return current?.confirmation?.isConfirmed ? 'Đã xác nhận' : 'Chưa xác nhận';
                                         })()}</p>
                                     </div>
@@ -549,7 +584,12 @@ export default function TechnicianWorkProgressPage() {
                 {selectedDay ? (
                     (() => {
                         const key = selectedDay.format("YYYY-MM-DD");
-                        const items = schedulesByDate[key] || [];
+                        const items = (schedulesByDate[key] || []).map((it) => ({
+                            ...it,
+                            assignedAppointments: Array.isArray(it.assignedAppointments)
+                                ? it.assignedAppointments.filter((a) => a.status !== 'cancelled')
+                                : it.assignedAppointments,
+                        }));
                         if (!items.length) return <Alert type="info" message="Không có lịch trong ngày này" showIcon />;
                         return (
                             <Space direction="vertical" style={{ width: "100%" }}>
@@ -628,7 +668,7 @@ export default function TechnicianWorkProgressPage() {
                 onOk={submitInspectionQuote}
                 okText="Gửi báo giá"
                 width={860}
-                destroyOnClose
+                destroyOnHidden
             >
                 <Form layout="vertical" form={quoteForm} size="small">
                     <Form.Item name="vehicleCondition" label="Tình trạng xe" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
@@ -640,9 +680,7 @@ export default function TechnicianWorkProgressPage() {
                     <Form.Item name="inspectionNotes" label="Ghi chú kiểm tra" style={{ marginBottom: 8 }}>
                         <Input placeholder="Ghi chú" />
                     </Form.Item>
-                    <Form.Item name="quoteAmount" label="Giá báo (VND)" rules={[{ required: true }]} style={{ marginBottom: 12 }}>
-                        <Input type="number" placeholder="1500000" />
-                    </Form.Item>
+                    {/** Removed Giá báo (VND) field as it is no longer sent */}
                     <Card size="small" className="mb-3">
                         <div className="flex items-center justify-between">
                             <Typography.Text strong>Hạng mục linh kiện</Typography.Text>
@@ -703,17 +741,7 @@ export default function TechnicianWorkProgressPage() {
                             )}
                         </Form.List>
                     </Card>
-                    <Card size="small">
-                        <Typography.Text strong>Công lao động</Typography.Text>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
-                            <Form.Item name={["quoteDetails", "labor", "minutes"]} label="Số phút" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
-                                <InputNumber min={0} step={5} className="w-full" />
-                            </Form.Item>
-                            <Form.Item name={["quoteDetails", "labor", "rate"]} label="Đơn giá/phút (VND)" initialValue={0} rules={[{ required: true }]} style={{ marginBottom: 8 }}>
-                                <InputNumber min={0} step={1000} className="w-full" />
-                            </Form.Item>
-                        </div>
-                    </Card>
+                    {/** Removed Công lao động UI and will not include in payload */}
                 </Form>
             </Modal>
 

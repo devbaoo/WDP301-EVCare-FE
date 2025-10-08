@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Input, Tag, Spin, message, Pagination, Popover, Checkbox, Space } from 'antd';
-import { MapPin, Phone, Star, ArrowRight, ArrowLeft, Search } from 'lucide-react';
+import { MapPin, Phone, ArrowRight, ArrowLeft, Search } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../services/store/store';
 import { fetchServiceCenters, fetchNearbyServiceCenters, setSelectedServiceCenter } from '../../services/features/serviceCenter/serviceCenterSlice';
 import { ServiceCenter } from '../../interfaces/serviceCenter';
@@ -210,11 +210,11 @@ const Step2ServiceCenterSelection: React.FC<Step2ServiceCenterSelectionProps> = 
                                         key={center._id}
                                         hoverable={canSelect}
                                         className={`transition-all duration-200 ${canSelect
-                                                ? `cursor-pointer ${isSelected
-                                                    ? 'ring-2 ring-blue-500 bg-blue-50'
-                                                    : 'hover:shadow-lg'
-                                                }`
-                                                : 'cursor-not-allowed opacity-60'
+                                            ? `cursor-pointer ${isSelected
+                                                ? 'ring-2 ring-blue-500 bg-blue-50'
+                                                : 'hover:shadow-lg'
+                                            }`
+                                            : 'cursor-not-allowed opacity-60'
                                             }`}
                                         onClick={() => canSelect && handleSelectServiceCenter(center)}
                                     >
@@ -249,16 +249,6 @@ const Step2ServiceCenterSelection: React.FC<Step2ServiceCenterSelectionProps> = 
                                                 <span className="text-sm text-gray-600">{center.contact.phone}</span>
                                             </div>
 
-                                            {/* Rating */}
-                                            <div className="flex items-center space-x-2">
-                                                <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                                                <span className="text-sm font-medium text-gray-700">
-                                                    {center.rating.average.toFixed(1)}
-                                                </span>
-                                                <span className="text-sm text-gray-500">
-                                                    ({center.rating.count} đánh giá)
-                                                </span>
-                                            </div>
 
                                             {/* Operating Hours */}
                                             <div className="flex items-center space-x-2">

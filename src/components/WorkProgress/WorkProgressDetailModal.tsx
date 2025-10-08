@@ -94,7 +94,7 @@ const WorkProgressDetailModal: React.FC<WorkProgressDetailModalProps> = ({
             onCancel={onCancel}
             footer={null}
             width={900}
-            destroyOnClose
+            destroyOnHidden
         >
             {loading ? (
                 <div className="text-center py-8">
@@ -233,7 +233,26 @@ const WorkProgressDetailModal: React.FC<WorkProgressDetailModalProps> = ({
                                                 <div>
                                                     <Text strong>Chi tiết:</Text>
                                                     <br />
-                                                    <Text>{workProgress.quote.quoteDetails}</Text>
+                                                    {typeof workProgress.quote.quoteDetails === 'string' ? (
+                                                        <Text>{workProgress.quote.quoteDetails}</Text>
+                                                    ) : (
+                                                        <div className="space-y-1">
+                                                            {(() => {
+                                                                type QuoteItem = { partId?: string; name?: string; quantity?: number; unitPrice?: number };
+                                                                const details = workProgress.quote!.quoteDetails as unknown as { items?: QuoteItem[] };
+                                                                const items = Array.isArray(details?.items) ? details.items : [];
+                                                                if (items.length > 0) {
+                                                                    return items.map((it, idx) => {
+                                                                        const qty = Number(it?.quantity || 0);
+                                                                        const price = Number(it?.unitPrice || 0);
+                                                                        const line = `${it?.name || it?.partId || 'Mục'}: ${qty} x ${formatCurrency(price)} = ${formatCurrency(qty * price)}`;
+                                                                        return <div key={idx}><Text>{line}</Text></div>;
+                                                                    });
+                                                                }
+                                                                return <Text>-</Text>;
+                                                            })()}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                             {workProgress.quote.quoteStatus && (

@@ -1,4 +1,4 @@
-import  { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Spin, Empty, Input, Select, Pagination, Button, Tag, Modal, Form, Popconfirm } from "antd";
 import { SearchOutlined, FilterOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { motion, AnimatePresence } from "framer-motion";
@@ -61,34 +61,19 @@ export default function ServicePage() {
       name: svc.name,
       description: svc.description,
       category: svc.category,
-      basePrice: svc.pricing?.basePrice,
-      priceType: svc.pricing?.priceType || "fixed",
-      currency: svc.pricing?.currency || "VND",
-      isNegotiable: svc.pricing?.isNegotiable || false,
-      duration: svc.serviceDetails?.duration,
-      complexity: svc.serviceDetails?.complexity || "easy",
-      requiredSkills: svc.serviceDetails?.requiredSkills || [],
-      tools: svc.serviceDetails?.tools || [],
-      requiredParts: svc.requiredParts || [],
+      pricing: {
+        basePrice: svc.pricing?.basePrice,
+        priceType: svc.pricing?.priceType || "fixed",
+        currency: svc.pricing?.currency || "VND",
+        isNegotiable: svc.pricing?.isNegotiable || false,
+      },
+      serviceDetails: {
+        minTechnicians: svc.serviceDetails?.minTechnicians || 1,
+        maxTechnicians: svc.serviceDetails?.maxTechnicians || 1,
+      },
       compatibleVehicles: svc.compatibleVehicles || [],
-      steps: (svc.procedure?.steps || []).map((s) => ({
-        stepNumber: s.stepNumber,
-        title: s.title,
-        description: s.description,
-        estimatedTime: s.estimatedTime,
-        requiredTools: (s.requiredTools || []).join(", "),
-        safetyNotes: (s.safetyNotes || []).join(", "),
-      })),
-      minBatteryLevel: svc.requirements?.minBatteryLevel,
-      maxMileage: svc.requirements?.maxMileage,
-      specialConditions: svc.requirements?.specialConditions || [],
-      safetyRequirements: svc.requirements?.safetyRequirements || [],
       status: svc.status,
-      tags: svc.tags || [],
-      priority: svc.priority || 0,
       isPopular: svc.isPopular || false,
-      images: svc.images || [],
-      aiData: svc.aiData ? JSON.stringify(svc.aiData, null, 2) : undefined,
     });
     setIsModalOpen(true);
   };
@@ -103,64 +88,30 @@ export default function ServicePage() {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      let parsedAiData: Record<string, unknown> | undefined = undefined;
-      if (values.aiData) {
-        try { parsedAiData = JSON.parse(values.aiData); } catch { parsedAiData = undefined; }
-      }
-      const stepsArray = (values.steps || []).map((s: any, idx: number) => ({
-        stepNumber: s.stepNumber ?? idx + 1,
-        title: s.title,
-        description: s.description,
-        estimatedTime: s.estimatedTime,
-        requiredTools: typeof s.requiredTools === "string" && s.requiredTools ? s.requiredTools.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
-        safetyNotes: typeof s.safetyNotes === "string" && s.safetyNotes ? s.safetyNotes.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
-      }));
+
       const data = {
         name: values.name,
         description: values.description,
         category: values.category,
-        pricing: {
-          basePrice: Number(values.basePrice ?? 0),
-          priceType: values.priceType || "fixed",
-          currency: values.currency || "VND",
-          isNegotiable: !!values.isNegotiable,
-        },
         serviceDetails: {
-          duration: values.duration,
-          complexity: values.complexity,
-          requiredSkills: values.requiredSkills || [],
-          tools: values.tools || [],
+          minTechnicians: Number(values.serviceDetails?.minTechnicians ?? 1),
+          maxTechnicians: Number(values.serviceDetails?.maxTechnicians ?? 1),
         },
-        requiredParts: (values.requiredParts || []).map((p: any) => ({
-          partName: p.partName,
-          partType: p.partType,
-          quantity: Number(p.quantity) || 0,
-          isOptional: !!p.isOptional,
-          estimatedCost: p.estimatedCost !== undefined ? Number(p.estimatedCost) : undefined,
-        })),
+        pricing: {
+          basePrice: Number(values.pricing?.basePrice ?? 0),
+          priceType: values.pricing?.priceType || "fixed",
+          currency: values.pricing?.currency || "VND",
+          isNegotiable: !!values.pricing?.isNegotiable,
+        },
         compatibleVehicles: (values.compatibleVehicles || []).map((v: any) => ({
           brand: v.brand,
           model: v.model,
           year: v.year,
           batteryType: v.batteryType,
         })),
-        procedure: {
-          steps: stepsArray,
-          totalSteps: stepsArray.length,
-        },
-        requirements: {
-          minBatteryLevel: values.minBatteryLevel,
-          maxMileage: values.maxMileage,
-          specialConditions: values.specialConditions || [],
-          safetyRequirements: values.safetyRequirements || [],
-        },
         status: values.status,
-        images: (values.images || []).map((img: any) => ({ url: img.url, caption: img.caption, isPrimary: !!img.isPrimary })),
-        aiData: parsedAiData,
-        tags: values.tags || [],
-        priority: values.priority !== undefined ? Number(values.priority) : undefined,
         isPopular: !!values.isPopular,
-      } as Partial<ServiceType>;
+      };
 
       if (editingService) {
         const res: any = await dispatch(updateServiceType({ id: editingService._id, data }));
@@ -187,8 +138,7 @@ export default function ServicePage() {
       const categoryMatch = categoryFilter === "all" || svc.category === categoryFilter;
       const searchMatch = !term ||
         svc.name.toLowerCase().includes(term) ||
-        svc.description.toLowerCase().includes(term) ||
-        (svc.tags || []).some(t => t.toLowerCase().includes(term));
+        svc.description.toLowerCase().includes(term);
       return categoryMatch && searchMatch;
     });
   }, [items, searchTerm, categoryFilter]);
@@ -206,12 +156,10 @@ export default function ServicePage() {
   const ServiceCard = ({ svc }: { svc: ServiceType }) => (
     <div className="h-full">
       <div className="relative h-full flex flex-col group border rounded-lg bg-white p-4 shadow-sm">
-        <div className="flex items-start justify-between min-h-[56px]">
-          <div>
-            <h3 className="text-lg font-semibold line-clamp-2">{svc.name}</h3>
-            <div className="text-sm text-gray-500 capitalize">{svc.category}</div>
-          </div>
-          <div className="flex items-center gap-2">
+        <div className="min-h-[56px]">
+          <h3 className="text-lg font-semibold line-clamp-2">{svc.name}</h3>
+          <div className="text-sm text-gray-500 capitalize mb-2">{svc.category}</div>
+          <div className="flex items-center gap-2 flex-wrap">
             {svc.isPopular ? <Tag color="green">Popular</Tag> : null}
             <Tag color={svc.status === "active" ? "blue" : "orange"}>{svc.status}</Tag>
           </div>
@@ -225,28 +173,15 @@ export default function ServicePage() {
               <div className="font-medium">{formatCurrencyVND(svc.pricing?.basePrice)}</div>
             </div>
             <div className="bg-gray-50 rounded p-2">
-              <div className="text-gray-500">Thời lượng</div>
-              <div className="font-medium">{svc.serviceDetails?.duration || 0} phút</div>
+              <div className="text-gray-500">Kỹ thuật viên tối thiểu</div>
+              <div className="font-medium">{svc.serviceDetails?.minTechnicians || 1}</div>
             </div>
             <div className="bg-gray-50 rounded p-2">
-              <div className="text-gray-500">Độ khó</div>
-              <div className="font-medium capitalize">{svc.serviceDetails?.complexity}</div>
-            </div>
-            <div className="bg-gray-50 rounded p-2">
-              <div className="text-gray-500">Bước quy trình</div>
-              <div className="font-medium">{svc.procedure?.totalSteps || svc.procedure?.steps?.length || 0}</div>
+              <div className="text-gray-500">Kỹ thuật viên tối đa</div>
+              <div className="font-medium">{svc.serviceDetails?.maxTechnicians || 1}</div>
             </div>
           </div>
 
-          <div className="min-h-[28px]">
-            {Array.isArray(svc.tags) && svc.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {svc.tags.map((t) => (
-                  <span key={t} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">#{t}</span>
-                ))}
-              </div>
-            )}
-          </div>
 
           <div className="text-sm text-gray-600 min-h-[20px]">
             {Array.isArray(svc.compatibleVehicles) && svc.compatibleVehicles.length > 0 && (
@@ -427,10 +362,10 @@ export default function ServicePage() {
         okText={editingService ? "Cập nhật" : "Tạo mới"}
         cancelText="Hủy"
         confirmLoading={loading}
-        destroyOnClose
+        destroyOnHidden
         width="90%"
         style={{ top: 20 }}
-        bodyStyle={{ maxHeight: '80vh', overflow: 'hidden' }}
+        styles={{ body: { maxHeight: '80vh', overflow: 'hidden' } }}
       >
         <ServiceTypeForm form={form} />
       </Modal>

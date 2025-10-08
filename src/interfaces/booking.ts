@@ -1,10 +1,8 @@
 import { Vehicle } from "./vehicle";
 
 export interface ServiceDetails {
-  duration: number;
-  complexity: string;
-  requiredSkills: string[];
-  tools: string[];
+  minTechnicians: number;
+  maxTechnicians: number;
 }
 
 export interface ServicePricing {
@@ -71,18 +69,14 @@ export interface ServiceType {
   _id: string;
   name: string;
   description: string;
-  category: string;
-  serviceDetails: ServiceDetails;
+  category: "maintenance" | "repair" | "inspection" | "upgrade" | "emergency";
+  serviceDetails: {
+    minTechnicians: number;
+    maxTechnicians: number;
+  };
   pricing: ServicePricing;
-  procedure: Procedure;
-  requirements: Requirements;
-  aiData: AIData;
-  requiredParts: RequiredPart[];
   compatibleVehicles: CompatibleVehicle[];
-  status: string;
-  images: ServiceImage[];
-  tags: string[];
-  priority: number;
+  status: "active" | "inactive" | "maintenance";
   isPopular: boolean;
   createdAt: string;
   updatedAt: string;
@@ -121,7 +115,6 @@ export interface BookingData {
   appointmentDate: string;
   appointmentTime: string;
   serviceDescription: string;
-  priority: "low" | "medium" | "high" | "critical";
   paymentPreference: "online" | "offline";
   isInspectionOnly?: boolean;
 }
@@ -329,7 +322,6 @@ export interface Booking {
   status: string;
   serviceDetails?: {
     description: string;
-    priority?: string;
     estimatedCost?: number;
     isInspectionOnly?: boolean;
     isFromPackage?: boolean;
@@ -502,7 +494,6 @@ export interface AwaitingConfirmationBooking {
   };
   serviceDetails: {
     description: string;
-    priority: string;
     estimatedCost: number;
     isInspectionOnly: boolean;
     isFromPackage: boolean;
