@@ -7,6 +7,7 @@ import {
   SERVICE_TYPE_DELETE_ENDPOINT,
   SERVICE_TYPE_ENDPOINT,
   SERVICE_TYPE_UPDATE_ENDPOINT,
+  GET_RATING_BY_SERVICE_CENTER_ID_ENDPOINT,
 } from "../../constant/apiConfig";
 import {
   ServiceType,
@@ -82,6 +83,25 @@ export const changeRole = createAsyncThunk<
     return rejectWithValue({ message: msg });
   }
 });
+// get rating by service center id
+export const getRatingByServiceCenterId = createAsyncThunk<
+  any,
+  { centerId: string },
+  { rejectValue: { message: string } }
+>("adminService/getRatingByServiceCenterId", async ({ centerId }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(GET_RATING_BY_SERVICE_CENTER_ID_ENDPOINT(centerId));
+      return response.data;
+    } catch (err: unknown) {
+      const anyErr = err as any;
+      const msg =
+        anyErr?.response?.data?.message ||
+        anyErr?.message ||
+        "Lấy đánh giá thất bại";
+      return rejectWithValue({ message: msg });
+    }
+  });
+
 
 // Create service type
 export const createServiceType = createAsyncThunk<
@@ -205,6 +225,19 @@ const adminServiceSlice = createSlice({
       .addCase(changeRole.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || "Thay đổi vai trò thất bại";
+      })
+      // get rating by service center id
+      .addCase(getRatingByServiceCenterId.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getRatingByServiceCenterId.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(getRatingByServiceCenterId.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Lấy đánh giá thất bại";
       })
       // Create
       .addCase(createServiceType.pending, (state) => {
