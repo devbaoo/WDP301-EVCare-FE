@@ -1146,35 +1146,40 @@ function BookingHistory() {
                             </Card>
                         )}
 
-                        {((progressData as any)?.currentStatus || "").toLowerCase() !== "completed" && (
-                            <Card title="Phản hồi báo giá">
-                                <TextArea
-                                    rows={3}
-                                    placeholder="Ghi chú của bạn (tùy chọn)"
-                                    value={quoteResponseNotes}
-                                    onChange={(e) => setQuoteResponseNotes(e.target.value)}
-                                    className="mb-4"
-                                />
-                                <Space>
-                                    <Button
-                                        type="primary"
-                                        icon={<CheckCircleOutlined />}
-                                        onClick={() => submitQuoteResponse("approved")}
-                                        loading={progressLoading}
-                                    >
-                                        Chấp nhận
-                                    </Button>
-                                    <Button
-                                        danger
-                                        icon={<CloseOutlined />}
-                                        onClick={() => submitQuoteResponse("rejected")}
-                                        loading={progressLoading}
-                                    >
-                                        Từ chối
-                                    </Button>
-                                </Space>
-                            </Card>
-                        )}
+                        {(() => {
+                            const currentStatus = String(((progressData as any)?.currentStatus || "")).toLowerCase();
+                            const quoteStatus = String((progressData as any)?.appointmentId?.inspectionAndQuote?.quoteStatus || (progressData as any)?.quote?.quoteStatus || 'pending').toLowerCase();
+                            const canRespond = currentStatus !== 'completed' && quoteStatus === 'pending';
+                            return canRespond;
+                        })() && (
+                                <Card title="Phản hồi báo giá">
+                                    <TextArea
+                                        rows={3}
+                                        placeholder="Ghi chú của bạn (tùy chọn)"
+                                        value={quoteResponseNotes}
+                                        onChange={(e) => setQuoteResponseNotes(e.target.value)}
+                                        className="mb-4"
+                                    />
+                                    <Space>
+                                        <Button
+                                            type="primary"
+                                            icon={<CheckCircleOutlined />}
+                                            onClick={() => submitQuoteResponse("approved")}
+                                            loading={progressLoading}
+                                        >
+                                            Chấp nhận
+                                        </Button>
+                                        <Button
+                                            danger
+                                            icon={<CloseOutlined />}
+                                            onClick={() => submitQuoteResponse("rejected")}
+                                            loading={progressLoading}
+                                        >
+                                            Từ chối
+                                        </Button>
+                                    </Space>
+                                </Card>
+                            )}
                     </div>
                 )}
             </Modal>

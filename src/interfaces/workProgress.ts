@@ -22,7 +22,6 @@ export interface WorkProgress {
         };
         serviceDetails: {
           description: string;
-          priority: string;
           estimatedCost: number;
           isInspectionOnly: boolean;
           isFromPackage: boolean;
@@ -32,7 +31,7 @@ export interface WorkProgress {
           inspectionCompletedAt?: string;
           vehicleCondition?: string;
           diagnosisDetails?: string;
-          quoteAmount?: number;
+          quoteAmount?: number; // kept optional for backward compatibility
           quoteDetails?: string;
           quotedAt?: string;
           quoteStatus?: QuoteStatus;
@@ -96,10 +95,10 @@ export interface WorkProgress {
   };
   quote?: {
     quoteStatus: QuoteStatus;
-    quoteAmount: number;
-    quoteDetails: string;
-    quotedAt: string;
-    customerResponseAt: string;
+    quoteAmount?: number; // no longer required
+    quoteDetails?: string;
+    quotedAt?: string;
+    customerResponseAt?: string;
   };
   paymentDetails?: {
     paymentMethod: string;
@@ -137,7 +136,7 @@ export interface InspectionQuotePayload {
   vehicleCondition: string;
   diagnosisDetails: string;
   inspectionNotes?: string;
-  quoteAmount: number;
+  quoteAmount?: number; // removed from payload usage
   quoteDetails: {
     items: Array<{
       partId: string;
@@ -145,7 +144,7 @@ export interface InspectionQuotePayload {
       unitPrice: number;
       name?: string;
     }>;
-    labor: {
+    labor?: {
       minutes: number;
       rate: number;
     };

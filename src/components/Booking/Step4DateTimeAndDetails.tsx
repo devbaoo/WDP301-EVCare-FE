@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Input, DatePicker, Radio, message, Spin } from 'antd';
+import { Card, Button, Input, DatePicker, Radio, message, Spin, TimePicker } from 'antd';
 import {
     Calendar,
     Clock,
@@ -48,12 +48,9 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
     const [selectedDate, setSelectedDate] = useState<string>('');
     const [selectedTime, setSelectedTime] = useState<string>('');
     const [serviceDescription, setServiceDescription] = useState<string>('');
-    const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
     const [paymentPreference, setPaymentPreference] = useState<'online' | 'offline'>('offline');
 
-    // Time slot filtering
-    const [timeFilter, setTimeFilter] = useState<'all' | 'morning' | 'afternoon' | 'evening'>('all');
-    const [showMoreSlots, setShowMoreSlots] = useState(false);
+    // Time slot filtering (deprecated, kept previously). Removed in favor of TimePicker
 
     // Payment modal state
     const [paymentModalVisible, setPaymentModalVisible] = useState(false);
@@ -77,21 +74,6 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
         };
     } | null>(null);
 
-    const priorityOptions = [
-        { value: 'low', label: 'Thấp', color: 'green' },
-        { value: 'medium', label: 'Trung bình', color: 'orange' },
-        { value: 'high', label: 'Cao', color: 'red' },
-    ];
-
-    const getPriorityColor = (priority: string) => {
-        const option = priorityOptions.find(opt => opt.value === priority);
-        return option?.color || 'default';
-    };
-
-    const getPriorityLabel = (priority: string) => {
-        const option = priorityOptions.find(opt => opt.value === priority);
-        return option?.label || priority;
-    };
 
     // Fetch available time slots when date changes
     useEffect(() => {
@@ -109,7 +91,6 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
             appointmentDate: selectedDate,
             appointmentTime: selectedTime,
             serviceDescription,
-            priority,
             paymentPreference,
         };
 
@@ -123,7 +104,7 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
         if (hasChanges) {
             dispatch(updateBookingData(newBookingData));
         }
-    }, [dispatch, selectedDate, selectedTime, serviceDescription, priority, paymentPreference, bookingData]);
+    }, [dispatch, selectedDate, selectedTime, serviceDescription, paymentPreference, bookingData]);
 
 
     const handleDateChange = (date: dayjs.Dayjs | null) => {
@@ -132,8 +113,7 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
             const formattedDate = date.tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD');
             setSelectedDate(formattedDate);
             setSelectedTime(''); // Reset time when date changes
-            setTimeFilter('all'); // Reset time filter
-            setShowMoreSlots(false); // Reset show more state
+            // reset any previous slot state (deprecated)
 
             // Fetch available time slots when date changes
             if (selectedServiceCenter?._id) {
@@ -145,16 +125,76 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
         } else {
             setSelectedDate('');
             setSelectedTime('');
-            setTimeFilter('all');
-            setShowMoreSlots(false);
+            // reset any previous slot state (deprecated)
         }
     };
 
-    const handleTimeSelect = (timeSlot: string) => {
-        setSelectedTime(timeSlot);
-        // Extract start time for booking data
-        const startTime = timeSlot.split('-')[0];
-        dispatch(updateBookingData({ appointmentTime: startTime }));
+    // Deprecated: slot grid selection replaced by TimePicker
+    // const handleTimeSelect = (timeSlot: string) => {
+    //     setSelectedTime(timeSlot);
+    //     const startTime = timeSlot.split('-')[0];
+    //     dispatch(updateBookingData({ appointmentTime: startTime }));
+    // };
+
+    // Determine if a given slot is selectable (has technicians and not in the past)
+    function isTimeSlotAvailable(slot: TimeSlot) {
+        const hasTechnicians = slot.availableTechnicians && slot.availableTechnicians.length > 0;
+        const timeSlotString = `${slot.startTime}-${slot.endTime}`;
+        const isPassed = isTimeSlotPassed(timeSlotString, selectedDate);
+        return hasTechnicians && !isPassed;
+    }
+
+    // Build allowed time set from available slots (only future and with technicians)
+    const getAllowedTimes = () => {
+        if (!selectedDate || !availableTimeSlots?.length) return new Set<string>();
+        const allowed = new Set<string>();
+        availableTimeSlots.forEach((slot) => {
+            if (isTimeSlotAvailable(slot)) {
+                allowed.add(slot.startTime);
+            }
+        });
+        return allowed;
+    };
+
+    const allowedTimes = getAllowedTimes();
+
+    const disabledHours = () => {
+        const allowedHours = new Set<number>([...allowedTimes].map(t => parseInt(t.split(':')[0])));
+        const hours: number[] = [];
+        for (let h = 0; h < 24; h++) {
+            if (!allowedHours.has(h)) hours.push(h);
+        }
+        return hours;
+    };
+
+    const disabledMinutes = (selectedHour: number) => {
+        const minutesAllowed = new Set<number>(
+            [...allowedTimes]
+                .filter(t => parseInt(t.split(':')[0]) === selectedHour)
+                .map(t => parseInt(t.split(':')[1]))
+        );
+        const minutes: number[] = [];
+        for (let m = 0; m < 60; m++) {
+            if (!minutesAllowed.has(m)) minutes.push(m);
+        }
+        return minutes;
+    };
+
+    const disabledTime = (now: dayjs.Dayjs | null) => {
+        return {
+            disabledHours,
+            disabledMinutes: (hour: number) => disabledMinutes(hour ?? (now ? now.hour() : 0)),
+        } as const;
+    };
+
+    const handleTimeChange = (time: dayjs.Dayjs | null) => {
+        if (!time) {
+            setSelectedTime('');
+            return;
+        }
+        const start = time.format('HH:mm');
+        setSelectedTime(start);
+        dispatch(updateBookingData({ appointmentTime: start }));
     };
 
     const handleSubmit = async () => {
@@ -181,9 +221,8 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
             serviceTypeId: selectedService?._id,
             servicePackageId: selectedServicePackage?._id,
             appointmentDate: selectedDate,
-            appointmentTime: selectedTime.split('-')[0], // Use start time
+            appointmentTime: selectedTime, // Use selected start time
             serviceDescription: serviceDescription.trim(),
-            priority,
             paymentPreference,
             isInspectionOnly: isInspectionOnlyFromState,
         };
@@ -233,27 +272,10 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
     };
 
 
-    const isTimeSlotAvailable = (slot: TimeSlot) => {
-        const hasTechnicians = slot.availableTechnicians && slot.availableTechnicians.length > 0;
-        const timeSlotString = `${slot.startTime}-${slot.endTime}`;
-        const isPassed = isTimeSlotPassed(timeSlotString, selectedDate);
-        return hasTechnicians && !isPassed;
-    };
+    // (moved above getAllowedTimes)
 
-    const getTimeSlotReason = (slot: TimeSlot) => {
-        const timeSlotString = `${slot.startTime}-${slot.endTime}`;
-        const isPassed = isTimeSlotPassed(timeSlotString, selectedDate);
-
-        if (isPassed) {
-            return 'Khung giờ đã qua';
-        }
-
-        if (!slot.availableTechnicians || slot.availableTechnicians.length === 0) {
-            return 'Không có kỹ thuật viên khả dụng';
-        }
-
-        return `${slot.availableTechnicians.length} kỹ thuật viên khả dụng`;
-    };
+    // Deprecated: tooltip reason for disabled time slot
+    // const getTimeSlotReason = (slot: TimeSlot) => { ... };
 
     // Check if service center is open on selected date
     const isServiceCenterOpenOnDate = (date: string) => {
@@ -291,65 +313,14 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
     };
 
     // Filter time slots by period
-    const getFilteredTimeSlots = () => {
-        if (!availableTimeSlots || availableTimeSlots.length === 0) return [];
+    // Deprecated: slot filtering replaced by TimePicker
+    // const getFilteredTimeSlots = () => { ... };
 
-        let filtered = availableTimeSlots;
+    // Deprecated: filter labels for slot pills
+    // const getTimeFilterLabel = (filter: string) => { ... };
 
-        if (timeFilter !== 'all') {
-            filtered = availableTimeSlots.filter(slot => {
-                const hour = parseInt(slot.startTime.split(':')[0]);
-                switch (timeFilter) {
-                    case 'morning':
-                        return hour >= 6 && hour < 12;
-                    case 'afternoon':
-                        return hour >= 12 && hour < 17;
-                    case 'evening':
-                        return hour >= 17 && hour < 22;
-                    default:
-                        return true;
-                }
-            });
-        }
-
-        // Show only first 8 slots initially, or all if showMoreSlots is true
-        if (!showMoreSlots && filtered.length > 8) {
-            return filtered.slice(0, 8);
-        }
-
-        return filtered;
-    };
-
-    const getTimeFilterLabel = (filter: string) => {
-        switch (filter) {
-            case 'morning': return 'Sáng (6h-12h)';
-            case 'afternoon': return 'Chiều (12h-17h)';
-            case 'evening': return 'Tối (17h-22h)';
-            default: return 'Tất cả';
-        }
-    };
-
-    const getTimeFilterCount = (filter: string) => {
-        if (!availableTimeSlots || availableTimeSlots.length === 0) return 0;
-
-        if (filter === 'all') return availableTimeSlots.length;
-
-        const filtered = availableTimeSlots.filter(slot => {
-            const hour = parseInt(slot.startTime.split(':')[0]);
-            switch (filter) {
-                case 'morning':
-                    return hour >= 6 && hour < 12;
-                case 'afternoon':
-                    return hour >= 12 && hour < 17;
-                case 'evening':
-                    return hour >= 17 && hour < 22;
-                default:
-                    return true;
-            }
-        });
-
-        return filtered.length;
-    };
+    // Deprecated: filter counts for slot pills
+    // const getTimeFilterCount = (filter: string) => { ... };
 
     return (
         <div className="space-y-6">
@@ -413,59 +384,17 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                                 </div>
                             ) : (
                                 <div className="space-y-4">
-                                    {/* Time Filter Pills */}
-                                    <div className="flex flex-wrap gap-2">
-                                        {(['all', 'morning', 'afternoon', 'evening'] as const).map((filter) => (
-                                            <Button
-                                                key={filter}
-                                                size="small"
-                                                type={timeFilter === filter ? 'primary' : 'default'}
-                                                onClick={() => {
-                                                    setTimeFilter(filter);
-                                                    setShowMoreSlots(false);
-                                                }}
-                                                className={`text-xs ${timeFilter === filter ? 'bg-blue-600' : 'bg-gray-100 hover:bg-gray-200'}`}
-                                            >
-                                                {getTimeFilterLabel(filter)} ({getTimeFilterCount(filter)})
-                                            </Button>
-                                        ))}
+                                    {/* Time Picker (Clock) */}
+                                    <div className="max-w-sm">
+                                        <TimePicker
+                                            placeholder="Chọn giờ hẹn"
+                                            value={selectedTime ? dayjs.tz(`${selectedDate} ${selectedTime}`, 'Asia/Ho_Chi_Minh') : null}
+                                            format="HH:mm"
+                                            onChange={handleTimeChange}
+                                            disabledTime={disabledTime}
+                                            className="w-full h-12"
+                                        />
                                     </div>
-
-                                    {/* Time Slots Grid */}
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                                        {getFilteredTimeSlots().map((slot, index) => (
-                                            <Button
-                                                key={`${slot.startTime}-${slot.endTime}-${index}`}
-                                                type={selectedTime === `${slot.startTime}-${slot.endTime}` ? 'primary' : 'default'}
-                                                disabled={!isTimeSlotAvailable(slot)}
-                                                onClick={() => handleTimeSelect(`${slot.startTime}-${slot.endTime}`)}
-                                                className={`h-12 flex items-center justify-center p-2 ${selectedTime === `${slot.startTime}-${slot.endTime}`
-                                                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                                    : isTimeSlotAvailable(slot)
-                                                        ? 'hover:bg-blue-50 border-gray-200'
-                                                        : 'opacity-50 cursor-not-allowed bg-gray-50'
-                                                    }`}
-                                                title={getTimeSlotReason(slot)}
-                                            >
-                                                <div className="text-sm font-medium">
-                                                    {slot.startTime}
-                                                </div>
-                                            </Button>
-                                        ))}
-                                    </div>
-
-                                    {/* Show More/Less Button */}
-                                    {availableTimeSlots.length > 8 && (
-                                        <div className="text-center">
-                                            <Button
-                                                type="link"
-                                                onClick={() => setShowMoreSlots(!showMoreSlots)}
-                                                className="text-blue-600 hover:text-blue-800"
-                                            >
-                                                {showMoreSlots ? 'Thu gọn' : `Xem thêm khung giờ khác`}
-                                            </Button>
-                                        </div>
-                                    )}
 
                                     {/* Selected Time Summary */}
                                     {selectedTime && (
@@ -522,26 +451,6 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
 
                     {/* No inspection-only UI here as requested */}
 
-                    {/* Priority Selection */}
-                    <Card>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Độ ưu tiên</h3>
-                        <Radio.Group
-                            value={priority}
-                            onChange={(e) => setPriority(e.target.value)}
-                            className="w-full"
-                        >
-                            <div className="space-y-2">
-                                {priorityOptions.map((option) => (
-                                    <Radio key={option.value} value={option.value} className="w-full">
-                                        <div className="flex items-center space-x-2">
-                                            <div className={`w-3 h-3 rounded-full bg-${option.color}-500`}></div>
-                                            <span>{option.label}</span>
-                                        </div>
-                                    </Radio>
-                                ))}
-                            </div>
-                        </Radio.Group>
-                    </Card>
 
                     {/* Payment Preference */}
                     <Card>
@@ -613,25 +522,21 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                         </span>
                     </div>
                     <div>
-                        <span className="text-gray-600">Độ ưu tiên:</span>
-                        <span className={`font-medium ml-2 text-${getPriorityColor(priority)}-600`}>
-                            {getPriorityLabel(priority)}
-                        </span>
-                    </div>
-                    <div>
                         <span className="text-gray-600">Thanh toán:</span>
                         <span className="font-medium ml-2">
                             {paymentPreference === 'online' ? 'Trực tuyến' : 'Tại trung tâm'}
                         </span>
                     </div>
-                    {/* Show deposit amount when service/package is selected, hide when inspection only */}
+                    {/* Show service deposit (20% of price) when service/package is selected, hide when inspection only */}
                     {!isInspectionOnlyFromState && (selectedService || selectedServicePackage) && (
                         <div>
-                            <span className="text-gray-600">Tiền ước tính:</span>
+                            <span className="text-gray-600">Tiền cọc dịch vụ:</span>
                             <span className="font-medium ml-2 text-blue-600">
-                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
-                                    selectedServicePackage ? selectedServicePackage.price : (selectedService?.pricing.basePrice || 0)
-                                )}
+                                {(() => {
+                                    const basePrice = selectedServicePackage ? selectedServicePackage.price : (selectedService?.pricing.basePrice || 0);
+                                    const deposit = Number(basePrice || 0) * 0.2; // 20% deposit
+                                    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(deposit);
+                                })()}
                             </span>
                         </div>
                     )}

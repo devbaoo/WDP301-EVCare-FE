@@ -16,6 +16,8 @@ export interface ServiceProcedure {
 export interface ServiceDetails {
   duration: number; // minutes
   complexity: "easy" | "medium" | "hard";
+  minTechnicians: number;
+  maxTechnicians: number;
   requiredSkills?: string[];
   tools?: string[];
 }
@@ -55,24 +57,15 @@ export interface ServiceType {
   _id: string;
   name: string;
   description: string;
-  category: string;
-  serviceDetails: ServiceDetails;
-  pricing: ServicePricing;
-  procedure: ServiceProcedure;
-  requirements?: {
-    minBatteryLevel?: number;
-    maxMileage?: number;
-    specialConditions?: string[];
-    safetyRequirements?: string[];
+  category: "maintenance" | "repair" | "inspection" | "upgrade" | "emergency";
+  serviceDetails: {
+    minTechnicians: number;
+    maxTechnicians: number;
   };
-  requiredParts?: ServiceRequirement[];
+  pricing: ServicePricing;
   compatibleVehicles: CompatibleVehicle[];
-  status: "active" | "inactive";
-  tags?: string[];
-  priority?: number;
-  isPopular?: boolean;
-  images?: ServiceImage[];
-  aiData?: Record<string, unknown>;
+  status: "active" | "inactive" | "maintenance";
+  isPopular: boolean;
   createdAt?: string;
   updatedAt?: string;
   __v?: number;
@@ -95,4 +88,3 @@ export interface ServiceTypesResponse {
   message: string;
   data: ServiceTypesPayload;
 }
-
