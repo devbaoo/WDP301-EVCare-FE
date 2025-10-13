@@ -22,27 +22,27 @@ export default function ContactPage() {
     const contactInfo = [
         {
             icon: <Phone className="w-6 h-6" />,
-            title: "Phone",
+            title: "Điện thoại",
             details: "+1 (555) 123-4567",
-            description: "Mon-Fri 8AM-6PM, Sat 9AM-4PM"
+            description: "Thứ 2-6 8:00-18:00, Thứ 7 9:00-16:00"
         },
         {
             icon: <Mail className="w-6 h-6" />,
             title: "Email",
             details: "support@evcare.com",
-            description: "We'll respond within 24 hours"
+            description: "Phản hồi trong vòng 24 giờ"
         },
         {
             icon: <MapPin className="w-6 h-6" />,
-            title: "Headquarters",
+            title: "Trụ sở",
             details: "Vinhome Grand Park, Quận 9",
-            description: "Visit us for in-person support"
+            description: "Đến trực tiếp để được hỗ trợ"
         },
         {
             icon: <Clock className="w-6 h-6" />,
-            title: "Business Hours",
-            details: "Mon-Fri: 8:00 AM - 6:00 PM",
-            description: "Sat: 9:00 AM - 4:00 PM, Sun: Closed"
+            title: "Giờ làm việc",
+            details: "Thứ 2-6: 8:00 - 18:00",
+            description: "Thứ 7: 9:00 - 16:00, Chủ nhật: Nghỉ"
         }
     ];
 
@@ -54,23 +54,23 @@ export default function ContactPage() {
     const supportOptions = [
         {
             icon: <MessageCircle className="w-8 h-8" />,
-            title: "Live Chat",
-            description: "Get instant support from our team",
-            action: "Start Chat",
+            title: "Trò chuyện trực tuyến",
+            description: "Nhận hỗ trợ ngay từ đội ngũ của chúng tôi",
+            action: "Bắt đầu chat",
             available: true
         },
         {
             icon: <Headphones className="w-8 h-8" />,
-            title: "Phone Support",
-            description: "Speak directly with our experts",
-            action: "Call Now",
+            title: "Hỗ trợ qua điện thoại",
+            description: "Trao đổi trực tiếp với chuyên gia",
+            action: "Gọi ngay",
             available: true
         },
         {
             icon: <MailIcon className="w-8 h-8" />,
-            title: "Email Support",
-            description: "Send us a detailed message",
-            action: "Send Email",
+            title: "Hỗ trợ qua email",
+            description: "Gửi cho chúng tôi nội dung chi tiết",
+            action: "Gửi email",
             available: true
         }
     ];
@@ -80,10 +80,10 @@ export default function ContactPage() {
         try {
             // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 2000));
-            message.success('Your message has been sent successfully! We\'ll get back to you soon.');
+            message.success('Tin nhắn của bạn đã được gửi thành công! Chúng tôi sẽ phản hồi sớm.');
             form.resetFields();
         } catch {
-            message.error('Failed to send message. Please try again.');
+            message.error('Gửi tin nhắn thất bại. Vui lòng thử lại.');
         } finally {
             setLoading(false);
         }
@@ -112,11 +112,11 @@ export default function ContactPage() {
                             transition={{ duration: 0.6, delay: 0.4 }}
                         >
                             <Title level={1} className="text-4xl md:text-6xl font-bold text-gray-800 mb-6">
-                                Contact Us
+                                Liên hệ với chúng tôi
                             </Title>
                             <Paragraph className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-                                Have questions about our EV services? We're here to help!
-                                Reach out to our friendly team for support, inquiries, or feedback.
+                                Có câu hỏi về dịch vụ xe điện? Chúng tôi luôn sẵn sàng hỗ trợ!
+                                Liên hệ đội ngũ của chúng tôi để được tư vấn, hỗ trợ hoặc góp ý.
                             </Paragraph>
                         </motion.div>
                     </div>
@@ -186,10 +186,10 @@ export default function ContactPage() {
                         className="text-center mb-12"
                     >
                         <Title level={2} className="text-3xl font-bold text-gray-800 mb-4">
-                            Get Support
+                            Nhận hỗ trợ
                         </Title>
                         <Paragraph className="text-gray-600 text-lg max-w-2xl mx-auto">
-                            Choose the support option that works best for you. We're here to help!
+                            Chọn hình thức hỗ trợ phù hợp nhất với bạn. Chúng tôi luôn sẵn sàng!
                         </Paragraph>
                     </motion.div>
 
@@ -242,11 +242,11 @@ export default function ContactPage() {
                                 transition={{ duration: 0.8, delay: 0.6 }}
                             >
                                 <Title level={2} className="text-3xl font-bold text-gray-800 mb-6">
-                                    Send us a Message
+                                    Gửi tin nhắn cho chúng tôi
                                 </Title>
                                 <Paragraph className="text-gray-600 text-lg mb-8">
-                                    Have a specific question or need detailed support? Fill out the form below
-                                    and we'll get back to you as soon as possible.
+                                    Có câu hỏi cụ thể hoặc cần hỗ trợ chi tiết? Điền biểu mẫu bên dưới
+                                    và chúng tôi sẽ phản hồi sớm nhất có thể.
                                 </Paragraph>
 
                                 <div className="space-y-6">
@@ -255,8 +255,8 @@ export default function ContactPage() {
                                             <MessageCircle className="w-6 h-6 text-blue-600" />
                                         </div>
                                         <div>
-                                            <Text strong className="text-gray-800 block">Quick Response</Text>
-                                            <Text type="secondary">We typically respond within 24 hours</Text>
+                                            <Text strong className="text-gray-800 block">Phản hồi nhanh</Text>
+                                            <Text type="secondary">Thường phản hồi trong 24 giờ</Text>
                                         </div>
                                     </div>
                                     <div className="flex items-start space-x-4">
@@ -264,8 +264,8 @@ export default function ContactPage() {
                                             <Headphones className="w-6 h-6 text-green-600" />
                                         </div>
                                         <div>
-                                            <Text strong className="text-gray-800 block">Expert Support</Text>
-                                            <Text type="secondary">Our team has extensive EV knowledge</Text>
+                                            <Text strong className="text-gray-800 block">Hỗ trợ từ chuyên gia</Text>
+                                            <Text type="secondary">Đội ngũ am hiểu sâu về xe điện</Text>
                                         </div>
                                     </div>
                                     <div className="flex items-start space-x-4">
@@ -273,8 +273,8 @@ export default function ContactPage() {
                                             <MailIcon className="w-6 h-6 text-purple-600" />
                                         </div>
                                         <div>
-                                            <Text strong className="text-gray-800 block">Follow-up</Text>
-                                            <Text type="secondary">We'll follow up until your issue is resolved</Text>
+                                            <Text strong className="text-gray-800 block">Theo dõi xử lý</Text>
+                                            <Text type="secondary">Chúng tôi theo sát cho tới khi vấn đề được giải quyết</Text>
                                         </div>
                                     </div>
                                 </div>
@@ -295,46 +295,46 @@ export default function ContactPage() {
                                     >
                                         <Form.Item
                                             name="name"
-                                            label="Full Name"
-                                            rules={[{ required: true, message: 'Please enter your name' }]}
+                                            label="Họ và tên"
+                                            rules={[{ required: true, message: 'Vui lòng nhập họ và tên' }]}
                                         >
-                                            <Input placeholder="Enter your full name" />
+                                            <Input placeholder="Nhập họ và tên" />
                                         </Form.Item>
 
                                         <Form.Item
                                             name="email"
-                                            label="Email Address"
+                                            label="Địa chỉ Email"
                                             rules={[
-                                                { required: true, message: 'Please enter your email' },
-                                                { type: 'email', message: 'Please enter a valid email' }
+                                                { required: true, message: 'Vui lòng nhập email' },
+                                                { type: 'email', message: 'Vui lòng nhập email hợp lệ' }
                                             ]}
                                         >
-                                            <Input placeholder="Enter your email address" />
+                                            <Input placeholder="Nhập địa chỉ email" />
                                         </Form.Item>
 
                                         <Form.Item
                                             name="phone"
-                                            label="Phone Number (Optional)"
+                                            label="Số điện thoại (không bắt buộc)"
                                         >
-                                            <Input placeholder="Enter your phone number" />
+                                            <Input placeholder="Nhập số điện thoại" />
                                         </Form.Item>
 
                                         <Form.Item
                                             name="subject"
-                                            label="Subject"
-                                            rules={[{ required: true, message: 'Please enter a subject' }]}
+                                            label="Chủ đề"
+                                            rules={[{ required: true, message: 'Vui lòng nhập chủ đề' }]}
                                         >
-                                            <Input placeholder="What is this about?" />
+                                            <Input placeholder="Nội dung liên quan đến?" />
                                         </Form.Item>
 
                                         <Form.Item
                                             name="message"
-                                            label="Message"
-                                            rules={[{ required: true, message: 'Please enter your message' }]}
+                                            label="Nội dung"
+                                            rules={[{ required: true, message: 'Vui lòng nhập nội dung' }]}
                                         >
                                             <TextArea
                                                 rows={6}
-                                                placeholder="Tell us how we can help you..."
+                                                placeholder="Hãy cho chúng tôi biết bạn cần hỗ trợ gì..."
                                                 showCount
                                                 maxLength={1000}
                                             />
@@ -348,7 +348,7 @@ export default function ContactPage() {
                                                 className="w-full h-12 rounded-full"
                                                 icon={<Send className="w-5 h-5" />}
                                             >
-                                                Send Message
+                                                Gửi tin nhắn
                                             </Button>
                                         </Form.Item>
                                     </Form>
@@ -374,10 +374,10 @@ export default function ContactPage() {
                         className="text-center mb-12"
                     >
                         <Title level={2} className="text-3xl font-bold text-gray-800 mb-4">
-                            Visit Our Headquarters
+                            Ghé thăm trụ sở của chúng tôi
                         </Title>
                         <Paragraph className="text-gray-600 text-lg max-w-2xl mx-auto">
-                            Stop by our main office for in-person support and consultations.
+                            Đến văn phòng chính để được hỗ trợ và tư vấn trực tiếp.
                         </Paragraph>
                     </motion.div>
 
@@ -390,7 +390,7 @@ export default function ContactPage() {
                             <div className="h-96 bg-gray-200 rounded-lg flex items-center justify-center">
                                 <div className="text-center">
                                     <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                                    <Text className="text-gray-600 text-lg">Interactive Map</Text>
+                                    <Text className="text-gray-600 text-lg">Bản đồ tương tác</Text>
                                     <Paragraph className="text-gray-500 mt-2">
                                         Vinhome Grand Park, Thành phố, Thủ Đức, Hồ Chí Minh 700000, Việt Nam
                                     </Paragraph>

@@ -9,45 +9,45 @@ export default function Footer() {
           <div className="space-y-6">
             <div className="space-y-4">
               <h3 className="text-xl font-bold text-white">
-                Ready to transform your EV service center?
+                Sẵn sàng nâng tầm trung tâm dịch vụ xe điện của bạn?
               </h3>
               <a href="/login">
                 <Button className="bg-white text-synop-blue-primary hover:bg-gray-100 rounded-full px-8">
-                  Get Started
+                  Bắt đầu
                 </Button>
               </a>
             </div>
           </div>
 
           <div>
-            <h4 className="font-bold text-lg mb-6">Solutions</h4>
+            <h4 className="font-bold text-lg mb-6">Giải pháp</h4>
             <ul className="space-y-3 text-sm">
-              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Charging Management</a></li>
-              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Vehicle Management</a></li>
-              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Energy Management</a></li>
-              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Payment Management</a></li>
+              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Quản lý sạc</a></li>
+              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Quản lý phương tiện</a></li>
+              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Quản lý năng lượng</a></li>
+              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Quản lý thanh toán</a></li>
               <li><a href="#" className="hover:text-synop-blue-light transition-colors">SynopLink</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold text-lg mb-6">Company</h4>
+            <h4 className="font-bold text-lg mb-6">Công ty</h4>
             <ul className="space-y-3 text-sm">
-              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Use Cases</a></li>
-              <li><a href="#" className="hover:text-synop-blue-light transition-colors">About Us</a></li>
+              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Tình huống sử dụng</a></li>
+              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Về chúng tôi</a></li>
               <li><a href="#" className="hover:text-synop-blue-light transition-colors">Blog</a></li>
-              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Press Room</a></li>
-              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Careers</a></li>
-              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Contact Us</a></li>
+              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Phòng báo chí</a></li>
+              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Tuyển dụng</a></li>
+              <li><a href="#" className="hover:text-synop-blue-light transition-colors">Liên hệ</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold text-lg mb-6 text-white">Contact Information</h4>
+            <h4 className="font-bold text-lg mb-6 text-white">Thông tin liên hệ</h4>
             <div className="space-y-3 text-sm">
               <p>Email: info@EV CARE.com</p>
-              <p>Phone: +1 (555) 123-4567</p>
-              <p>Address: Vinhome Grand Park, Quận 9</p>
+              <p>Điện thoại: +1 (555) 123-4567</p>
+              <p>Địa chỉ: Vinhome Grand Park, Quận 9</p>
             </div>
           </div>
         </div>
@@ -62,19 +62,19 @@ export default function Footer() {
                 <Globe className="w-5 h-5" />
               </div>
               <div className="flex space-x-4">
-                <a href="#" className="hover:text-synop-blue-light transition-colors underline">Press Inquiries</a>
-                <a href="#" className="hover:text-synop-blue-light transition-colors underline">Contact Us</a>
-                <a href="#" className="hover:text-synop-blue-light transition-colors underline">Status</a>
-                <a href="#" className="hover:text-synop-blue-light transition-colors underline">Security</a>
+                <a href="#" className="hover:text-synop-blue-light transition-colors underline">Báo chí</a>
+                <a href="#" className="hover:text-synop-blue-light transition-colors underline">Liên hệ</a>
+                <a href="#" className="hover:text-synop-blue-light transition-colors underline">Trạng thái</a>
+                <a href="#" className="hover:text-synop-blue-light transition-colors underline">Bảo mật</a>
               </div>
             </div>
             <div className="flex items-center space-x-6">
               <span>Vinhome Grand Park, Quận 9</span>
               <div className="flex space-x-4">
-                <a href="#" className="hover:text-synop-blue-light transition-colors underline">Privacy Policy</a>
-                <a href="#" className="hover:text-synop-blue-light transition-colors underline">Terms & Conditions</a>
+                <a href="#" className="hover:text-synop-blue-light transition-colors underline">Chính sách bảo mật</a>
+                <a href="#" className="hover:text-synop-blue-light transition-colors underline">Điều khoản & Điều kiện</a>
               </div>
-              <span>©COPYRIGHT EV CARE  2025</span>
+              <span>© BẢN QUYỀN EV CARE 2025</span>
             </div>
           </div>
         </div>

@@ -17,40 +17,40 @@ export default function AboutPage() {
     const features = [
         {
             icon: <Shield className="w-8 h-8" />,
-            title: "Reliable Service",
-            description: "Professional maintenance and repair services with certified technicians"
+            title: "Dịch vụ đáng tin cậy",
+            description: "Bảo dưỡng và sửa chữa chuyên nghiệp với kỹ thuật viên được chứng nhận"
         },
         {
             icon: <Award className="w-8 h-8" />,
-            title: "Quality Assurance",
-            description: "High-quality parts and equipment for all electric vehicle models"
+            title: "Đảm bảo chất lượng",
+            description: "Linh kiện và thiết bị chất lượng cao cho mọi dòng xe điện"
         },
         {
             icon: <Heart className="w-8 h-8" />,
-            title: "Customer Focus",
-            description: "Dedicated to providing exceptional customer service and support"
+            title: "Lấy khách hàng làm trọng tâm",
+            description: "Tận tâm mang đến dịch vụ và hỗ trợ khách hàng xuất sắc"
         },
         {
             icon: <Lightbulb className="w-8 h-8" />,
-            title: "Innovation",
-            description: "Staying ahead with the latest EV technology and service methods"
+            title: "Đổi mới",
+            description: "Luôn dẫn đầu với công nghệ và phương pháp dịch vụ xe điện mới nhất"
         }
     ];
 
     const values = [
-        "Environmental Responsibility",
-        "Customer Satisfaction",
-        "Technical Excellence",
-        "Transparency & Trust",
-        "Continuous Improvement",
-        "Community Support"
+        "Trách nhiệm với môi trường",
+        "Sự hài lòng của khách hàng",
+        "Xuất sắc về kỹ thuật",
+        "Minh bạch & Tin cậy",
+        "Cải tiến liên tục",
+        "Hỗ trợ cộng đồng"
     ];
 
     const stats = [
-        { number: "500+", label: "Happy Customers" },
-        { number: "50+", label: "Service Centers" },
-        { number: "99%", label: "Satisfaction Rate" },
-        { number: "24/7", label: "Customer Support" }
+        { number: "500+", label: "Khách hàng hài lòng" },
+        { number: "50+", label: "Trung tâm dịch vụ" },
+        { number: "99%", label: "Mức độ hài lòng" },
+        { number: "24/7", label: "Hỗ trợ khách hàng" }
     ];
 
     return (
@@ -76,11 +76,11 @@ export default function AboutPage() {
                             transition={{ duration: 0.6, delay: 0.4 }}
                         >
                             <Title level={1} className="text-4xl md:text-6xl font-bold text-gray-800 mb-6">
-                                About EV Care
+                                Về EV Care
                             </Title>
                             <Paragraph className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-                                We are dedicated to providing comprehensive electric vehicle maintenance and repair services,
-                                ensuring your EV runs smoothly while contributing to a sustainable future.
+                                Chúng tôi mang đến dịch vụ bảo dưỡng và sửa chữa xe điện toàn diện,
+                                đảm bảo chiếc xe điện của bạn vận hành êm ái và góp phần vào tương lai bền vững.
                             </Paragraph>
                         </motion.div>
                     </div>
@@ -108,12 +108,11 @@ export default function AboutPage() {
                                             <Target className="w-8 h-8 text-blue-600" />
                                         </div>
                                         <Title level={2} className="text-2xl font-bold text-gray-800 mb-4">
-                                            Our Mission
+                                            Sứ mệnh của chúng tôi
                                         </Title>
                                         <Paragraph className="text-gray-600 text-lg leading-relaxed">
-                                            To revolutionize electric vehicle maintenance by providing accessible, reliable, and
-                                            eco-friendly service solutions that empower EV owners to embrace sustainable transportation
-                                            with confidence and peace of mind.
+                                            Nâng tầm dịch vụ bảo dưỡng xe điện bằng các giải pháp dễ tiếp cận, đáng tin cậy
+                                            và thân thiện với môi trường, giúp chủ xe tự tin đồng hành cùng giao thông bền vững.
                                         </Paragraph>
                                     </div>
                                 </Card>
@@ -131,12 +130,12 @@ export default function AboutPage() {
                                             <Users className="w-8 h-8 text-green-600" />
                                         </div>
                                         <Title level={2} className="text-2xl font-bold text-gray-800 mb-4">
-                                            Our Vision
+                                            Tầm nhìn của chúng tôi
                                         </Title>
                                         <Paragraph className="text-gray-600 text-lg leading-relaxed">
-                                            To become the leading electric vehicle service network, creating a sustainable ecosystem
-                                            where EV maintenance is seamless, affordable, and environmentally responsible, contributing
-                                            to a cleaner future for generations to come.
+                                            Trở thành mạng lưới dịch vụ xe điện hàng đầu, kiến tạo hệ sinh thái bền vững nơi việc
+                                            bảo dưỡng xe điện diễn ra thuận tiện, hợp lý chi phí và có trách nhiệm với môi trường,
+                                            đóng góp cho một tương lai xanh hơn.
                                         </Paragraph>
                                     </div>
                                 </Card>
@@ -161,10 +160,10 @@ export default function AboutPage() {
                         className="text-center mb-12"
                     >
                         <Title level={2} className="text-3xl font-bold text-gray-800 mb-4">
-                            Why Choose EV Care?
+                            Vì sao chọn EV Care?
                         </Title>
                         <Paragraph className="text-gray-600 text-lg max-w-2xl mx-auto">
-                            We combine cutting-edge technology with exceptional service to deliver the best EV maintenance experience.
+                            Chúng tôi kết hợp công nghệ tiên tiến với dịch vụ xuất sắc để mang lại trải nghiệm bảo dưỡng xe điện tốt nhất.
                         </Paragraph>
                     </motion.div>
 
@@ -240,10 +239,10 @@ export default function AboutPage() {
                                 transition={{ duration: 0.8, delay: 0.7 }}
                             >
                                 <Title level={2} className="text-3xl font-bold text-gray-800 mb-6">
-                                    Our Core Values
+                                    Giá trị cốt lõi
                                 </Title>
                                 <Paragraph className="text-gray-600 text-lg mb-8">
-                                    These fundamental principles guide everything we do and shape our commitment to excellence.
+                                    Những nguyên tắc then chốt định hướng mọi hành động và cam kết chất lượng của chúng tôi.
                                 </Paragraph>
                                 <Space direction="vertical" size="middle" className="w-full">
                                     {values.map((value, index) => (
@@ -273,10 +272,10 @@ export default function AboutPage() {
                                             <Heart className="w-16 h-16 text-red-500" />
                                         </div>
                                         <Title level={3} className="text-2xl font-bold text-gray-800 mb-4">
-                                            Committed to Excellence
+                                            Cam kết xuất sắc
                                         </Title>
                                         <Paragraph className="text-gray-600">
-                                            Every interaction, every service, every moment is guided by our unwavering commitment to excellence.
+                                            Mọi tương tác, mọi dịch vụ, mọi khoảnh khắc đều được dẫn dắt bởi cam kết bền bỉ về chất lượng.
                                         </Paragraph>
                                     </div>
                                 </div>
@@ -300,10 +299,10 @@ export default function AboutPage() {
                         transition={{ duration: 0.6, delay: 0.8 }}
                     >
                         <Title level={2} className="text-3xl font-bold text-white mb-4">
-                            Ready to Experience EV Care?
+                            Sẵn sàng trải nghiệm EV Care?
                         </Title>
                         <Paragraph className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
-                            Join thousands of satisfied customers who trust EV Care for their electric vehicle maintenance needs.
+                            Hãy cùng hàng nghìn khách hàng tin tưởng EV Care cho nhu cầu bảo dưỡng xe điện của bạn.
                         </Paragraph>
                         <Space size="large">
                             <Button
@@ -313,7 +312,7 @@ export default function AboutPage() {
                                 icon={<ArrowRight className="w-5 h-5" />}
                                 onClick={() => window.location.href = '/service-centers'}
                             >
-                                Find Service Centers
+                                Tìm trung tâm dịch vụ
                             </Button>
                         </Space>
                     </motion.div>

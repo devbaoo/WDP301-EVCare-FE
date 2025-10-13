@@ -101,10 +101,10 @@ export default function UnauthorizedPage() {
                 {/* Title */}
                 <div className="text-center space-y-3">
                     <h1 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">
-                        Access Denied
+                        Truy cập bị từ chối
                     </h1>
                     <p className="text-gray-600 text-base leading-relaxed">
-                        You don't have permission to access this page.
+                        Bạn không có quyền truy cập trang này.
                     </p>
                 </div>
 
@@ -116,10 +116,10 @@ export default function UnauthorizedPage() {
                                 <ShieldX className="w-8 h-8 text-white" />
                             </div>
 
-                            <h3 className="text-xl font-bold text-red-600">Unauthorized Access</h3>
+                            <h3 className="text-xl font-bold text-red-600">Truy cập không được phép</h3>
                             <p className="text-gray-600 text-sm leading-relaxed">
-                                Your account doesn't have the required permissions to view this page.
-                                Please contact your administrator if you believe this is an error.
+                                Tài khoản của bạn không có đủ quyền để xem trang này.
+                                Vui lòng liên hệ quản trị viên nếu bạn cho rằng đây là nhầm lẫn.
                             </p>
                         </div>
 
@@ -138,7 +138,7 @@ export default function UnauthorizedPage() {
                                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold rounded-xl hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl"
                                 >
                                     <ArrowLeft className="w-4 h-4" />
-                                    Go Back
+                                    Quay lại
                                 </motion.button>
                                 <motion.button
                                     whileHover={{ scale: 1.05, y: -2 }}
@@ -147,7 +147,7 @@ export default function UnauthorizedPage() {
                                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl"
                                 >
                                     <Home className="w-4 h-4" />
-                                    Go Home
+                                    Về trang chủ
                                 </motion.button>
                             </div>
                         </motion.div>
@@ -156,7 +156,7 @@ export default function UnauthorizedPage() {
                         {user && (
                             <div className="border-t border-gray-200 pt-4">
                                 <p className="text-xs text-gray-500">
-                                    Current role: <span className="font-semibold text-gray-700">{user.role}</span>
+                                    Vai trò hiện tại: <span className="font-semibold text-gray-700">{user.role}</span>
                                 </p>
                             </div>
                         )}

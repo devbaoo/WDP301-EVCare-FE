@@ -148,7 +148,7 @@ const PaymentHistory: React.FC = () => {
   };
 
   const handleDownloadReceipt = (paymentId: string) => {
-    message.info('Download receipt feature coming soon');
+    message.info('Tính năng tải hóa đơn sẽ sớm được cung cấp');
     console.log('Download receipt:', paymentId);
   };
 

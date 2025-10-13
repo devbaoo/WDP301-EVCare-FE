@@ -107,9 +107,9 @@ export default function ServiceCentersPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-center text-white"
           >
-            <h1 className="text-4xl font-bold mb-4">All Service Centers</h1>
+            <h1 className="text-4xl font-bold mb-4">Tất cả trung tâm dịch vụ</h1>
             <p className="text-xl opacity-90">
-              Search and discover EV service centers near you
+              Tìm kiếm và khám phá trung tâm dịch vụ xe điện gần bạn
             </p>
           </motion.div>
         </div>
@@ -137,7 +137,7 @@ export default function ServiceCentersPage() {
               className="flex-1 max-w-md"
             >
               <Input
-                placeholder="Search service centers..."
+                placeholder="Tìm trung tâm dịch vụ..."
                 prefix={<SearchOutlined />}
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
@@ -162,10 +162,10 @@ export default function ServiceCentersPage() {
                 className="min-w-32"
                 suffixIcon={<FilterOutlined />}
               >
-                <Option value="all">All</Option>
-                <Option value="active">Active</Option>
-                <Option value="maintenance">Maintenance</Option>
-                <Option value="inactive">Inactive</Option>
+                <Option value="all">Tất cả</Option>
+                <Option value="active">Hoạt động</Option>
+                <Option value="maintenance">Bảo trì</Option>
+                <Option value="inactive">Tạm dừng</Option>
               </Select>
             </motion.div>
           </motion.div>
@@ -200,7 +200,7 @@ export default function ServiceCentersPage() {
                 className="text-center py-20"
               >
                 <Empty
-                  description="Unable to load service centers list"
+                  description="Không thể tải danh sách trung tâm dịch vụ"
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                 />
               </motion.div>
@@ -213,7 +213,7 @@ export default function ServiceCentersPage() {
                 className="text-center py-20"
               >
                 <Empty
-                  description="No service centers found"
+                  description="Không tìm thấy trung tâm dịch vụ nào"
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                 />
               </motion.div>
@@ -260,7 +260,7 @@ export default function ServiceCentersPage() {
                       showSizeChanger={false}
                       showQuickJumper
                       showTotal={(total, range) =>
-                        `${range[0]}-${range[1]} of ${total} centers`
+                        `${range[0]}-${range[1]} trong tổng ${total} trung tâm`
                       }
                       className="pagination-custom"
                     />

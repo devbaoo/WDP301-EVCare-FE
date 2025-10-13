@@ -135,14 +135,14 @@ export default function NotFoundPage() {
                 {/* Title */}
                 <div className="text-center space-y-4">
                     <h1 className="text-5xl md:text-6xl font-black text-gray-900 mb-4 tracking-tight">
-                        Oops!
+                        Ôi!
                     </h1>
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-700 mb-2">
-                        Page Not Found
+                        Không tìm thấy trang
                     </h2>
                     <p className="text-gray-600 text-lg leading-relaxed max-w-md mx-auto">
-                        The page you're looking for seems to have vanished into the digital void.
-                        Don't worry, even the best explorers sometimes take a wrong turn!
+                        Trang bạn đang tìm có vẻ đã biến mất.
+                        Đừng lo, ngay cả những người giỏi nhất đôi khi cũng đi nhầm hướng!
                     </p>
                 </div>
 
@@ -154,10 +154,10 @@ export default function NotFoundPage() {
                                 <Search className="w-8 h-8 text-white" />
                             </div>
 
-                            <h3 className="text-xl font-bold text-gray-800">Lost in Space?</h3>
+                            <h3 className="text-xl font-bold text-gray-800">Lạc giữa không gian?</h3>
                             <p className="text-gray-600 text-sm leading-relaxed">
-                                The page you requested could not be found. It might have been moved, deleted,
-                                or you might have entered the wrong URL.
+                                Không thể tìm thấy trang bạn yêu cầu. Có thể trang đã được di chuyển, xóa,
+                                hoặc bạn đã nhập sai địa chỉ URL.
                             </p>
                         </div>
 
@@ -176,7 +176,7 @@ export default function NotFoundPage() {
                                     className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl"
                                 >
                                     <Home className="w-4 h-4" />
-                                    Go Home
+                                    Về trang chủ
                                 </motion.button>
                                 <motion.button
                                     whileHover={{ scale: 1.05, y: -2 }}
@@ -185,7 +185,7 @@ export default function NotFoundPage() {
                                     className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold rounded-xl hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl"
                                 >
                                     <ArrowLeft className="w-4 h-4" />
-                                    Go Back
+                                    Quay lại
                                 </motion.button>
                                 <motion.button
                                     whileHover={{ scale: 1.05, y: -2 }}
@@ -194,7 +194,7 @@ export default function NotFoundPage() {
                                     className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl"
                                 >
                                     <RefreshCw className="w-4 h-4" />
-                                    Refresh
+                                    Tải lại
                                 </motion.button>
                             </div>
                         </motion.div>
@@ -206,8 +206,8 @@ export default function NotFoundPage() {
                 <div className="text-center">
                     <div className="inline-block bg-white/60 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-lg border border-white/20">
                         <p className="text-sm text-gray-600">
-                            <span className="font-semibold text-gray-700">Fun fact:</span> The 404 error gets its name from
-                            room 404 at CERN, where the original web servers were located!
+                            <span className="font-semibold text-gray-700">Thông tin thú vị:</span> Lỗi 404 có tên từ phòng 404
+                            tại CERN, nơi đặt các máy chủ web đầu tiên!
                         </p>
                     </div>
                 </div>

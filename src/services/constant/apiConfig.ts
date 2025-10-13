@@ -240,5 +240,6 @@ export const CHAT_CONVERSATION_MESSAGES_ENDPOINT = (
 };
 export const CHAT_CONVERSATION_MARK_READ_ENDPOINT = (conversationId: string) =>
   `${CHAT_CONVERSATIONS_ENDPOINT}/${conversationId}/read`;
-export const CHAT_CONVERSATION_SEND_MESSAGE_ENDPOINT = (conversationId: string) =>
-  `${CHAT_CONVERSATIONS_ENDPOINT}/${conversationId}/messages`;
+export const CHAT_CONVERSATION_SEND_MESSAGE_ENDPOINT = (
+  conversationId: string
+) => `${CHAT_CONVERSATIONS_ENDPOINT}/${conversationId}/messages`;
