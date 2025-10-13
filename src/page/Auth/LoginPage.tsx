@@ -37,7 +37,7 @@ export default function LoginPage() {
           <ArrowLeft className="w-4 h-4 text-gray-700 group-hover:text-gray-900 transition-colors" />
           <Home className="w-4 h-4 text-gray-700 group-hover:text-gray-900 transition-colors" />
           <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900 transition-colors">
-            Back to Home
+            Về trang chủ
           </span>
         </motion.button>
       </motion.div>
@@ -131,7 +131,7 @@ export default function LoginPage() {
             transition={{ duration: 0.4 }}
             className="text-4xl font-black bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent mb-2"
           >
-            {isLogin ? "Welcome back" : "Create Account"}
+            {isLogin ? "Chào mừng trở lại" : "Tạo tài khoản"}
           </motion.h1>
           <motion.p
             key={isLogin ? "welcome-desc" : "create-desc"}
@@ -141,8 +141,8 @@ export default function LoginPage() {
             className="text-gray-600 text-base leading-relaxed"
           >
             {isLogin
-              ? "Delivering professional EV care with the trust and reliability you deserve."
-              : "Join us for professional EV care services"
+              ? "Mang đến dịch vụ chăm sóc xe điện chuyên nghiệp, uy tín và đáng tin cậy."
+              : "Tham gia cùng chúng tôi để sử dụng dịch vụ chăm sóc xe điện chuyên nghiệp"
             }
           </motion.p>
         </motion.div>
@@ -176,7 +176,7 @@ export default function LoginPage() {
         >
           <div>
             <span className="text-gray-500 text-sm">
-              {isLogin ? "Are you new here? " : "Already have an account? "}
+              {isLogin ? "Bạn mới ở đây? " : "Bạn đã có tài khoản? "}
             </span>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -184,7 +184,7 @@ export default function LoginPage() {
               onClick={toggleMode}
               className="text-gray-600 hover:text-gray-900 text-sm font-semibold transition-colors duration-200 hover:underline"
             >
-              {isLogin ? "Sign up" : "Sign in"}
+              {isLogin ? "Đăng ký" : "Đăng nhập"}
             </motion.button>
           </div>
         </motion.div>

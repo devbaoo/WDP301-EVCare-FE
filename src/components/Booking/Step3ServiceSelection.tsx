@@ -7,8 +7,7 @@ import {
     ArrowLeft,
     Search,
     Check,
-    Info,
-    Users
+    Info
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../services/store/store';
 import { fetchCompatibleServices, setSelectedService, updateBookingData } from '../../services/features/booking/bookingSlice';
@@ -62,6 +61,19 @@ const Step3ServiceSelection: React.FC<Step3ServiceSelectionProps> = ({ onNext, o
     }, [searchTerm, categoryFilter, filterMode]);
 
     const pagedServices = filteredServices.slice((servicesPage - 1) * pageSize, servicesPage * pageSize);
+
+    const getStatusText = (status?: string) => {
+        switch (status) {
+            case 'active':
+                return 'Hoạt động';
+            case 'inactive':
+                return 'Tạm dừng';
+            case 'maintenance':
+                return 'Bảo trì';
+            default:
+                return status || 'N/A';
+        }
+    };
 
     const handleSelectService = (service: ServiceType) => {
         // Toggle: if clicking the same service, unselect it
@@ -168,7 +180,7 @@ const Step3ServiceSelection: React.FC<Step3ServiceSelectionProps> = ({ onNext, o
                                         </div>
                                     </Space>
                                     <div className="flex justify-end gap-2 pt-2">
-                                        <Button size="small" onClick={() => { setTempFilterMode('all'); setTempCategory(categories[0] || ''); }}>Reset</Button>
+                                        <Button size="small" onClick={() => { setTempFilterMode('all'); setTempCategory(categories[0] || ''); }}>Đặt lại</Button>
                                         <Button
                                             type="primary"
                                             size="small"
@@ -177,12 +189,12 @@ const Step3ServiceSelection: React.FC<Step3ServiceSelectionProps> = ({ onNext, o
                                                 setCategoryFilter(tempCategory || 'all');
                                                 setFilterOpen(false);
                                             }}
-                                        >OK</Button>
+                                        >Đồng ý</Button>
                                     </div>
                                 </div>
                             }
                         >
-                            <Button className="h-12">Filters</Button>
+                            <Button className="h-12">Bộ lọc</Button>
                         </Popover>
                         {/* Category pills are moved into the Filters popover as requested */}
                     </div>
@@ -234,12 +246,8 @@ const Step3ServiceSelection: React.FC<Step3ServiceSelectionProps> = ({ onNext, o
                                                             <DollarSign className="w-4 h-4" />
                                                             <span>{formatPrice(service?.pricing?.basePrice)}</span>
                                                         </div>
-                                                        <div className="flex items-center space-x-1">
-                                                            <Users className="w-4 h-4" />
-                                                            <span>{service?.serviceDetails?.minTechnicians || 1}-{service?.serviceDetails?.maxTechnicians || 1} kỹ thuật viên</span>
-                                                        </div>
                                                         <Tag color={service?.status === 'active' ? 'green' : 'orange'}>
-                                                            {service?.status || 'N/A'}
+                                                            {getStatusText(service?.status)}
                                                         </Tag>
                                                     </div>
                                                 </div>
@@ -252,11 +260,11 @@ const Step3ServiceSelection: React.FC<Step3ServiceSelectionProps> = ({ onNext, o
                                             <div className="flex flex-wrap gap-1">
                                                 {service.isPopular && (
                                                     <Tag color="green" className="text-xs">
-                                                        Popular
+                                                        Phổ biến
                                                     </Tag>
                                                 )}
                                                 <Tag color={service.status === 'active' ? 'blue' : 'orange'} className="text-xs">
-                                                    {service.status}
+                                                    {getStatusText(service.status)}
                                                 </Tag>
                                             </div>
 
@@ -289,16 +297,8 @@ const Step3ServiceSelection: React.FC<Step3ServiceSelectionProps> = ({ onNext, o
                                                                         <span className="font-medium ml-2">{service?.pricing?.isNegotiable ? 'Có' : 'Không'}</span>
                                                                     </div>
                                                                     <div>
-                                                                        <span className="text-gray-600">Kỹ thuật viên tối thiểu:</span>
-                                                                        <span className="font-medium ml-2">{service?.serviceDetails?.minTechnicians || 1}</span>
-                                                                    </div>
-                                                                    <div>
-                                                                        <span className="text-gray-600">Kỹ thuật viên tối đa:</span>
-                                                                        <span className="font-medium ml-2">{service?.serviceDetails?.maxTechnicians || 1}</span>
-                                                                    </div>
-                                                                    <div>
                                                                         <span className="text-gray-600">Trạng thái:</span>
-                                                                        <span className="font-medium ml-2">{service?.status || 'N/A'}</span>
+                                                                        <span className="font-medium ml-2">{getStatusText(service?.status)}</span>
                                                                     </div>
                                                                 </div>
                                                             </div>

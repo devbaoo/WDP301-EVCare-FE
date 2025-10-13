@@ -40,7 +40,7 @@ export default function Header() {
     {
       key: 'profile',
       icon: <UserOutlined />,
-      label: 'Profile',
+      label: 'Hồ sơ',
       onClick: handleNavigateToProfile,
     },
     {
@@ -58,7 +58,7 @@ export default function Header() {
     {
       key: 'manageVehicles',
       icon: <CarOutlined />,
-      label: 'Manage Vehicles',
+      label: 'Quản lý xe',
       onClick: handleNavigateToVehicles,
     },
     {
@@ -67,13 +67,13 @@ export default function Header() {
     {
       key: 'history',
       icon: <HistoryOutlined />,
-      label: 'Booking History',
+      label: 'Lịch sử đặt lịch',
       onClick: handleNavigateToBookingHistory,
     },
     {
       key: 'payments',
       icon: <CreditCardOutlined />,
-      label: 'Payment History',
+      label: 'Lịch sử thanh toán',
       onClick: handleNavigateToPaymentHistory,
     },
     {
@@ -82,7 +82,7 @@ export default function Header() {
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: 'Logout',
+      label: 'Đăng xuất',
       onClick: handleLogout,
     },
   ];
@@ -120,7 +120,7 @@ export default function Header() {
           >
             <motion.a href="/" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <button className="text-synop-blue-dark font-semibold text-sm tracking-wide hover:text-synop-blue-primary transition-colors">
-                Home
+                Trang chủ
               </button>
             </motion.a>
             <motion.a
@@ -129,7 +129,7 @@ export default function Header() {
               whileTap={{ scale: 0.95 }}
               className="text-synop-blue-dark font-semibold text-sm tracking-wide hover:text-synop-blue-primary transition-colors"
             >
-              Booking
+              Đặt lịch
             </motion.a>
             <motion.a
               href="/about"
@@ -137,7 +137,7 @@ export default function Header() {
               whileTap={{ scale: 0.95 }}
               className="text-synop-blue-dark font-semibold text-sm tracking-wide hover:text-synop-blue-primary transition-colors"
             >
-              About us
+              Về chúng tôi
             </motion.a>
             <motion.a
               href="/contact"
@@ -145,7 +145,7 @@ export default function Header() {
               whileTap={{ scale: 0.95 }}
               className="text-synop-blue-dark font-semibold text-sm tracking-wide hover:text-synop-blue-primary transition-colors"
             >
-              Contacts
+              Liên hệ
             </motion.a>
           </motion.div>
           <motion.div
@@ -184,7 +184,7 @@ export default function Header() {
                 whileTap={{ scale: 0.95 }}
               >
                 <Button className="bg-white text-synop-blue-primary border border-synop-blue-primary hover:bg-synop-blue-primary hover:text-white rounded-full px-6">
-                  Login/Register
+                  Đăng nhập/Đăng ký
                 </Button>
               </motion.a>
             )}
