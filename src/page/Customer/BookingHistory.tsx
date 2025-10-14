@@ -1016,15 +1016,10 @@ function BookingHistory() {
                                             <Text className="block">{iq.diagnosisDetails || '-'}</Text>
                                         </Col>
                                         <Col xs={24} md={12}>
-                                            <Text type="secondary" className="block text-xs">Số tiền báo giá</Text>
-                                            <Text strong className="block text-blue-600">{iq.quoteAmount ? formatCurrency(iq.quoteAmount) : '-'}</Text>
-                                        </Col>
-                                        <Col xs={24} md={12}>
                                             <Text type="secondary" className="block text-xs">Trạng thái báo giá</Text>
                                             {(() => {
                                                 const qs = String(iq.quoteStatus || 'pending').toLowerCase();
                                                 const qc = QUOTE_STATUS_CONFIG[qs] || { color: '#8c8c8c', label: qs };
-                                                // Use Tag with inline color style to reflect hex color
                                                 return (
                                                     <Tag style={{ borderColor: qc.color, color: qc.color }}>
                                                         {qc.label}
@@ -1035,28 +1030,40 @@ function BookingHistory() {
                                     </Row>
                                     <Divider />
                                     <div>
-                                        <Text type="secondary" className="block text-xs mb-2">Chi tiết báo giá</Text>
+                                        <Text strong className="block mb-2">Chi tiết báo giá</Text>
                                         {(() => {
                                             const qd: any = iq.quoteDetails;
                                             if (!qd) {
                                                 return <Text className="block">-</Text>;
                                             }
-                                            // If server returns a string, show directly
                                             if (typeof qd === 'string') {
-                                                return <Text className="block">{qd}</Text>;
+                                                return (
+                                                    <div className="space-y-3">
+                                                        <Text className="block">{qd}</Text>
+                                                        {Boolean(iq.quoteAmount) && (
+                                                            <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+                                                                <Text strong className="text-blue-700">Tổng cộng</Text>
+                                                                <Text strong className="text-blue-700" style={{ fontSize: 20 }}>
+                                                                    {formatCurrency(Number(iq.quoteAmount || 0))}
+                                                                </Text>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
                                             }
-                                            // Otherwise, assume object shape { items: [...], labor: { minutes, rate } }
                                             const items = Array.isArray(qd.items) ? qd.items : [];
                                             const labor = qd.labor || {};
                                             const laborMinutes = Number(labor.minutes || 0);
                                             const laborRate = Number(labor.rate || 0);
                                             const laborCost = laborMinutes * laborRate;
+                                            const itemsTotal = items.reduce((sum: number, it: any) => sum + Number(it.quantity || 0) * Number(it.unitPrice || 0), 0);
+                                            const grandTotal = Number(itemsTotal + laborCost);
 
                                             return (
-                                                <div className="space-y-2">
+                                                <div className="space-y-3">
                                                     {items.length > 0 && (
                                                         <div>
-                                                            <Text strong className="block">Linh kiện</Text>
+                                                            <Text type="secondary" className="block text-xs">Linh kiện</Text>
                                                             <ul className="list-disc list-inside space-y-1">
                                                                 {items.map((it: any, idx: number) => {
                                                                     const qty = Number(it.quantity || 0);
@@ -1065,7 +1072,7 @@ function BookingHistory() {
                                                                     return (
                                                                         <li key={`${it.partId || it.name || idx}-${idx}`}>
                                                                             <Text>
-                                                                                {(it.name || it.partId || 'Linh kiện')} x{qty > 0 ? qty : 1} - {formatCurrency(unit)} mỗi cái
+                                                                                {(it.name || it.partId || 'Linh kiện')} x{qty > 0 ? qty : 1} — {formatCurrency(unit)} / cái
                                                                                 {lineTotal > 0 && (
                                                                                     <span> (Tổng: {formatCurrency(lineTotal)})</span>
                                                                                 )}
@@ -1074,11 +1081,15 @@ function BookingHistory() {
                                                                     );
                                                                 })}
                                                             </ul>
+                                                            <div className="flex items-center justify-end mt-1">
+                                                                <Text type="secondary">Tạm tính linh kiện:&nbsp;</Text>
+                                                                <Text strong>{formatCurrency(itemsTotal)}</Text>
+                                                            </div>
                                                         </div>
                                                     )}
                                                     {(laborMinutes > 0 || laborRate > 0) && (
                                                         <div>
-                                                            <Text strong className="block">Công thợ</Text>
+                                                            <Text type="secondary" className="block text-xs">Công thợ</Text>
                                                             <Text>
                                                                 {laborMinutes} phút x {formatCurrency(laborRate)} = {formatCurrency(laborCost)}
                                                             </Text>
@@ -1087,6 +1098,13 @@ function BookingHistory() {
                                                     {items.length === 0 && !(laborMinutes > 0 || laborRate > 0) && (
                                                         <Text className="block">-</Text>
                                                     )}
+                                                    <Divider className="my-2" />
+                                                    <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+                                                        <Text strong className="text-blue-700">Tổng cộng</Text>
+                                                        <Text strong className="text-blue-700" style={{ fontSize: 22 }}>
+                                                            {formatCurrency(grandTotal > 0 ? grandTotal : Number(iq.quoteAmount || 0))}
+                                                        </Text>
+                                                    </div>
                                                 </div>
                                             );
                                         })()}
@@ -1132,17 +1150,17 @@ function BookingHistory() {
 
                         {Array.isArray(progressData?.milestones) && progressData.milestones.length > 0 && (
                             <Card title="Các mốc tiến độ" className="mb-4">
-                                <ul className="list-disc list-inside space-y-2">
-                                    {progressData.milestones.map((m: Record<string, any>) => (
-                                        <li key={m._id || m.name}>
-                                            <Text strong>{m.name}:</Text> {m.description} {m.status && (
-                                                <Tag color={String(m.status).toLowerCase() === 'completed' ? 'green' : 'default'}>
-                                                    {String(m.status).toLowerCase() === 'completed' ? 'hoàn thành' : 'pending'}
-                                                </Tag>
-                                            )}
-                                        </li>
+                                <div className="space-y-3">
+                                    {progressData.milestones.map((m: Record<string, any>, idx: number) => (
+                                        <div key={m._id || `${m.name}-${idx}`} className="relative pl-6 border-l border-gray-200">
+                                            <span className="absolute -left-1.5 top-2 w-3 h-3 rounded-full bg-blue-500" />
+                                            <div>
+                                                <Text strong className="block">{m.name}</Text>
+                                                <Text type="secondary" className="block">{m.description || '-'}</Text>
+                                            </div>
+                                        </div>
                                     ))}
-                                </ul>
+                                </div>
                             </Card>
                         )}
 
