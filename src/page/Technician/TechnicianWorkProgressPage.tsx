@@ -14,6 +14,7 @@ import {
     startMaintenance as startMaintenanceThunk,
     completeMaintenance,
 } from "../../services/features/technician/workProgressSlice";
+import { cancelBooking } from "../../services/features/booking/bookingSlice";
 import { TechnicianSchedule } from "@/interfaces/technician";
 import { WorkProgress } from "@/interfaces/workProgress";
 import { fetchParts, fetchPartsByCategory } from "../../services/features/parts/partsSlice";
@@ -52,6 +53,11 @@ export default function TechnicianWorkProgressPage() {
     const [dayModalSelectedAppt, setDayModalSelectedAppt] = useState<Record<string, string>>({});
     const { parts: allParts, loading: partsLoading } = useAppSelector((s) => s.parts);
     const [selectedPartCategory, setSelectedPartCategory] = useState<string | undefined>(undefined);
+
+    // Cancel booking state
+    const [cancelOpen, setCancelOpen] = useState(false);
+    const [cancelReason, setCancelReason] = useState("");
+    const [selectedBookingForCancel, setSelectedBookingForCancel] = useState<string | null>(null);
 
     const startDate = useMemo(() => currentMonth.startOf("month").format("YYYY-MM-DD"), [currentMonth]);
     const endDate = useMemo(() => currentMonth.endOf("month").format("YYYY-MM-DD"), [currentMonth]);
@@ -368,6 +374,42 @@ export default function TechnicianWorkProgressPage() {
         }
     };
 
+    const openCancelBooking = (appointmentId: string) => {
+        setSelectedBookingForCancel(appointmentId);
+        setCancelReason("");
+        setCancelOpen(true);
+    };
+
+    const closeCancelBooking = () => {
+        setCancelOpen(false);
+        setSelectedBookingForCancel(null);
+        setCancelReason("");
+    };
+
+    const submitCancelBooking = async () => {
+        if (!selectedBookingForCancel) return;
+        try {
+            const result = await dispatch(cancelBooking({
+                bookingId: selectedBookingForCancel,
+                reason: cancelReason
+            }));
+            if (cancelBooking.fulfilled.match(result)) {
+                message.success("Đã hủy lịch hẹn thành công");
+                closeCancelBooking();
+                // Reload schedules to reflect the cancellation
+                await loadSchedules();
+                // Close detail modal if open
+                setDetailOpen(false);
+            } else {
+                const payload = result.payload as unknown;
+                const errMsg = (typeof payload === 'string' ? payload : (payload as { message?: string })?.message) || "Hủy lịch hẹn thất bại";
+                message.error(String(errMsg));
+            }
+        } catch {
+            message.error("Hủy lịch hẹn thất bại");
+        }
+    };
+
     const handleCreate = async () => {
         try {
             const values = await form.validateFields();
@@ -483,6 +525,23 @@ export default function TechnicianWorkProgressPage() {
                                         <Button danger onClick={() => { completeForm.resetFields(); setCompleteOpen(true); }} disabled={detailProgress?.currentStatus !== 'in_progress'}>Hoàn thành</Button>
                                     </>
                                 )}
+                                {/* Cancel booking button - show for all appointments that can be cancelled */}
+                                {detailSelectedAppointmentId && (() => {
+                                    const currentAppt = (detailSchedule && Array.isArray(detailSchedule.assignedAppointments))
+                                        ? (detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId) || detailSchedule.assignedAppointments[0])
+                                        : undefined;
+                                    const apptStatus = currentAppt?.status || '';
+                                    // Allow cancellation for most statuses except completed and cancelled
+                                    const canCancel = !['completed', 'cancelled'].includes(apptStatus);
+                                    return canCancel ? (
+                                        <Button
+                                            danger
+                                            onClick={() => openCancelBooking(detailSelectedAppointmentId)}
+                                        >
+                                            Hủy lịch hẹn
+                                        </Button>
+                                    ) : null;
+                                })()}
                             </Space>
                         </div>
                         {/* Chọn booking nếu có nhiều */}
@@ -811,6 +870,56 @@ export default function TechnicianWorkProgressPage() {
                         <TextArea rows={3} />
                     </Form.Item>
                 </Form>
+            </Modal>
+
+            {/* Cancel Booking Modal */}
+            <Modal
+                title={
+                    <div className="flex items-center gap-2">
+                        <span className="text-red-500">⚠️</span>
+                        Hủy lịch hẹn
+                    </div>
+                }
+                open={cancelOpen}
+                onCancel={closeCancelBooking}
+                footer={[
+                    <Button key="cancel" onClick={closeCancelBooking}>
+                        Hủy
+                    </Button>,
+                    <Button
+                        key="submit"
+                        danger
+                        onClick={submitCancelBooking}
+                        loading={loading}
+                    >
+                        Xác nhận hủy
+                    </Button>
+                ]}
+                width={500}
+            >
+                <div className="space-y-4">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div className="flex items-center gap-3">
+                            <span className="text-red-500 text-xl">⚠️</span>
+                            <div>
+                                <Text strong className="text-red-800 block">Cảnh báo</Text>
+                                <Text className="text-red-700">Hành động này không thể hoàn tác. Lịch hẹn sẽ bị hủy.</Text>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <Text strong className="block mb-2">
+                            Lý do hủy (tùy chọn)
+                        </Text>
+                        <TextArea
+                            rows={3}
+                            placeholder="Lý do hủy lịch hẹn là gì?"
+                            value={cancelReason}
+                            onChange={(e) => setCancelReason(e.target.value)}
+                        />
+                    </div>
+                </div>
             </Modal>
         </div>
     );
