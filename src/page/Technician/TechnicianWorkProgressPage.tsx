@@ -223,8 +223,7 @@ export default function TechnicianWorkProgressPage() {
         }
         const existed = await ensureProgressChecked(apptId);
         if (existed) {
-            message.info("Booking đã có tiến trình.");
-            return;
+            message.info("Booking đã có tiến trình. Bạn vẫn có thể tạo thêm tiến trình.");
         }
         // Prefill serviceDate and startTime from booking if available
         let serviceDateValue: dayjs.Dayjs | undefined;
@@ -414,12 +413,7 @@ export default function TechnicianWorkProgressPage() {
         try {
             const values = await form.validateFields();
             if (!selectedAppointmentId || !technicianId) return;
-            const existed = await ensureProgressChecked(selectedAppointmentId);
-            if (existed) {
-                message.info("Booking đã có tiến trình.");
-                setCreateOpen(false);
-                return;
-            }
+            await ensureProgressChecked(selectedAppointmentId);
             const payload = {
                 technicianId,
                 appointmentId: selectedAppointmentId,
@@ -693,14 +687,11 @@ export default function TechnicianWorkProgressPage() {
                                                     <Tooltip title={(() => {
                                                         const chosen = dayModalSelectedAppt[item._id] || (item.assignedAppointments?.[0]?._id as string | undefined) || (item.appointmentId as string | undefined);
                                                         const has = chosen ? progressExistSet.has(chosen) : false;
-                                                        return has ? "Đã có tiến trình cho booking này" : (hasBooking ? undefined : "Lịch này chưa gắn booking - không thể tạo tiến trình");
+                                                        return has ? "Đã có tiến trình cho booking này (vẫn có thể tạo thêm)" : (hasBooking ? undefined : "Lịch này chưa gắn booking - không thể tạo tiến trình");
                                                     })()}>
                                                         <Button
                                                             type="primary"
-                                                            disabled={!hasBooking || (() => {
-                                                                const chosen = dayModalSelectedAppt[item._id] || (item.assignedAppointments?.[0]?._id as string | undefined) || (item.appointmentId as string | undefined);
-                                                                return chosen ? progressExistSet.has(chosen) : false;
-                                                            })()}
+                                                            disabled={!hasBooking}
                                                             onClick={() => {
                                                                 const chosen = dayModalSelectedAppt[item._id] || (item.assignedAppointments?.[0]?._id as string | undefined) || (item.appointmentId as string | undefined);
                                                                 openCreateProgress(item, chosen);
