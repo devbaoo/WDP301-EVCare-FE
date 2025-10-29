@@ -20,6 +20,8 @@ import {
   BOOKINGS_PENDING_OFFLINE_PAYMENT_ENDPOINT,
   SUBMIT_CUSTOMER_FEEDBACK_ENDPOINT,
   GET_CUSTOMER_FEEDBACK_ENDPOINT,
+  APPOINTMENT_INSPECTION_QUOTE_ENDPOINT,
+  APPOINTMENT_QUOTE_RESPONSE_ENDPOINT,
 } from "../../constant/apiConfig";
 import { Vehicle, CreateVehicleData } from "../../../interfaces/vehicle";
 import {
@@ -486,6 +488,69 @@ export const submitCustomerFeedback = createAsyncThunk(
   }
 );
 
+// New: technician submits inspection & quote by appointment
+export const submitAppointmentInspectionQuote = createAsyncThunk(
+  "booking/submitAppointmentInspectionQuote",
+  async (
+    params: {
+      appointmentId: string;
+      payload: {
+        vehicleCondition?: string;
+        diagnosisDetails?: string;
+        inspectionNotes?: string;
+        quoteDetails?: {
+          items?: Array<{
+            partId: string;
+            quantity: number;
+            unitPrice: number;
+            name?: string;
+          }>;
+        };
+      };
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosInstance.post(
+        APPOINTMENT_INSPECTION_QUOTE_ENDPOINT(params.appointmentId),
+        params.payload
+      );
+      return response.data;
+    } catch (err: unknown) {
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to submit inspection & quote"
+      );
+    }
+  }
+);
+
+// New: customer responds to quote (approve/reject) by appointment
+export const respondAppointmentQuote = createAsyncThunk(
+  "booking/respondAppointmentQuote",
+  async (
+    params: {
+      appointmentId: string;
+      status: "approved" | "rejected";
+      notes?: string;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosInstance.put(
+        APPOINTMENT_QUOTE_RESPONSE_ENDPOINT(params.appointmentId),
+        { status: params.status, notes: params.notes }
+      );
+      return response.data;
+    } catch (err: unknown) {
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to respond to quote"
+      );
+    }
+  }
+);
+
 const bookingSlice = createSlice({
   name: "booking",
   initialState,
@@ -876,6 +941,50 @@ const bookingSlice = createSlice({
         }
       })
       .addCase(submitCustomerFeedback.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Submit appointment inspection & quote
+      .addCase(submitAppointmentInspectionQuote.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(submitAppointmentInspectionQuote.fulfilled, (state, action) => {
+        state.loading = false;
+        const appt = action.payload?.data;
+        if (!appt?._id) return;
+        const idx = state.myBookings.findIndex((b) => b._id === appt._id);
+        if (idx !== -1) {
+          state.myBookings[idx] = {
+            ...state.myBookings[idx],
+            status: appt.status,
+            inspectionAndQuote: appt.inspectionAndQuote,
+          } as (typeof state.myBookings)[number];
+        }
+      })
+      .addCase(submitAppointmentInspectionQuote.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Respond appointment quote
+      .addCase(respondAppointmentQuote.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(respondAppointmentQuote.fulfilled, (state, action) => {
+        state.loading = false;
+        const appt = action.payload?.data;
+        if (!appt?._id) return;
+        const idx = state.myBookings.findIndex((b) => b._id === appt._id);
+        if (idx !== -1) {
+          state.myBookings[idx] = {
+            ...state.myBookings[idx],
+            status: appt.status,
+            inspectionAndQuote: appt.inspectionAndQuote,
+          } as (typeof state.myBookings)[number];
+        }
+      })
+      .addCase(respondAppointmentQuote.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

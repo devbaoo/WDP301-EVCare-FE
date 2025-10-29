@@ -6,7 +6,6 @@ import {
   WORK_PROGRESS_DETAIL_ENDPOINT,
   WORK_PROGRESS_PROCESS_PAYMENT_ENDPOINT,
   APPOINTMENT_PROGRESS_ENDPOINT,
-  TECHNICIAN_PROGRESS_INSPECTION_QUOTE_ENDPOINT,
   TECHNICIAN_PROGRESS_START_MAINTENANCE_ENDPOINT,
   TECHNICIAN_PROGRESS_COMPLETE_MAINTENANCE_ENDPOINT,
 } from "../../constant/apiConfig";
@@ -15,7 +14,6 @@ import {
   CreateWorkProgressPayload,
   CreateWorkProgressResponse,
   WorkProgressResponse,
-  InspectionQuotePayload,
   CompleteMaintenancePayload,
   WorkProgressQueryParams,
   WorkProgressListResponse,
@@ -156,27 +154,7 @@ export const getProgressByAppointment = createAsyncThunk(
   }
 );
 
-export const submitInspectionQuote = createAsyncThunk(
-  "workProgress/inspectionQuote",
-  async (
-    params: { progressId: string; payload: InspectionQuotePayload },
-    { rejectWithValue }
-  ) => {
-    try {
-      const res = await axiosInstance.post(
-        TECHNICIAN_PROGRESS_INSPECTION_QUOTE_ENDPOINT(params.progressId),
-        params.payload
-      );
-      return res.data as WorkProgressResponse;
-    } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const error = err as any;
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to submit quote"
-      );
-    }
-  }
-);
+// Removed: submitInspectionQuote (moved to appointment-level in booking slice)
 
 export const startMaintenance = createAsyncThunk(
   "workProgress/startMaintenance",
@@ -317,16 +295,7 @@ const workProgressSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(submitInspectionQuote.fulfilled, (state, action) => {
-        if (action.payload.success) {
-          const wp = action.payload.data as WorkProgress;
-          const apptId =
-            typeof wp.appointmentId === "string"
-              ? wp.appointmentId
-              : wp.appointmentId?._id;
-          if (apptId) state.byAppointment[apptId] = wp;
-        }
-      })
+      // submitInspectionQuote removed
       .addCase(startMaintenance.fulfilled, (state, action) => {
         if (action.payload.success) {
           const wp = action.payload.data as WorkProgress;
