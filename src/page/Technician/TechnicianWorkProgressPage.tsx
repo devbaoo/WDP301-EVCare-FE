@@ -5,16 +5,16 @@ import viVN from "antd/locale/vi_VN";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import axiosInstance from "../../services/constant/axiosInstance";
-import { TECHNICIAN_SCHEDULES_BY_TECHNICIAN_ENDPOINT } from "../../services/constant/apiConfig";
+import { TECHNICIAN_SCHEDULES_BY_TECHNICIAN_ENDPOINT, APPOINTMENT_VIEW_QUOTE_ENDPOINT } from "../../services/constant/apiConfig";
 import { useAppSelector, useAppDispatch } from "../../services/store/store";
 import {
     createWorkProgress,
     getProgressByAppointment,
-    submitInspectionQuote as submitInspectionQuoteThunk,
     startMaintenance as startMaintenanceThunk,
     completeMaintenance,
 } from "../../services/features/technician/workProgressSlice";
 import { cancelBooking } from "../../services/features/booking/bookingSlice";
+import { submitAppointmentInspectionQuote } from "../../services/features/booking/bookingSlice";
 import { TechnicianSchedule } from "@/interfaces/technician";
 import { WorkProgress } from "@/interfaces/workProgress";
 import { fetchParts, fetchPartsByCategory } from "../../services/features/parts/partsSlice";
@@ -39,6 +39,7 @@ export default function TechnicianWorkProgressPage() {
     const [schedules, setSchedules] = useState<ScheduleLike[]>([]);
     const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
     const [createOpen, setCreateOpen] = useState(false);
+    const [createCtx, setCreateCtx] = useState<{ schedule: ScheduleLike; apptId: string } | null>(null);
     const [form] = Form.useForm();
     const [detailOpen, setDetailOpen] = useState(false);
     const [detailLoading, setDetailLoading] = useState(false);
@@ -46,6 +47,7 @@ export default function TechnicianWorkProgressPage() {
     const [detailProgress, setDetailProgress] = useState<WorkProgress | null>(null);
     const [detailSelectedAppointmentId, setDetailSelectedAppointmentId] = useState<string | null>(null);
     const [quoteOpen, setQuoteOpen] = useState(false);
+    const [quoteAppointmentId, setQuoteAppointmentId] = useState<string | null>(null);
     const [quoteForm] = Form.useForm();
     const [completeOpen, setCompleteOpen] = useState(false);
     const [completeForm] = Form.useForm();
@@ -169,6 +171,19 @@ export default function TechnicianWorkProgressPage() {
         }
     };
 
+    const ensureQuoteApproved = async (appointmentId: string): Promise<boolean> => {
+        try {
+            const res = await axiosInstance.get(APPOINTMENT_VIEW_QUOTE_ENDPOINT(appointmentId));
+            const data = res.data?.data || res.data;
+            const status: string | undefined = (data?.status as string | undefined) || undefined;
+            // server may wrap quote in data.quote
+            const quoteStatus: string | undefined = (data?.quote?.quoteStatus as string | undefined) || undefined;
+            return status === 'quote_approved' || String(quoteStatus || '').toLowerCase() === 'approved';
+        } catch {
+            return false;
+        }
+    };
+
     const statusColor = (status?: string) =>
         status === "working"
             ? "processing"
@@ -223,7 +238,26 @@ export default function TechnicianWorkProgressPage() {
         }
         const existed = await ensureProgressChecked(apptId);
         if (existed) {
-            message.info("Booking đã có tiến trình. Bạn vẫn có thể tạo thêm tiến trình.");
+            message.info("Booking đã có tiến trình. Không thể tạo thêm.");
+            return;
+        }
+        // Must have inspection & quote APPROVED before creating progress
+        const chosenAppt = (Array.isArray(schedule.assignedAppointments)
+            ? schedule.assignedAppointments.find((a) => a._id === apptId)
+            : undefined) as unknown as { inspectionAndQuote?: { quoteStatus?: string } } | undefined;
+        const localApproved = ((): boolean => {
+            // Local quick check using schedule data if present
+            const apptStatus: string | undefined = (chosenAppt as unknown as { status?: string } | undefined)?.status;
+            const qStatus: string | undefined = chosenAppt?.inspectionAndQuote?.quoteStatus;
+            return apptStatus === 'quote_approved' || String(qStatus || '').toLowerCase() === 'approved';
+        })();
+        let approved = localApproved;
+        if (!approved) {
+            approved = await ensureQuoteApproved(apptId);
+        }
+        if (!approved) {
+            message.warning("Cần báo giá và được khách duyệt (approved) trước khi tạo tiến trình");
+            return;
         }
         // Prefill serviceDate and startTime from booking if available
         let serviceDateValue: dayjs.Dayjs | undefined;
@@ -245,6 +279,7 @@ export default function TechnicianWorkProgressPage() {
             startTime: startTimeValue,
             milestones: [],
         });
+        setCreateCtx({ schedule, apptId });
         setCreateOpen(true);
     };
 
@@ -252,7 +287,7 @@ export default function TechnicianWorkProgressPage() {
         return sch.appointmentId || sch.assignedAppointments?.[0]?._id || null;
     };
 
-    const openDetails = async (sch: ScheduleLike) => {
+    const openDetails = async (sch: ScheduleLike, presetAppointmentId?: string | null) => {
         setDetailSchedule(sch);
         setDetailOpen(true);
         setDetailLoading(true);
@@ -261,10 +296,10 @@ export default function TechnicianWorkProgressPage() {
         const firstNonCancelled = Array.isArray(sch.assignedAppointments)
             ? sch.assignedAppointments.find((a) => a.status !== 'cancelled')?._id
             : undefined;
-        const apptPreset = firstNonCancelled || sch.appointmentId || null;
+        const apptPreset = presetAppointmentId || firstNonCancelled || sch.appointmentId || null;
         setDetailSelectedAppointmentId(typeof apptPreset === 'string' ? apptPreset : null);
         try {
-            const apptId = (firstNonCancelled as string | undefined) || getAppointmentIdFromSchedule(sch);
+            const apptId = (apptPreset as string | undefined) || getAppointmentIdFromSchedule(sch);
             if (apptId) {
                 const result = await dispatch(getProgressByAppointment(apptId));
                 if (getProgressByAppointment.fulfilled.match(result) && result.payload.success) {
@@ -295,8 +330,8 @@ export default function TechnicianWorkProgressPage() {
     const submitInspectionQuote = async () => {
         try {
             const values = await quoteForm.validateFields();
-            const progressId = detailProgress?._id;
-            if (!progressId) return;
+            const appointmentId = quoteAppointmentId || detailSelectedAppointmentId;
+            if (!appointmentId) return;
             // Build payload without quoteAmount and without labor
             type QuoteItemForm = { partId?: string; quantity?: number; unitPrice?: number; name?: string };
             const itemsSource: QuoteItemForm[] = Array.isArray(values?.quoteDetails?.items)
@@ -311,8 +346,8 @@ export default function TechnicianWorkProgressPage() {
                     name: it?.name,
                 }));
             const result = await dispatch(
-                submitInspectionQuoteThunk({
-                    progressId,
+                submitAppointmentInspectionQuote({
+                    appointmentId,
                     payload: {
                         vehicleCondition: values.vehicleCondition,
                         diagnosisDetails: values.diagnosisDetails,
@@ -321,15 +356,16 @@ export default function TechnicianWorkProgressPage() {
                     },
                 })
             );
-            if (submitInspectionQuoteThunk.fulfilled.match(result) && (result.payload as { success?: boolean })?.success) {
+            if ((result as unknown as { type: string }).type.endsWith('/fulfilled')) {
                 message.success("Đã gửi báo giá");
                 setQuoteOpen(false);
+                setQuoteAppointmentId(null);
             } else {
                 const payload = result.payload as unknown;
                 const errMsg = (typeof payload === 'string' ? payload : (payload as { message?: string })?.message) || "Gửi báo giá thất bại";
                 message.error(String(errMsg));
             }
-            await openDetails(detailSchedule as ScheduleLike);
+            if (detailSchedule) await openDetails(detailSchedule, appointmentId);
         } catch {
             // validation or request error
         }
@@ -413,6 +449,12 @@ export default function TechnicianWorkProgressPage() {
         try {
             const values = await form.validateFields();
             if (!selectedAppointmentId || !technicianId) return;
+            // Re-check server approval strictly before creating
+            const approved = await ensureQuoteApproved(selectedAppointmentId);
+            if (!approved) {
+                message.warning("Chỉ được tạo tiến trình khi báo giá đã được duyệt");
+                return;
+            }
             await ensureProgressChecked(selectedAppointmentId);
             const payload = {
                 technicianId,
@@ -427,6 +469,10 @@ export default function TechnicianWorkProgressPage() {
                 message.success("Tạo tiến trình thành công");
                 setCreateOpen(false);
                 setProgressExistSet((prev) => new Set(prev).add(selectedAppointmentId));
+                // Mở chi tiết ngay sau khi tạo để bắt đầu làm
+                if (createCtx) {
+                    await openDetails(createCtx.schedule, createCtx.apptId);
+                }
             } else {
                 const payload = result.payload as unknown;
                 const errMsg = (typeof payload === 'string' ? payload : (payload as { message?: string })?.message) || "Tạo tiến trình thất bại";
@@ -492,19 +538,6 @@ export default function TechnicianWorkProgressPage() {
                                 {null}
                                 {detailProgress && (
                                     <>
-                                        <Button onClick={() => { quoteForm.resetFields(); setQuoteOpen(true); }} disabled={(() => {
-                                            const progressStatus = detailProgress?.currentStatus || '';
-                                            const currentAppt = (detailSchedule && Array.isArray(detailSchedule.assignedAppointments))
-                                                ? (detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId) || detailSchedule.assignedAppointments[0])
-                                                : undefined;
-                                            const apptStatus = currentAppt?.status || '';
-                                            // Disable if appointment itself is completed
-                                            if (apptStatus === 'completed') return true;
-                                            // If progress is completed but appointment is maintenance_completed, allow sending again
-                                            if (progressStatus === 'completed' && apptStatus === 'maintenance_completed') return false;
-                                            // Otherwise disable only when progress is completed
-                                            return progressStatus === 'completed';
-                                        })()}>Gửi Inspection & Quote</Button>
                                         {(() => {
                                             const status = detailProgress?.currentStatus || '';
                                             const maintenanceStartedOrBeyond = ['in_progress', 'paused', 'completed', 'delayed'].includes(status);
@@ -684,14 +717,44 @@ export default function TechnicianWorkProgressPage() {
                                                 )}
                                                 <div className="flex gap-2">
                                                     <Button onClick={() => openDetails(item)}>Chi tiết</Button>
+                                                    <Button
+                                                        onClick={() => {
+                                                            const chosen = dayModalSelectedAppt[item._id] || (item.assignedAppointments?.[0]?._id as string | undefined) || (item.appointmentId as string | undefined);
+                                                            if (!chosen) { message.warning("Không có booking để báo giá"); return; }
+                                                            setQuoteAppointmentId(chosen);
+                                                            quoteForm.resetFields();
+                                                            setQuoteOpen(true);
+                                                        }}
+                                                    >
+                                                        Gửi Inspection & Quote
+                                                    </Button>
                                                     <Tooltip title={(() => {
                                                         const chosen = dayModalSelectedAppt[item._id] || (item.assignedAppointments?.[0]?._id as string | undefined) || (item.appointmentId as string | undefined);
-                                                        const has = chosen ? progressExistSet.has(chosen) : false;
-                                                        return has ? "Đã có tiến trình cho booking này (vẫn có thể tạo thêm)" : (hasBooking ? undefined : "Lịch này chưa gắn booking - không thể tạo tiến trình");
+                                                        const hasProgress = chosen ? progressExistSet.has(chosen) : false;
+                                                        const chosenAppt: { inspectionAndQuote?: { quoteStatus?: string } } | undefined = Array.isArray(item.assignedAppointments)
+                                                            ? (item.assignedAppointments.find((a) => a._id === chosen) as unknown as { inspectionAndQuote?: { quoteStatus?: string } } | undefined)
+                                                            : undefined;
+                                                        const qs = chosenAppt?.inspectionAndQuote?.quoteStatus;
+                                                        const apptStatus: string | undefined = (chosenAppt as unknown as { status?: string } | undefined)?.status;
+                                                        if (!hasBooking) return "Lịch này chưa gắn booking - không thể tạo tiến trình";
+                                                        if (hasProgress) return "Đã tạo tiến trình - không thể tạo thêm";
+                                                        if (!(apptStatus === 'quote_approved' || String(qs || '').toLowerCase() === 'approved')) return "Cần báo giá và khách duyệt trước khi tạo tiến trình";
+                                                        return undefined;
                                                     })()}>
                                                         <Button
                                                             type="primary"
-                                                            disabled={!hasBooking}
+                                                            disabled={(() => {
+                                                                if (!hasBooking) return true;
+                                                                const chosen = dayModalSelectedAppt[item._id] || (item.assignedAppointments?.[0]?._id as string | undefined) || (item.appointmentId as string | undefined);
+                                                                const hasProgress = chosen ? progressExistSet.has(chosen) : false;
+                                                                if (hasProgress) return true;
+                                                                const chosenAppt: { inspectionAndQuote?: { quoteStatus?: string } } | undefined = Array.isArray(item.assignedAppointments)
+                                                                    ? (item.assignedAppointments.find((a) => a._id === chosen) as unknown as { inspectionAndQuote?: { quoteStatus?: string } } | undefined)
+                                                                    : undefined;
+                                                                const qs = chosenAppt?.inspectionAndQuote?.quoteStatus;
+                                                                const apptStatus: string | undefined = (chosenAppt as unknown as { status?: string } | undefined)?.status;
+                                                                return !(apptStatus === 'quote_approved' || String(qs || '').toLowerCase() === 'approved');
+                                                            })()}
                                                             onClick={() => {
                                                                 const chosen = dayModalSelectedAppt[item._id] || (item.assignedAppointments?.[0]?._id as string | undefined) || (item.appointmentId as string | undefined);
                                                                 openCreateProgress(item, chosen);

@@ -163,12 +163,14 @@ export const WORK_PROGRESS_DETAIL_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/work-progress/${id}`;
 export const WORK_PROGRESS_PROCESS_PAYMENT_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/work-progress/${id}/process-payment`;
-export const TECHNICIAN_PROGRESS_QUOTE_RESPONSE_ENDPOINT = (
-  progressId: string
-) => `${BASE_URL}/api/work-progress/${progressId}/quote-response`;
-export const TECHNICIAN_PROGRESS_INSPECTION_QUOTE_ENDPOINT = (
-  progressId: string
-) => `${BASE_URL}/api/work-progress/${progressId}/inspection-quote`;
+// Deprecated: progress-level quote endpoints removed in favor of appointment-level
+// New appointment-level quote endpoints
+export const APPOINTMENT_INSPECTION_QUOTE_ENDPOINT = (appointmentId: string) =>
+  `${BASE_URL}/api/appointments/${appointmentId}/inspection-quote`;
+export const APPOINTMENT_QUOTE_RESPONSE_ENDPOINT = (appointmentId: string) =>
+  `${BASE_URL}/api/appointments/${appointmentId}/quote-response`;
+export const APPOINTMENT_VIEW_QUOTE_ENDPOINT = (appointmentId: string) =>
+  `${BASE_URL}/api/appointments/${appointmentId}/quote`;
 export const TECHNICIAN_PROGRESS_START_MAINTENANCE_ENDPOINT = (
   progressId: string
 ) => `${BASE_URL}/api/work-progress/${progressId}/start-maintenance`;

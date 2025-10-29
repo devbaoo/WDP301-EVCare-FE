@@ -37,7 +37,8 @@ import {
     Input as AntInput
 } from "antd";
 import axiosInstance from "../../services/constant/axiosInstance";
-import { BOOKING_DETAILS_ENDPOINT, BOOKING_TIME_SLOTS_ENDPOINT, APPOINTMENT_PROGRESS_ENDPOINT, TECHNICIAN_PROGRESS_QUOTE_RESPONSE_ENDPOINT } from "../../services/constant/apiConfig";
+import { BOOKING_DETAILS_ENDPOINT, BOOKING_TIME_SLOTS_ENDPOINT, APPOINTMENT_PROGRESS_ENDPOINT, APPOINTMENT_VIEW_QUOTE_ENDPOINT } from "../../services/constant/apiConfig";
+import { respondAppointmentQuote } from "../../services/features/booking/bookingSlice";
 import { Booking } from "../../interfaces/booking";
 import { cancelBooking, rescheduleBooking, fetchMyBookings, submitCustomerFeedback, updateBookingFeedback, getCustomerFeedback } from "../../services/features/booking/bookingSlice";
 import { useAppDispatch, useAppSelector } from "../../services/store/store";
@@ -57,7 +58,12 @@ function BookingHistory() {
     const [progressModalOpen, setProgressModalOpen] = useState(false);
     const [progressLoading, setProgressLoading] = useState(false);
     const [progressData, setProgressData] = useState<Record<string, unknown> | null>(null);
+    const [currentAppointmentId, setCurrentAppointmentId] = useState<string | null>(null);
     const [quoteResponseNotes, setQuoteResponseNotes] = useState("");
+    // Quote modal state (view quote without progress)
+    const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+    const [quoteLoading, setQuoteLoading] = useState(false);
+    const [quoteData, setQuoteData] = useState<Record<string, unknown> | null>(null);
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -197,6 +203,7 @@ function BookingHistory() {
         setProgressModalOpen(true);
         setProgressLoading(true);
         setProgressData(null);
+        setCurrentAppointmentId(appointmentId);
         try {
             const res = await axiosInstance.get(APPOINTMENT_PROGRESS_ENDPOINT(appointmentId));
             const data = res.data;
@@ -218,16 +225,41 @@ function BookingHistory() {
         setQuoteResponseNotes("");
     };
 
+    const openQuoteModal = async (appointmentId: string) => {
+        setCurrentAppointmentId(appointmentId);
+        setQuoteModalOpen(true);
+        setQuoteLoading(true);
+        setQuoteData(null);
+        try {
+            const res = await axiosInstance.get(APPOINTMENT_VIEW_QUOTE_ENDPOINT(appointmentId));
+            const data = res.data;
+            if (data?.success) {
+                setQuoteData(data.data);
+            } else {
+                setQuoteData({ notFound: true, message: data?.message || "Quote not found for this appointment" });
+            }
+        } catch {
+            setQuoteData({ notFound: true, message: "Quote not found for this appointment" });
+        } finally {
+            setQuoteLoading(false);
+        }
+    };
+
+    const closeQuoteModal = () => {
+        setQuoteModalOpen(false);
+        setQuoteData(null);
+        setQuoteResponseNotes("");
+    };
+
     const submitQuoteResponse = async (status: "approved" | "rejected") => {
-        if (!progressData?._id) return;
+        if (!currentAppointmentId) return;
         try {
             setProgressLoading(true);
-            const res = await axiosInstance.put(TECHNICIAN_PROGRESS_QUOTE_RESPONSE_ENDPOINT(progressData._id as string), {
-                status,
-                notes: quoteResponseNotes,
-            });
-            if (res.data?.success) {
-                setProgressData(res.data.data);
+            const action = await dispatch(respondAppointmentQuote({ appointmentId: currentAppointmentId, status, notes: quoteResponseNotes }) as any);
+            if (action.type.endsWith('/fulfilled')) {
+                // Refresh progress from server to reflect latest
+                const res = await axiosInstance.get(APPOINTMENT_PROGRESS_ENDPOINT(currentAppointmentId));
+                setProgressData(res.data?.data || null);
                 // reload bookings to reflect status change if server updates appointment status
                 await fetchBookings();
                 message.success(status === "approved" ? "Approved quote successfully" : "Rejected quote successfully");
@@ -581,6 +613,21 @@ function BookingHistory() {
                             onClick={() => fetchBookingDetails(record._id)}
                         />
                     </Tooltip>
+                    {/* View Quote button (available when quote exists) */}
+                    {(() => {
+                        const qs = record?.inspectionAndQuote?.quoteStatus as string | undefined;
+                        const canView = Boolean(qs);
+                        return canView ? (
+                            <Tooltip title="Xem báo giá">
+                                <Button
+                                    type="text"
+                                    size="small"
+                                    icon={<TagOutlined />}
+                                    onClick={() => openQuoteModal(record._id)}
+                                />
+                            </Tooltip>
+                        ) : null;
+                    })()}
                     <Tooltip title="Xem tiến độ">
                         <Button
                             type="text"
@@ -1192,6 +1239,183 @@ function BookingHistory() {
                                             icon={<CloseOutlined />}
                                             onClick={() => submitQuoteResponse("rejected")}
                                             loading={progressLoading}
+                                        >
+                                            Từ chối
+                                        </Button>
+                                    </Space>
+                                </Card>
+                            )}
+                    </div>
+                )}
+            </Modal>
+
+            {/* Quote Modal */}
+            <Modal
+                title={
+                    <div className="flex items-center gap-2">
+                        <TagOutlined />
+                        Báo giá
+                    </div>
+                }
+                open={quoteModalOpen}
+                onCancel={closeQuoteModal}
+                footer={null}
+                width={760}
+            >
+                {quoteLoading ? (
+                    <div className="flex flex-col items-center justify-center py-8">
+                        <Spin size="large" />
+                        <Text className="mt-4">Đang tải báo giá...</Text>
+                    </div>
+                ) : quoteData?.notFound ? (
+                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+                        <Text className="text-yellow-800">{String(quoteData?.message || "Không tìm thấy báo giá cho lịch hẹn này")}</Text>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {(() => {
+                            const qwrap = quoteData || {};
+                            const quote: any = (qwrap as any).quote || qwrap;
+                            const formatCurrency = (v: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(v || 0));
+                            return (
+                                <Card title="Thông tin kiểm tra & báo giá" className="mb-4">
+                                    <Row gutter={[16, 16]}>
+                                        <Col xs={24} md={12}>
+                                            <Text type="secondary" className="block text-xs">Ghi chú kiểm tra</Text>
+                                            <Text className="block">{quote?.inspectionNotes || '-'}</Text>
+                                        </Col>
+                                        <Col xs={24} md={12}>
+                                            <Text type="secondary" className="block text-xs">Hoàn thành kiểm tra lúc</Text>
+                                            <Text className="block">{quote?.inspectionCompletedAt ? new Date(quote.inspectionCompletedAt).toLocaleString() : '-'}</Text>
+                                        </Col>
+                                        <Col xs={24} md={12}>
+                                            <Text type="secondary" className="block text-xs">Tình trạng xe</Text>
+                                            <Text className="block">{quote?.vehicleCondition || '-'}</Text>
+                                        </Col>
+                                        <Col xs={24} md={12}>
+                                            <Text type="secondary" className="block text-xs">Chi tiết chẩn đoán</Text>
+                                            <Text className="block">{quote?.diagnosisDetails || '-'}</Text>
+                                        </Col>
+                                        <Col xs={24} md={12}>
+                                            <Text type="secondary" className="block text-xs">Trạng thái báo giá</Text>
+                                            {(() => {
+                                                const qs = String(quote?.quoteStatus || 'pending').toLowerCase();
+                                                const qc = QUOTE_STATUS_CONFIG[qs] || { color: '#8c8c8c', label: qs };
+                                                return (
+                                                    <Tag style={{ borderColor: qc.color, color: qc.color }}>
+                                                        {qc.label}
+                                                    </Tag>
+                                                );
+                                            })()}
+                                        </Col>
+                                    </Row>
+                                    <Divider />
+                                    <div>
+                                        <Text strong className="block mb-2">Chi tiết báo giá</Text>
+                                        {(() => {
+                                            const qd: any = quote?.quoteDetails;
+                                            if (!qd) return <Text className="block">-</Text>;
+                                            const items = Array.isArray(qd.items) ? qd.items : [];
+                                            const itemsTotal = items.reduce((sum: number, it: any) => sum + Number(it.quantity || 0) * Number(it.unitPrice || 0), 0);
+                                            return (
+                                                <div className="space-y-3">
+                                                    {items.length > 0 && (
+                                                        <div>
+                                                            <Text type="secondary" className="block text-xs">Linh kiện</Text>
+                                                            <ul className="list-disc list-inside space-y-1">
+                                                                {items.map((it: any, idx: number) => {
+                                                                    const qty = Number(it.quantity || 0);
+                                                                    const unit = Number(it.unitPrice || 0);
+                                                                    const lineTotal = qty * unit;
+                                                                    return (
+                                                                        <li key={`${it.partId || it.name || idx}-${idx}`}>
+                                                                            <Text>
+                                                                                {(it.name || it.partId || 'Linh kiện')} x{qty > 0 ? qty : 1} — {formatCurrency(unit)} / cái
+                                                                                {lineTotal > 0 && (
+                                                                                    <span> (Tổng: {formatCurrency(lineTotal)})</span>
+                                                                                )}
+                                                                            </Text>
+                                                                        </li>
+                                                                    );
+                                                                })}
+                                                            </ul>
+                                                            <div className="flex items-center justify-end mt-1">
+                                                                <Text type="secondary">Tạm tính linh kiện:&nbsp;</Text>
+                                                                <Text strong>{formatCurrency(itemsTotal)}</Text>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {items.length === 0 && (
+                                                        <Text className="block">-</Text>
+                                                    )}
+                                                    <Divider className="my-2" />
+                                                    <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+                                                        <Text strong className="text-blue-700">Tổng cộng</Text>
+                                                        <Text strong className="text-blue-700" style={{ fontSize: 22 }}>
+                                                            {formatCurrency(Number(quote?.quoteAmount || 0))}
+                                                        </Text>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                </Card>
+                            );
+                        })()}
+
+                        {(() => {
+                            const qwrap = quoteData || {};
+                            const quote: any = (qwrap as any).quote || qwrap;
+                            const status = String(quote?.quoteStatus || 'pending').toLowerCase();
+                            const canRespond = status === 'pending';
+                            return canRespond;
+                        })() && (
+                                <Card title="Phản hồi báo giá">
+                                    <TextArea
+                                        rows={3}
+                                        placeholder="Ghi chú của bạn (tùy chọn)"
+                                        value={quoteResponseNotes}
+                                        onChange={(e) => setQuoteResponseNotes(e.target.value)}
+                                        className="mb-4"
+                                    />
+                                    <Space>
+                                        <Button
+                                            type="primary"
+                                            icon={<CheckCircleOutlined />}
+                                            onClick={async () => {
+                                                if (!currentAppointmentId) return;
+                                                setQuoteLoading(true);
+                                                const action = await dispatch(respondAppointmentQuote({ appointmentId: currentAppointmentId, status: 'approved', notes: quoteResponseNotes }) as any);
+                                                if (action.type.endsWith('/fulfilled')) {
+                                                    await fetchBookings();
+                                                    message.success('Chấp nhận báo giá thành công');
+                                                    closeQuoteModal();
+                                                } else {
+                                                    message.error('Cập nhật thất bại');
+                                                }
+                                                setQuoteLoading(false);
+                                            }}
+                                            loading={quoteLoading}
+                                        >
+                                            Chấp nhận
+                                        </Button>
+                                        <Button
+                                            danger
+                                            icon={<CloseOutlined />}
+                                            onClick={async () => {
+                                                if (!currentAppointmentId) return;
+                                                setQuoteLoading(true);
+                                                const action = await dispatch(respondAppointmentQuote({ appointmentId: currentAppointmentId, status: 'rejected', notes: quoteResponseNotes }) as any);
+                                                if (action.type.endsWith('/fulfilled')) {
+                                                    await fetchBookings();
+                                                    message.success('Từ chối báo giá thành công');
+                                                    closeQuoteModal();
+                                                } else {
+                                                    message.error('Cập nhật thất bại');
+                                                }
+                                                setQuoteLoading(false);
+                                            }}
+                                            loading={quoteLoading}
                                         >
                                             Từ chối
                                         </Button>
