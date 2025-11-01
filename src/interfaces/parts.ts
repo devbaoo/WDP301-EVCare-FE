@@ -165,13 +165,19 @@ export interface TransactionUserRef {
   fullName?: string;
 }
 
+export type InventoryReferenceType =
+  | "service"
+  | "purchase"
+  | "adjustment"
+  | "transfer";
+
 export interface InventoryTransaction {
   _id: string;
   inventoryId: string | InventoryItem;
   transactionType: string;
   quantity: number;
   unitCost?: number;
-  referenceType?: string;
+  referenceType?: InventoryReferenceType;
   referenceId?: string;
   notes?: string;
   performedBy?: string | TransactionUserRef;
@@ -185,7 +191,7 @@ export interface InventoryTransactionPayload {
   transactionType: string;
   quantity: number;
   unitCost?: number;
-  referenceType?: string;
+  referenceType?: InventoryReferenceType;
   referenceId?: string;
   notes?: string;
 }

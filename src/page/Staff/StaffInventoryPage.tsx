@@ -48,6 +48,7 @@ import {
   InventoryFilterParams,
   InventoryItem,
   InventoryPayload,
+  InventoryReferenceType,
   InventoryTransactionPayload,
 } from "@/interfaces/parts";
 
@@ -55,7 +56,7 @@ type TransactionFormValues = {
   transactionType: "in" | "out" | "adjustment" | "transfer";
   quantity: number;
   unitCost?: number;
-  referenceType?: string;
+  referenceType?: InventoryReferenceType;
   referenceId?: string;
   notes?: string;
 };
@@ -75,6 +76,16 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 const StaffInventoryPage = () => {
+  const referenceTypeOptions: { value: InventoryReferenceType; label: string }[] = useMemo(
+    () => [
+      { value: "service", label: "Dịch vụ" },
+      { value: "purchase", label: "Mua hàng" },
+      { value: "adjustment", label: "Điều chỉnh" },
+      { value: "transfer", label: "Chuyển kho" },
+    ],
+    []
+  );
+
   const dispatch = useAppDispatch();
   const {
     items,
@@ -957,7 +968,11 @@ const StaffInventoryPage = () => {
               <InputNumber min={0} className="w-full" />
             </Form.Item>
             <Form.Item label="Loại tham chiếu" name="referenceType">
-              <Input placeholder="Ví dụ: purchase, service" />
+              <Select
+                placeholder="Chọn loại tham chiếu"
+                allowClear
+                options={referenceTypeOptions}
+              />
             </Form.Item>
             <Form.Item label="Mã tham chiếu" name="referenceId">
               <Input placeholder="Nhập ID liên quan (nếu có)" />
