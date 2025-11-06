@@ -166,7 +166,7 @@ const StaffBookingManagePage: React.FC = () => {
             title: "Khách hàng",
             key: "customer",
             render: (record: AwaitingConfirmationBooking) => {
-                const customer = typeof record.customer === 'string'
+                const customer = typeof record.customer === 'string' || !record.customer
                     ? { fullName: 'N/A' }
                     : record.customer;
                 return (
@@ -178,7 +178,7 @@ const StaffBookingManagePage: React.FC = () => {
             title: "Xe",
             key: "vehicle",
             render: (record: AwaitingConfirmationBooking) => {
-                const vehicle = typeof record.vehicle === 'string'
+                const vehicle = typeof record.vehicle === 'string' || !record.vehicle
                     ? {
                         vehicleInfo: {
                             licensePlate: 'N/A',
@@ -200,7 +200,7 @@ const StaffBookingManagePage: React.FC = () => {
             title: "Dịch vụ",
             key: "service",
             render: (record: AwaitingConfirmationBooking) => {
-                const serviceType = typeof record.serviceType === 'string'
+                const serviceType = typeof record.serviceType === 'string' || !record.serviceType
                     ? { name: 'N/A' }
                     : record.serviceType;
                 return (
@@ -211,26 +211,31 @@ const StaffBookingManagePage: React.FC = () => {
         {
             title: "Thời gian hẹn",
             key: "appointment",
-            render: (record: AwaitingConfirmationBooking) => (
-                <div>
-                    <div className="font-medium">{formatDate(record.appointmentTime.date)}</div>
-                    <div className="text-sm text-gray-500">
-                        {record.appointmentTime.startTime} - {record.appointmentTime.endTime}
+            render: (record: AwaitingConfirmationBooking) => {
+                const date = record.appointmentTime?.date ? formatDate(record.appointmentTime.date) : 'N/A';
+                const start = record.appointmentTime?.startTime ?? 'N/A';
+                const end = record.appointmentTime?.endTime ?? 'N/A';
+                return (
+                    <div>
+                        <div className="font-medium">{date}</div>
+                        <div className="text-sm text-gray-500">
+                            {start} - {end}
+                        </div>
                     </div>
-                </div>
-            ),
+                );
+            },
         },
         {
             title: "Trạng thái",
             key: "status",
             render: (record: AwaitingConfirmationBooking) => (
                 <div>
-                    <Tag color={record.confirmation.isConfirmed ? "green" : "orange"}>
-                        {record.confirmation.isConfirmed ? "ĐÃ XÁC NHẬN" : "CHỜ XÁC NHẬN"}
+                    <Tag color={record.confirmation?.isConfirmed ? "green" : "orange"}>
+                        {record.confirmation?.isConfirmed ? "ĐÃ XÁC NHẬN" : "CHỜ XÁC NHẬN"}
                     </Tag>
                     <div className="text-xs text-gray-500 mt-1">
-                        <Tag color={getStatusColor(record.payment.status)}>
-                            {record.payment.status.toUpperCase()}
+                        <Tag color={getStatusColor(record.payment?.status ?? 'pending')}>
+                            {(record.payment?.status ?? 'pending').toUpperCase()}
                         </Tag>
                     </div>
                 </div>
@@ -455,10 +460,10 @@ const StaffBookingManagePage: React.FC = () => {
                             <Col span={12}>
                                 <Card size="small" title="Dịch vụ">
                                     <Space direction="vertical" className="w-full">
-                                        <div className="font-medium">{typeof selectedBooking.serviceType === 'string' ? 'N/A' : selectedBooking.serviceType.name}</div>
+                                        <div className="font-medium">{typeof selectedBooking.serviceType === 'string' || !selectedBooking.serviceType ? 'N/A' : selectedBooking.serviceType.name}</div>
                                         <div>Mô tả: {selectedBooking.serviceDetails.description}</div>
                                         <div className="text-green-600 font-medium">
-                                            <DollarOutlined /> {formatCurrency(typeof selectedBooking.serviceType === 'string' ? 0 : selectedBooking.serviceType.pricing.basePrice)}
+                                            <DollarOutlined /> {formatCurrency(typeof selectedBooking.serviceType === 'string' || !selectedBooking.serviceType ? 0 : selectedBooking.serviceType.pricing.basePrice)}
                                         </div>
                                     </Space>
                                 </Card>
@@ -466,10 +471,10 @@ const StaffBookingManagePage: React.FC = () => {
                             <Col span={12}>
                                 <Card size="small" title="Lịch hẹn">
                                     <Space direction="vertical" className="w-full">
-                                        <div><CalendarOutlined /> {formatDate(selectedBooking.appointmentTime.date)}</div>
-                                        <div><ClockCircleOutlined /> {selectedBooking.appointmentTime.startTime} - {selectedBooking.appointmentTime.endTime}</div>
-                                        <div>Trung tâm: {selectedBooking.serviceCenter.name}</div>
-                                        <div><EnvironmentOutlined /> {selectedBooking.serviceCenter.address.street}, {selectedBooking.serviceCenter.address.ward}, {selectedBooking.serviceCenter.address.district}, {selectedBooking.serviceCenter.address.city}</div>
+                                        <div><CalendarOutlined /> {selectedBooking.appointmentTime?.date ? formatDate(selectedBooking.appointmentTime.date) : 'N/A'}</div>
+                                        <div><ClockCircleOutlined /> {selectedBooking.appointmentTime?.startTime ?? 'N/A'} - {selectedBooking.appointmentTime?.endTime ?? 'N/A'}</div>
+                                        <div>Trung tâm: {typeof selectedBooking.serviceCenter === 'string' ? 'N/A' : (selectedBooking.serviceCenter?.name ?? 'N/A')}</div>
+                                        <div><EnvironmentOutlined /> {typeof selectedBooking.serviceCenter === 'string' ? 'N/A' : `${selectedBooking.serviceCenter?.address?.street ?? 'N/A'}, ${selectedBooking.serviceCenter?.address?.ward ?? 'N/A'}, ${selectedBooking.serviceCenter?.address?.district ?? 'N/A'}, ${selectedBooking.serviceCenter?.address?.city ?? 'N/A'}`}</div>
                                     </Space>
                                 </Card>
                             </Col>
@@ -482,33 +487,33 @@ const StaffBookingManagePage: React.FC = () => {
                         <Card size="small" title="Thông tin thanh toán">
                             <Row gutter={[16, 16]}>
                                 <Col span={8}>
-                                    <div>Trạng thái: <Tag color={getStatusColor(selectedBooking.payment.status)}>{selectedBooking.payment.status.toUpperCase()}</Tag></div>
+                                    <div>Trạng thái: <Tag color={getStatusColor(selectedBooking.payment?.status ?? 'pending')}>{(selectedBooking.payment?.status ?? 'pending').toUpperCase()}</Tag></div>
                                 </Col>
                                 <Col span={8}>
-                                    <div>Số tiền: <Text className="text-green-600 font-medium">{formatCurrency(selectedBooking.payment.amount)}</Text></div>
+                                    <div>Số tiền: <Text className="text-green-600 font-medium">{formatCurrency(selectedBooking.payment?.amount ?? 0)}</Text></div>
                                 </Col>
                                 <Col span={8}>
-                                    <div>Phương thức: {selectedBooking.payment.method}</div>
+                                    <div>Phương thức: {selectedBooking.payment?.method ?? 'N/A'}</div>
                                 </Col>
                             </Row>
                             <div className="mt-2">
-                                <Text type="secondary">Thời gian thanh toán: {formatDateTime(selectedBooking.payment.paidAt)}</Text>
+                                <Text type="secondary">Thời gian thanh toán: {selectedBooking.payment?.paidAt ? formatDateTime(selectedBooking.payment.paidAt) : 'N/A'}</Text>
                             </div>
                         </Card>
 
                         <Card size="small" title="Thông tin xác nhận">
                             <Row gutter={[16, 16]}>
                                 <Col span={8}>
-                                    <div>Trạng thái: <Tag color={selectedBooking.confirmation.isConfirmed ? "green" : "orange"}>{selectedBooking.confirmation.isConfirmed ? "ĐÃ XÁC NHẬN" : "CHỜ XÁC NHẬN"}</Tag></div>
+                                    <div>Trạng thái: <Tag color={selectedBooking.confirmation?.isConfirmed ? "green" : "orange"}>{selectedBooking.confirmation?.isConfirmed ? "ĐÃ XÁC NHẬN" : "CHỜ XÁC NHẬN"}</Tag></div>
                                 </Col>
                                 <Col span={8}>
-                                    <div>Phương thức: {selectedBooking.confirmation.confirmationMethod}</div>
+                                    <div>Phương thức: {selectedBooking.confirmation?.confirmationMethod ?? 'N/A'}</div>
                                 </Col>
 
                             </Row>
-                            {selectedBooking.confirmation.isConfirmed && (
+                            {selectedBooking.confirmation?.isConfirmed && (
                                 <div className="mt-2">
-                                    <Text type="secondary">Thời gian xác nhận: {formatDateTime(selectedBooking.confirmation.confirmedAt!)}</Text>
+                                    <Text type="secondary">Thời gian xác nhận: {selectedBooking.confirmation?.confirmedAt ? formatDateTime(selectedBooking.confirmation.confirmedAt) : 'N/A'}</Text>
                                 </div>
                             )}
                         </Card>
@@ -531,10 +536,10 @@ const StaffBookingManagePage: React.FC = () => {
                         <p>Bạn có chắc chắn muốn xác nhận booking này?</p>
                         <Divider />
                         <div className="space-y-2">
-                            <div><strong>Khách hàng:</strong> {typeof selectedBooking.customer === 'string' ? 'N/A' : selectedBooking.customer.fullName}</div>
-                            <div><strong>Xe:</strong> {typeof selectedBooking.vehicle === 'string' ? 'N/A' : selectedBooking.vehicle.vehicleInfo.licensePlate}</div>
-                            <div><strong>Dịch vụ:</strong> {typeof selectedBooking.serviceType === 'string' ? 'N/A' : selectedBooking.serviceType.name}</div>
-                            <div><strong>Thời gian:</strong> {formatDate(selectedBooking.appointmentTime.date)} {selectedBooking.appointmentTime.startTime}</div>
+                            <div><strong>Khách hàng:</strong> {typeof selectedBooking.customer === 'string' || !selectedBooking.customer ? 'N/A' : selectedBooking.customer.fullName}</div>
+                            <div><strong>Xe:</strong> {typeof selectedBooking.vehicle === 'string' || !selectedBooking.vehicle ? 'N/A' : selectedBooking.vehicle.vehicleInfo.licensePlate}</div>
+                            <div><strong>Dịch vụ:</strong> {typeof selectedBooking.serviceType === 'string' || !selectedBooking.serviceType ? 'N/A' : selectedBooking.serviceType.name}</div>
+                            <div><strong>Thời gian:</strong> {(selectedBooking.appointmentTime?.date ? formatDate(selectedBooking.appointmentTime.date) : 'N/A')} {selectedBooking.appointmentTime?.startTime ?? ''}</div>
                         </div>
                     </div>
                 )}
