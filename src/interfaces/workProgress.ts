@@ -186,6 +186,50 @@ export interface ProcessPaymentPayload {
   notes?: string;
 }
 
+// Process online payment payload
+export interface ProcessOnlinePaymentPayload {
+  staffId: string;
+  amount: number;
+  notes?: string;
+}
+
+// Process online payment response
+export interface ProcessOnlinePaymentResponse {
+  success: boolean;
+  data: {
+    payment: {
+      _id: string;
+      appointment: string;
+      customer: string;
+      paymentInfo: {
+        amount: number;
+        currency: string;
+        description: string;
+        orderCode: number;
+      };
+      payosInfo: Record<string, unknown>;
+      paymentMethod: string;
+      status: string;
+      expiresAt: string;
+      metadata: {
+        createdByStaff: string;
+        progressRecordId: string;
+      };
+    };
+    paymentLink: {
+      paymentId: string;
+      orderCode: number;
+      paymentLink: string;
+      qrCode: string;
+      checkoutUrl: string;
+      deepLink: string;
+      amount: number;
+      expiresAt: string;
+    };
+  };
+  message: string;
+}
+
 // Process payment response
 export interface ProcessPaymentResponse {
   success: boolean;

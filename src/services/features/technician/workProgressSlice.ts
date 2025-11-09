@@ -5,6 +5,7 @@ import {
   WORK_PROGRESS_LIST_ENDPOINT,
   WORK_PROGRESS_DETAIL_ENDPOINT,
   WORK_PROGRESS_PROCESS_PAYMENT_ENDPOINT,
+  WORK_PROGRESS_PROCESS_ONLINE_PAYMENT_ENDPOINT,
   APPOINTMENT_PROGRESS_ENDPOINT,
   TECHNICIAN_PROGRESS_START_MAINTENANCE_ENDPOINT,
   TECHNICIAN_PROGRESS_COMPLETE_MAINTENANCE_ENDPOINT,
@@ -19,6 +20,8 @@ import {
   WorkProgressListResponse,
   ProcessPaymentPayload,
   ProcessPaymentResponse,
+  ProcessOnlinePaymentPayload,
+  ProcessOnlinePaymentResponse,
   WorkProgressDetailResponse,
 } from "@/interfaces/workProgress";
 
@@ -29,6 +32,8 @@ interface WorkProgressState {
   listLoading: boolean;
   detailLoading: boolean;
   processPaymentLoading: boolean;
+  processOnlinePaymentLoading: boolean;
+  onlinePaymentLink: ProcessOnlinePaymentResponse["data"] | null;
   loading: boolean;
   error: string | null;
 }
@@ -40,6 +45,8 @@ const initialState: WorkProgressState = {
   listLoading: false,
   detailLoading: false,
   processPaymentLoading: false,
+  processOnlinePaymentLoading: false,
+  onlinePaymentLink: null,
   loading: false,
   error: null,
 };
@@ -112,6 +119,29 @@ export const processPayment = createAsyncThunk(
       const error = err as any;
       return rejectWithValue(
         error.response?.data?.message || "Failed to process payment"
+      );
+    }
+  }
+);
+
+// Process online payment for work progress (PayOS)
+export const processOnlinePayment = createAsyncThunk(
+  "workProgress/processOnlinePayment",
+  async (
+    params: { workProgressId: string; payload: ProcessOnlinePaymentPayload },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await axiosInstance.post(
+        WORK_PROGRESS_PROCESS_ONLINE_PAYMENT_ENDPOINT(params.workProgressId),
+        params.payload
+      );
+      return res.data as ProcessOnlinePaymentResponse;
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to process online payment"
       );
     }
   }
@@ -196,10 +226,76 @@ export const completeMaintenance = createAsyncThunk(
   }
 );
 
-const workProgressSlice = createSlice({
+export const workProgressSlice = createSlice({
   name: "workProgress",
   initialState,
-  reducers: {},
+  reducers: {
+    clearOnlinePaymentLink: (state) => {
+      state.onlinePaymentLink = null;
+      state.processOnlinePaymentLoading = false;
+      state.error = null;
+    },
+    updatePaymentStatus: (
+      state,
+      action: {
+        payload: {
+          workProgressId: string;
+          paymentMethod: string;
+          paymentStatus: string;
+          paidAmount?: number;
+        };
+      }
+    ) => {
+      const { workProgressId, paymentMethod, paymentStatus, paidAmount } =
+        action.payload;
+      // Update in list
+      const idx = state.workProgressList.findIndex(
+        (wp) => wp._id === workProgressId
+      );
+      if (idx !== -1) {
+        const existing = state.workProgressList[idx];
+        state.workProgressList[idx] = {
+          ...existing,
+          paymentDetails: {
+            paymentMethod,
+            paymentStatus,
+            paidAmount: paidAmount ?? existing.paymentDetails?.paidAmount ?? 0,
+          },
+        };
+      }
+      // Update in byAppointment map
+      Object.keys(state.byAppointment).forEach((apptId) => {
+        const wp = state.byAppointment[apptId];
+        if (wp && wp._id === workProgressId) {
+          state.byAppointment[apptId] = {
+            ...wp,
+            paymentDetails: {
+              paymentMethod,
+              paymentStatus,
+              paidAmount: paidAmount ?? wp.paymentDetails?.paidAmount ?? 0,
+            },
+          };
+        }
+      });
+      // If selectedWorkProgress matches
+      if (
+        state.selectedWorkProgress &&
+        state.selectedWorkProgress._id === workProgressId
+      ) {
+        state.selectedWorkProgress = {
+          ...state.selectedWorkProgress,
+          paymentDetails: {
+            paymentMethod,
+            paymentStatus,
+            paidAmount:
+              paidAmount ??
+              state.selectedWorkProgress.paymentDetails?.paidAmount ??
+              0,
+          },
+        };
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchWorkProgressList.pending, (state) => {
@@ -257,6 +353,23 @@ const workProgressSlice = createSlice({
       })
       .addCase(processPayment.rejected, (state, action) => {
         state.processPaymentLoading = false;
+        state.error = action.payload as string;
+      })
+      // Process online payment
+      .addCase(processOnlinePayment.pending, (state) => {
+        state.processOnlinePaymentLoading = true;
+        state.onlinePaymentLink = null;
+        state.error = null;
+      })
+      .addCase(processOnlinePayment.fulfilled, (state, action) => {
+        state.processOnlinePaymentLoading = false;
+        if (action.payload.success) {
+          state.onlinePaymentLink = action.payload.data;
+        }
+      })
+      .addCase(processOnlinePayment.rejected, (state, action) => {
+        state.processOnlinePaymentLoading = false;
+        state.onlinePaymentLink = null;
         state.error = action.payload as string;
       })
       .addCase(createWorkProgress.pending, (state) => {
@@ -319,4 +432,6 @@ const workProgressSlice = createSlice({
   },
 });
 
+export const { clearOnlinePaymentLink, updatePaymentStatus } =
+  workProgressSlice.actions;
 export default workProgressSlice.reducer;

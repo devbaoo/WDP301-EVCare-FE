@@ -1,5 +1,5 @@
-export const BASE_URL = "https://dolphin-app-pwai8.ondigitalocean.app";
-// export const BASE_URL = "http://localhost:8080";
+// export const BASE_URL = "https://dolphin-app-pwai8.ondigitalocean.app";
+export const BASE_URL = "http://localhost:8080";
 
 // Auth endpoints
 export const LOGIN_ENDPOINT = `${BASE_URL}/api/auth/login`;
@@ -163,6 +163,8 @@ export const WORK_PROGRESS_DETAIL_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/work-progress/${id}`;
 export const WORK_PROGRESS_PROCESS_PAYMENT_ENDPOINT = (id: string) =>
   `${BASE_URL}/api/work-progress/${id}/process-payment`;
+export const WORK_PROGRESS_PROCESS_ONLINE_PAYMENT_ENDPOINT = (id: string) =>
+  `${BASE_URL}/api/work-progress/${id}/process-online-payment`;
 // Deprecated: progress-level quote endpoints removed in favor of appointment-level
 // New appointment-level quote endpoints
 export const APPOINTMENT_INSPECTION_QUOTE_ENDPOINT = (appointmentId: string) =>
