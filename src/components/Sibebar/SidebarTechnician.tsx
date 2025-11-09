@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch } from '@/services/store/store';
 import { logout } from '@/services/features/auth/authSlice';
 import {
-    LayoutDashboard,
     Calendar,
     Wrench,
     Clock,
@@ -30,7 +29,7 @@ const SidebarTechnician = () => {
     const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
 
     const menuItems: MenuItem[] = [
-        { icon: LayoutDashboard, label: 'Dashboard', path: '/technician' },
+        
         { icon: Calendar, label: 'Schedule', path: '/technician/schedule' },
         { icon: Wrench, label: 'My Services', path: '/technician/services' },
         { icon: MessageSquare, label: 'Chat', path: '/technician/chat' },

@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch } from '@/services/store/store';
 import { logout } from '@/services/features/auth/authSlice';
 import {
-    LayoutDashboard,
     DollarSign,
     Wrench,
     Settings,
@@ -35,9 +34,9 @@ const SidebarStaff = () => {
     const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
 
     const menuItems: MenuItem[] = [
-        { icon: LayoutDashboard, label: 'Dashboard', path: '/staff' },
-        { icon: ShieldCheck, label: 'Certificate', path: '/staff/certificate' },
         { icon: CalendarDays, label: 'Bookings', path: '/staff/booking' },
+        
+        { icon: ShieldCheck, label: 'Certificate', path: '/staff/certificate' },
         { icon: DollarSign, label: 'Payments', path: '/staff/payment' },
         { icon: Package, label: 'Parts', path: '/staff/parts' },
         { icon: Boxes, label: 'Inventory', path: '/staff/inventory' },

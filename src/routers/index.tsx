@@ -72,10 +72,10 @@ const AppRouter = () => {
             return "/admin";
         }
         if (user?.role === "staff") {
-            return "/staff";
+            return "/staff/booking";
         }
         if (user?.role === "technician") {
-            return "/technician";
+            return "/technician/schedule";
         }
         // Customer can stay on home page (only if verified)
         return "/";
@@ -168,7 +168,7 @@ const AppRouter = () => {
                 {/* Technician Routes - Only accessible when authenticated as technician */}
                 <Route element={<ProtectedRoute allowedRoles={["technician"]} />}>
                         <Route path="/technician" element={<TechnicianLayout />}>
-                            <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Technician Dashboard</h1></div>} />
+                            <Route index element={<Navigate to="/technician/schedule" replace />} />
                             <Route path="schedule" element={<SchedulePage />} />
                             <Route path="services" element={<TechnicianWorkProgressPage />} />
                             <Route path="chat" element={<ChatPage />} />
@@ -180,7 +180,7 @@ const AppRouter = () => {
                 {/* Staff Routes - Only accessible when authenticated as staff */}
                 <Route element={<ProtectedRoute allowedRoles={["staff"]} />}>
                         <Route path="/staff" element={<StaffLayout />}>
-                            <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Dashboard</h1></div>} />
+                            <Route index element={<Navigate to="/staff/booking" replace />} />
                             <Route path="booking" element={<StaffBookingManagePage />} />
                             <Route path="payment" element={<StaffPaymentPage />} />
                             <Route path="certificate" element={<CertificatePage />} />
@@ -190,8 +190,8 @@ const AppRouter = () => {
                             <Route path="technicians" element={<StaffTechnicianPage />} />
                             <Route path="chat" element={<ChatPage />} />
                             <Route path="schedules" element={<StaffSchedulesTechnicianPage />} />
-                        <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Settings</h1></div>} />
-                    </Route>
+                            <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Settings</h1></div>} />
+                        </Route>
                 </Route>
 
                 {/* Admin Routes - Only accessible when authenticated as admin */}
