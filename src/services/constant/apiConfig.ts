@@ -1,5 +1,5 @@
-// export const BASE_URL = "https://dolphin-app-pwai8.ondigitalocean.app";
-export const BASE_URL = "http://localhost:8080";
+export const BASE_URL = "https://dolphin-app-pwai8.ondigitalocean.app";
+// export const BASE_URL = "http://localhost:8080";
 
 // Auth endpoints
 export const LOGIN_ENDPOINT = `${BASE_URL}/api/auth/login`;
