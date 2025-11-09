@@ -3,10 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch } from '@/services/store/store';
 import { logout } from '@/services/features/auth/authSlice';
 import {
-    LayoutDashboard,
     DollarSign,
     Wrench,
-    Settings,
     LogOut,
     Menu,
     ChevronDown,
@@ -14,7 +12,6 @@ import {
     CalendarDays,
     type LucideIcon,
     Calendar,
-    MessageSquare,
     Package,
     Boxes,
     Sparkles,
@@ -35,7 +32,6 @@ const SidebarStaff = () => {
     const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
 
     const menuItems: MenuItem[] = [
-        { icon: LayoutDashboard, label: 'Dashboard', path: '/staff' },
         { icon: ShieldCheck, label: 'Certificate', path: '/staff/certificate' },
         { icon: CalendarDays, label: 'Bookings', path: '/staff/booking' },
         { icon: DollarSign, label: 'Payments', path: '/staff/payment' },
@@ -43,9 +39,7 @@ const SidebarStaff = () => {
         { icon: Boxes, label: 'Inventory', path: '/staff/inventory' },
         { icon: Sparkles, label: 'AI Optimization', path: '/staff/ai' },
         { icon: Wrench, label: 'Technicians', path: '/staff/technicians' },
-        { icon: MessageSquare, label: 'Chat', path: '/staff/chat' },
         { icon: Calendar, label: 'Schedules', path: '/staff/schedules' },
-        { icon: Settings, label: 'Settings', path: '/staff/settings' },
     ];
 
     const handleLogout = () => {
@@ -55,8 +49,7 @@ const SidebarStaff = () => {
     };
 
     const isActive = (path: string) => {
-        const isRoot = path === '/staff';
-        return isRoot ? location.pathname === '/staff' : location.pathname.startsWith(path);
+        return location.pathname.startsWith(path);
     };
 
     const toggleDropdown = (path: string) => {

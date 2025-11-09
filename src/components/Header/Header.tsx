@@ -32,25 +32,12 @@ export default function Header() {
     navigate("/customer/payments");
   };
 
-  const handleNavigateToChat = () => {
-    navigate("/customer/chat");
-  };
-
   const userMenuItems: MenuProps['items'] = [
     {
       key: 'profile',
       icon: <UserOutlined />,
       label: 'Hồ sơ',
       onClick: handleNavigateToProfile,
-    },
-    {
-      type: 'divider',
-    },
-    {
-      key: 'chat',
-      icon: <MessageOutlined />,
-      label: 'Trung tâm chat',
-      onClick: handleNavigateToChat,
     },
     {
       type: 'divider',
