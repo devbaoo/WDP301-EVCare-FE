@@ -1,5 +1,5 @@
 import { Button, Dropdown } from "antd";
-import { UserOutlined, LogoutOutlined, CarOutlined, HistoryOutlined, CreditCardOutlined, MessageOutlined } from "@ant-design/icons";
+import { UserOutlined, LogoutOutlined, CarOutlined, HistoryOutlined, CreditCardOutlined } from "@ant-design/icons";
 import type { MenuProps } from 'antd';
 import { useAppSelector, useAppDispatch } from "../../services/store/store";
 import { logout } from "../../services/features/auth/authSlice";
