@@ -34,9 +34,6 @@ import AllUserPage from "@/page/Admin/AllUserPage";
 import StaffPage from "@/page/Admin/StaffPage";
 import ServicePage from "@/page/Admin/ServicePage";
 
-import ManageModelPage from "@/page/Admin/ManageModelPage";
-import ManagePackagePage from "@/page/Admin/ManagePackagePage";
-import SettingPage from "@/page/Admin/SettingPage";
 import ServiceCentersPages from "@/page/Admin/ServiceCentersPages";
 import PaymentSuccessPage from "@/page/Payment/PaymentSuccessPage";
 import PaymentFailurePage from "@/page/Payment/PaymentFailurePage";
@@ -148,7 +145,6 @@ const AppRouter = () => {
                         <Route path="/customer/vehicles" element={<ManageVehiclesCustomer />} />
                         <Route path="/customer/bookings" element={<BookingHistory />} />
                         <Route path="/customer/payments" element={<PaymentHistory />} />
-                        <Route path="/customer/chat" element={<ChatPage />} />
                         <Route path="/customer/service-centers" element={<ServiceCentersPage />} />
                         <Route path="/customer/service-centers/:id" element={<ServiceCenterDetailPage />} />
                         <Route path="/booking" element={<BookingPage />} />
@@ -167,46 +163,38 @@ const AppRouter = () => {
 
                 {/* Technician Routes - Only accessible when authenticated as technician */}
                 <Route element={<ProtectedRoute allowedRoles={["technician"]} />}>
-                        <Route path="/technician" element={<TechnicianLayout />}>
-                            <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Technician Dashboard</h1></div>} />
-                            <Route path="schedule" element={<SchedulePage />} />
-                            <Route path="services" element={<TechnicianWorkProgressPage />} />
-                            <Route path="chat" element={<ChatPage />} />
-                            <Route path="history" element={<div className="p-6"><h1 className="text-2xl font-bold">Service History</h1></div>} />
+                    <Route path="/technician" element={<TechnicianLayout />}>
+                        <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Technician Dashboard</h1></div>} />
+                        <Route path="schedule" element={<SchedulePage />} />
+                        <Route path="services" element={<TechnicianWorkProgressPage />} />
+                        <Route path="chat" element={<ChatPage />} />
+                        <Route path="history" element={<div className="p-6"><h1 className="text-2xl font-bold">Service History</h1></div>} />
                         <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Technician Settings</h1></div>} />
                     </Route>
                 </Route>
 
                 {/* Staff Routes - Only accessible when authenticated as staff */}
                 <Route element={<ProtectedRoute allowedRoles={["staff"]} />}>
-                        <Route path="/staff" element={<StaffLayout />}>
-                            <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Dashboard</h1></div>} />
-                            <Route path="booking" element={<StaffBookingManagePage />} />
-                            <Route path="payment" element={<StaffPaymentPage />} />
-                            <Route path="certificate" element={<CertificatePage />} />
-                            <Route path="parts" element={<StaffPartsPage />} />
-                            <Route path="inventory" element={<StaffInventoryPage />} />
-                            <Route path="ai" element={<StaffAiInventoryPage />} />
-                            <Route path="technicians" element={<StaffTechnicianPage />} />
-                            <Route path="chat" element={<ChatPage />} />
-                            <Route path="schedules" element={<StaffSchedulesTechnicianPage />} />
-                        <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Settings</h1></div>} />
+                    <Route path="/staff" element={<StaffLayout />}>
+                        <Route index element={<Navigate to="/staff/certificate" replace />} />
+                        <Route path="booking" element={<StaffBookingManagePage />} />
+                        <Route path="payment" element={<StaffPaymentPage />} />
+                        <Route path="certificate" element={<CertificatePage />} />
+                        <Route path="parts" element={<StaffPartsPage />} />
+                        <Route path="inventory" element={<StaffInventoryPage />} />
+                        <Route path="ai" element={<StaffAiInventoryPage />} />
+                        <Route path="technicians" element={<StaffTechnicianPage />} />
+                        <Route path="schedules" element={<StaffSchedulesTechnicianPage />} />
                     </Route>
-                </Route>
-
-                {/* Admin Routes - Only accessible when authenticated as admin */}
+                </Route>                {/* Admin Routes - Only accessible when authenticated as admin */}
                 <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
                     <Route path="/admin" element={<AdminLayout />}>
                         <Route index element={<DashboardPage />} />
                         <Route path="users/all" element={<AllUserPage />} />
                         <Route path="users/staff" element={<StaffPage />} />
                         <Route path="services/manage" element={<ServicePage />} />
-                        <Route path="services/model" element={<ManageModelPage />} />
-                        <Route path="services/package" element={<ManagePackagePage />} />
                         <Route path="service-centers" element={<ServiceCentersPages />} />
                         <Route path="booking" element={<BookingManagePages />} />
-                        <Route path="chat" element={<ChatPage />} />
-                        <Route path="settings" element={<SettingPage />} />
                     </Route>
                 </Route>
 
