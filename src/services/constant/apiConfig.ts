@@ -220,6 +220,16 @@ export const AI_DEMAND_FORECAST_ENDPOINT = `${BASE_URL}/api/ai/demand-forecast`;
 export const AI_STOCK_OPTIMIZATION_ENDPOINT = `${BASE_URL}/api/ai/stock-optimization`;
 export const AI_APPLY_RECOMMENDATIONS_ENDPOINT = `${BASE_URL}/api/ai/apply-recommendations`;
 
+// Dashboard endpoints
+export const DASHBOARD_OVERVIEW_ENDPOINT = `${BASE_URL}/api/dashboard/overview`;
+export const DASHBOARD_REVENUE_ANALYTICS_ENDPOINT = `${BASE_URL}/api/dashboard/revenue-analytics`;
+export const DASHBOARD_BOOKING_ANALYTICS_ENDPOINT = `${BASE_URL}/api/dashboard/booking-analytics`;
+export const DASHBOARD_CUSTOMER_GROWTH_ENDPOINT = `${BASE_URL}/api/dashboard/customer-growth`;
+export const DASHBOARD_SERVICE_CENTER_PERFORMANCE_ENDPOINT = `${BASE_URL}/api/dashboard/service-center-performance`;
+export const DASHBOARD_INVENTORY_STATS_ENDPOINT = `${BASE_URL}/api/dashboard/inventory-stats`;
+export const DASHBOARD_RECENT_ACTIVITIES_ENDPOINT = `${BASE_URL}/api/dashboard/recent-activities`;
+export const DASHBOARD_TOP_CUSTOMERS_ENDPOINT = `${BASE_URL}/api/dashboard/top-customers`;
+
 // Chat endpoints
 const CHAT_BASE_ENDPOINT = `${BASE_URL}/api/chat`;
 export const CHAT_BOOKINGS_ENDPOINT = `${CHAT_BASE_ENDPOINT}/bookings`;
