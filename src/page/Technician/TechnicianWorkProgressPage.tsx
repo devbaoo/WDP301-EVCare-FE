@@ -345,13 +345,18 @@ export default function TechnicianWorkProgressPage() {
                     unitPrice: Number(it?.unitPrice || 0),
                     name: it?.name,
                 }));
+            // Handle inspectionNotes: convert array to string if needed (from tags mode)
+            const inspectionNotesValue = Array.isArray(values.inspectionNotes)
+                ? values.inspectionNotes.join(", ")
+                : (values.inspectionNotes || "");
+
             const result = await dispatch(
                 submitAppointmentInspectionQuote({
                     appointmentId,
                     payload: {
                         vehicleCondition: values.vehicleCondition,
                         diagnosisDetails: values.diagnosisDetails,
-                        inspectionNotes: values.inspectionNotes,
+                        inspectionNotes: inspectionNotesValue,
                         quoteDetails: { items },
                     },
                 })
@@ -394,13 +399,19 @@ export default function TechnicianWorkProgressPage() {
             const values = await completeForm.validateFields();
             const progressId = detailProgress?._id;
             if (!progressId) return;
-            const result = await dispatch(completeMaintenance({ progressId, payload: values }));
+            // Handle array values from tags mode: convert to string
+            const payload = {
+                notes: Array.isArray(values.notes) ? values.notes.join(", ") : (values.notes || ""),
+                workDone: Array.isArray(values.workDone) ? values.workDone.join(", ") : (values.workDone || ""),
+                recommendations: Array.isArray(values.recommendations) ? values.recommendations.join(", ") : (values.recommendations || ""),
+            };
+            const result = await dispatch(completeMaintenance({ progressId, payload }));
             if (completeMaintenance.fulfilled.match(result) && (result.payload as { success?: boolean })?.success) {
                 message.success("Đã hoàn thành bảo dưỡng");
                 setCompleteOpen(false);
             } else {
-                const payload = result.payload as unknown;
-                const errMsg = (typeof payload === 'string' ? payload : (payload as { message?: string })?.message) || "Hoàn thành thất bại";
+                const errorPayload = result.payload as unknown;
+                const errMsg = (typeof errorPayload === 'string' ? errorPayload : (errorPayload as { message?: string })?.message) || "Hoàn thành thất bại";
                 message.error(String(errMsg));
             }
             await openDetails(detailSchedule as ScheduleLike);
@@ -785,13 +796,60 @@ export default function TechnicianWorkProgressPage() {
             >
                 <Form layout="vertical" form={quoteForm} size="small">
                     <Form.Item name="vehicleCondition" label="Tình trạng xe" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
-                        <Input placeholder="Ví dụ: Ắc quy yếu, đèn báo động cơ..." />
+                        <Select
+                            placeholder="Chọn tình trạng xe"
+                            showSearch
+                            allowClear
+                            optionFilterProp="label"
+                            options={[
+                                { label: "Ắc quy yếu", value: "Ắc quy yếu" },
+                                { label: "Đèn báo động cơ", value: "Đèn báo động cơ" },
+                                { label: "Hệ thống phanh có vấn đề", value: "Hệ thống phanh có vấn đề" },
+                                { label: "Pin yếu", value: "Pin yếu" },
+                                { label: "Hệ thống sạc không hoạt động", value: "Hệ thống sạc không hoạt động" },
+                                { label: "Lốp mòn", value: "Lốp mòn" },
+                                { label: "Hệ thống điều hòa không lạnh", value: "Hệ thống điều hòa không lạnh" },
+                                { label: "Đèn pha không sáng", value: "Đèn pha không sáng" },
+                                { label: "Hệ thống treo có tiếng kêu", value: "Hệ thống treo có tiếng kêu" },
+                                { label: "Xe không khởi động được", value: "Xe không khởi động được" },
+                                { label: "Hệ thống lái có vấn đề", value: "Hệ thống lái có vấn đề" },
+                                { label: "Rò rỉ dầu", value: "Rò rỉ dầu" },
+                                { label: "Khác", value: "Khác" },
+                            ]}
+                        />
                     </Form.Item>
                     <Form.Item name="diagnosisDetails" label="Chẩn đoán" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
-                        <Input placeholder="Chi tiết chẩn đoán" />
+                        <Select
+                            placeholder="Chọn chẩn đoán"
+                            showSearch
+                            allowClear
+                            optionFilterProp="label"
+                            options={[
+                                { label: "Xe hư", value: "Xe hư" },
+                                { label: "Cần bảo dưỡng định kỳ", value: "Cần bảo dưỡng định kỳ" },
+                                { label: "Cần thay thế linh kiện", value: "Cần thay thế linh kiện" },
+                                { label: "Cần sửa chữa", value: "Cần sửa chữa" },
+                                { label: "Cần kiểm tra kỹ hơn", value: "Cần kiểm tra kỹ hơn" },
+                                { label: "Xe hoạt động bình thường", value: "Xe hoạt động bình thường" },
+                                { label: "Cần vệ sinh và bảo dưỡng", value: "Cần vệ sinh và bảo dưỡng" },
+                                { label: "Cần hiệu chỉnh hệ thống", value: "Cần hiệu chỉnh hệ thống" },
+                                { label: "Khác", value: "Khác" },
+                            ]}
+                        />
                     </Form.Item>
                     <Form.Item name="inspectionNotes" label="Ghi chú kiểm tra" style={{ marginBottom: 8 }}>
-                        <Input placeholder="Ghi chú" />
+                        <Select
+                            mode="tags"
+                            placeholder="Chọn hoặc nhập ghi chú"
+                            allowClear
+                            options={[
+                                { label: "Đã kiểm tra kỹ", value: "Đã kiểm tra kỹ" },
+                                { label: "Cần theo dõi thêm", value: "Cần theo dõi thêm" },
+                                { label: "Khách hàng đã được thông báo", value: "Khách hàng đã được thông báo" },
+                                { label: "Cần phụ tùng đặt hàng", value: "Cần phụ tùng đặt hàng" },
+                                { label: "Xe cần giữ lại để kiểm tra", value: "Xe cần giữ lại để kiểm tra" },
+                            ]}
+                        />
                     </Form.Item>
                     {/** Removed Giá báo (VND) field as it is no longer sent */}
                     <Card size="small" className="mb-3">
@@ -867,13 +925,60 @@ export default function TechnicianWorkProgressPage() {
             >
                 <Form layout="vertical" form={completeForm}>
                     <Form.Item name="notes" label="Ghi chú">
-                        <Input.TextArea rows={2} />
+                        <Select
+                            mode="tags"
+                            placeholder="Chọn hoặc nhập ghi chú"
+                            allowClear
+                            options={[
+                                { label: "Đã hoàn thành đúng hạn", value: "Đã hoàn thành đúng hạn" },
+                                { label: "Cần kiểm tra lại sau", value: "Cần kiểm tra lại sau" },
+                                { label: "Khách hàng đã được thông báo", value: "Khách hàng đã được thông báo" },
+                                { label: "Xe sẵn sàng giao", value: "Xe sẵn sàng giao" },
+                                { label: "Cần chờ phụ tùng", value: "Cần chờ phụ tùng" },
+                            ]}
+                        />
                     </Form.Item>
                     <Form.Item name="workDone" label="Công việc đã làm" rules={[{ required: true }]}>
-                        <Input.TextArea rows={2} />
+                        <Select
+                            mode="tags"
+                            placeholder="Chọn hoặc nhập công việc đã làm"
+                            allowClear
+                            options={[
+                                { label: "Đã kiểm tra toàn bộ hệ thống", value: "Đã kiểm tra toàn bộ hệ thống" },
+                                { label: "Đã thay thế linh kiện", value: "Đã thay thế linh kiện" },
+                                { label: "Đã bảo dưỡng định kỳ", value: "Đã bảo dưỡng định kỳ" },
+                                { label: "Đã sửa chữa hệ thống", value: "Đã sửa chữa hệ thống" },
+                                { label: "Đã vệ sinh xe", value: "Đã vệ sinh xe" },
+                                { label: "Đã kiểm tra và hiệu chỉnh pin", value: "Đã kiểm tra và hiệu chỉnh pin" },
+                                { label: "Đã kiểm tra hệ thống sạc", value: "Đã kiểm tra hệ thống sạc" },
+                                { label: "Đã kiểm tra hệ thống phanh", value: "Đã kiểm tra hệ thống phanh" },
+                                { label: "Đã kiểm tra hệ thống lái", value: "Đã kiểm tra hệ thống lái" },
+                                { label: "Đã thay dầu và lọc dầu", value: "Đã thay dầu và lọc dầu" },
+                                { label: "Đã kiểm tra và bảo dưỡng điều hòa", value: "Đã kiểm tra và bảo dưỡng điều hòa" },
+                                { label: "Đã kiểm tra lốp và áp suất", value: "Đã kiểm tra lốp và áp suất" },
+                                { label: "Đã kiểm tra đèn và hệ thống điện", value: "Đã kiểm tra đèn và hệ thống điện" },
+                                { label: "Đã test drive", value: "Đã test drive" },
+                            ]}
+                        />
                     </Form.Item>
                     <Form.Item name="recommendations" label="Khuyến nghị">
-                        <Input.TextArea rows={2} />
+                        <Select
+                            mode="tags"
+                            placeholder="Chọn hoặc nhập khuyến nghị"
+                            allowClear
+                            options={[
+                                { label: "Nên kiểm tra định kỳ sau 3 tháng", value: "Nên kiểm tra định kỳ sau 3 tháng" },
+                                { label: "Nên kiểm tra định kỳ sau 6 tháng", value: "Nên kiểm tra định kỳ sau 6 tháng" },
+                                { label: "Cần thay lốp trong thời gian tới", value: "Cần thay lốp trong thời gian tới" },
+                                { label: "Cần thay pin trong thời gian tới", value: "Cần thay pin trong thời gian tới" },
+                                { label: "Nên bảo dưỡng định kỳ", value: "Nên bảo dưỡng định kỳ" },
+                                { label: "Nên vệ sinh xe thường xuyên", value: "Nên vệ sinh xe thường xuyên" },
+                                { label: "Cần theo dõi hệ thống sạc", value: "Cần theo dõi hệ thống sạc" },
+                                { label: "Cần kiểm tra lại sau 1 tháng", value: "Cần kiểm tra lại sau 1 tháng" },
+                                { label: "Nên sử dụng phụ tùng chính hãng", value: "Nên sử dụng phụ tùng chính hãng" },
+                                { label: "Xe hoạt động tốt, không cần lo lắng", value: "Xe hoạt động tốt, không cần lo lắng" },
+                            ]}
+                        />
                     </Form.Item>
                 </Form>
             </Modal>
@@ -905,10 +1010,53 @@ export default function TechnicianWorkProgressPage() {
                                         <Card key={field.key} size="small">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                                 <Form.Item name={[field.name, "name"]} label="Tên mốc" rules={[{ required: true }]}>
-                                                    <Input placeholder="Tên mốc" />
+                                                    <Select
+                                                        placeholder="Chọn tên mốc"
+                                                        showSearch
+                                                        allowClear
+                                                        optionFilterProp="label"
+                                                        options={[
+                                                            { label: "Kiểm tra ban đầu", value: "Kiểm tra ban đầu" },
+                                                            { label: "Chẩn đoán sơ bộ", value: "Chẩn đoán sơ bộ" },
+                                                            { label: "Chẩn đoán chi tiết", value: "Chẩn đoán chi tiết" },
+                                                            { label: "Tháo lắp linh kiện", value: "Tháo lắp linh kiện" },
+                                                            { label: "Thay thế linh kiện", value: "Thay thế linh kiện" },
+                                                            { label: "Bảo dưỡng hệ thống", value: "Bảo dưỡng hệ thống" },
+                                                            { label: "Kiểm tra pin", value: "Kiểm tra pin" },
+                                                            { label: "Kiểm tra hệ thống sạc", value: "Kiểm tra hệ thống sạc" },
+                                                            { label: "Kiểm tra hệ thống phanh", value: "Kiểm tra hệ thống phanh" },
+                                                            { label: "Kiểm tra hệ thống lái", value: "Kiểm tra hệ thống lái" },
+                                                            { label: "Vệ sinh và bảo dưỡng", value: "Vệ sinh và bảo dưỡng" },
+                                                            { label: "Hiệu chỉnh hệ thống", value: "Hiệu chỉnh hệ thống" },
+                                                            { label: "Kiểm tra cuối cùng", value: "Kiểm tra cuối cùng" },
+                                                            { label: "Hoàn tất", value: "Hoàn tất" },
+                                                            { label: "Khác", value: "Khác" },
+                                                        ]}
+                                                    />
                                                 </Form.Item>
                                                 <Form.Item name={[field.name, "description"]} label="Mô tả" rules={[{ required: true }]}>
-                                                    <Input placeholder="Mô tả" />
+                                                    <Select
+                                                        placeholder="Chọn mô tả"
+                                                        showSearch
+                                                        allowClear
+                                                        optionFilterProp="label"
+                                                        options={[
+                                                            { label: "Đã hoàn thành kiểm tra", value: "Đã hoàn thành kiểm tra" },
+                                                            { label: "Đã xác định vấn đề", value: "Đã xác định vấn đề" },
+                                                            { label: "Đang tiến hành sửa chữa", value: "Đang tiến hành sửa chữa" },
+                                                            { label: "Đã thay thế linh kiện", value: "Đã thay thế linh kiện" },
+                                                            { label: "Đã bảo dưỡng xong", value: "Đã bảo dưỡng xong" },
+                                                            { label: "Đã vệ sinh xong", value: "Đã vệ sinh xong" },
+                                                            { label: "Đã hiệu chỉnh xong", value: "Đã hiệu chỉnh xong" },
+                                                            { label: "Đang chờ phụ tùng", value: "Đang chờ phụ tùng" },
+                                                            { label: "Cần kiểm tra thêm", value: "Cần kiểm tra thêm" },
+                                                            { label: "Hoạt động bình thường", value: "Hoạt động bình thường" },
+                                                            { label: "Cần thay thế", value: "Cần thay thế" },
+                                                            { label: "Cần sửa chữa", value: "Cần sửa chữa" },
+                                                            { label: "Đã hoàn tất", value: "Đã hoàn tất" },
+                                                            { label: "Khác", value: "Khác" },
+                                                        ]}
+                                                    />
                                                 </Form.Item>
                                             </div>
                                             <Button danger onClick={() => remove(field.name)}>Xóa</Button>
