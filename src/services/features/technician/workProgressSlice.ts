@@ -319,7 +319,25 @@ export const workProgressSlice = createSlice({
       .addCase(fetchWorkProgressDetail.fulfilled, (state, action) => {
         state.detailLoading = false;
         if (action.payload.success) {
-          state.selectedWorkProgress = action.payload.data;
+          const updatedWorkProgress = action.payload.data;
+          state.selectedWorkProgress = updatedWorkProgress;
+
+          // Also update in workProgressList if present
+          const listIndex = state.workProgressList.findIndex(
+            (wp) => wp._id === updatedWorkProgress._id
+          );
+          if (listIndex !== -1) {
+            state.workProgressList[listIndex] = updatedWorkProgress;
+          }
+
+          // Also update in byAppointment if present
+          const apptId =
+            typeof updatedWorkProgress.appointmentId === "string"
+              ? updatedWorkProgress.appointmentId
+              : updatedWorkProgress.appointmentId?._id;
+          if (apptId) {
+            state.byAppointment[apptId] = updatedWorkProgress;
+          }
         }
       })
       .addCase(fetchWorkProgressDetail.rejected, (state, action) => {

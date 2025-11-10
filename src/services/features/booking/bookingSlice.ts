@@ -283,6 +283,18 @@ export const fetchMyBookings = createAsyncThunk(
         : MY_BOOKINGS_ENDPOINT;
 
       const response = await axiosInstance.get(url);
+
+      // DEBUG: Log raw API response
+      console.log("🔍 MY_BOOKINGS API Response:", {
+        url,
+        appointments: response.data.data?.appointments?.map((apt: any) => ({
+          id: apt._id,
+          status: apt.status,
+          paymentStatus: apt.payment?.status,
+          paymentMethod: apt.payment?.method,
+        })),
+      });
+
       return response.data.data; // This returns { appointments: [...], pagination: {...} }
     } catch (err: unknown) {
       const error = err as any;
