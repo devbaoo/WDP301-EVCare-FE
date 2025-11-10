@@ -99,7 +99,7 @@ const StaffPage: React.FC = () => {
 
     return (
         <div className="p-6">
-            <Typography.Title level={3} style={{ margin: 0 }}>Staff Management</Typography.Title>
+            <Typography.Title level={3} style={{ margin: 0 }}>Quản lý nhân viên</Typography.Title>
             <Typography.Paragraph type="secondary" style={{ marginTop: 8 }}>Quản lý nhân viên và quyền hạn.</Typography.Paragraph>
 
             <Space style={{ marginTop: 16, marginBottom: 16 }} direction="horizontal">

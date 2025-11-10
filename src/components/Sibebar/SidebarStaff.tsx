@@ -32,14 +32,14 @@ const SidebarStaff = () => {
     const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
 
     const menuItems: MenuItem[] = [
-        { icon: CalendarDays, label: 'Bookings', path: '/staff/booking' },
-        { icon: ShieldCheck, label: 'Certificate', path: '/staff/certificate' },
-        { icon: DollarSign, label: 'Payments', path: '/staff/payment' },
-        { icon: Package, label: 'Parts', path: '/staff/parts' },
-        { icon: Boxes, label: 'Inventory', path: '/staff/inventory' },
-        { icon: Sparkles, label: 'AI Optimization', path: '/staff/ai' },
-        { icon: Wrench, label: 'Technicians', path: '/staff/technicians' },
-        { icon: Calendar, label: 'Schedules', path: '/staff/schedules' },
+        { icon: CalendarDays, label: 'Đặt Lịch', path: '/staff/booking' },
+        { icon: ShieldCheck, label: 'Chứng Nhận', path: '/staff/certificate' },
+        { icon: DollarSign, label: 'Thanh Toán', path: '/staff/payment' },
+        { icon: Package, label: 'Phụ Tùng', path: '/staff/parts' },
+        { icon: Boxes, label: 'Tồn Kho', path: '/staff/inventory' },
+        { icon: Sparkles, label: 'Tối Ưu Hóa AI', path: '/staff/ai' },
+        { icon: Wrench, label: 'Kỹ Thuật Viên', path: '/staff/technicians' },
+        { icon: Calendar, label: 'Lịch Làm Việc', path: '/staff/schedules' },
     ];
 
     const handleLogout = () => {

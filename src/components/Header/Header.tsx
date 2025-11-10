@@ -149,7 +149,7 @@ export default function Header() {
                 className="flex items-center space-x-3"
               >
                 <span className="text-synop-blue-dark font-medium">
-                  Hello, {user.fullName || user.username || user.email || 'User'}
+                  Xin Chào, {user.fullName || user.username || user.email || 'User'}
                 </span>
                 <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
                   <motion.div

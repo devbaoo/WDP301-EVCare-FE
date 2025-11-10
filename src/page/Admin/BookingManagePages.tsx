@@ -380,8 +380,8 @@ const BookingManagePages: React.FC = () => {
             {/* Table - Pending Offline Payment */}
             <Card className="mt-6">
                 <div className="mb-3">
-                    <Title level={4}>Booking chờ thanh toán offline</Title>
-                    <Text type="secondary">Các booking có phương thức thanh toán offline và đang ở trạng thái pending</Text>
+                    <Title level={4}>Chờ thanh toán trực tuyến</Title>
+                    <Text type="secondary">Các booking có phương thức thanh toán trực tuyến và đang ở trạng thái chờ xác nhận</Text>
                 </div>
                 <Table
                     columns={columns}
