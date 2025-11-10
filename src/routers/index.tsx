@@ -1,4 +1,3 @@
-
 import HomePage from "../page/Home/HomePage";
 import LoginPage from "../page/Auth/LoginPage";
 import ResendVerificationPage from "../page/Auth/ResendVerificationPage";
@@ -61,7 +60,6 @@ const AppRouter = () => {
         if (!isAuthenticated) {
             return "/login";
         }
-        // If customer needs verification, force to verify page
         if (user?.role === "customer" && needVerification) {
             return "/verify-email";
         }
@@ -69,12 +67,11 @@ const AppRouter = () => {
             return "/admin";
         }
         if (user?.role === "staff") {
-            return "/staff";
+            return "/staff/booking";
         }
         if (user?.role === "technician") {
-            return "/technician";
+            return "/technician/schedule";
         }
-        // Customer can stay on home page (only if verified)
         return "/";
     };
 
@@ -85,60 +82,47 @@ const AppRouter = () => {
                 {/* Public verification routes */}
                 <Route path="/verify-email/:token" element={<VerifyEmailSuccessPage />} />
                 <Route path="/verify-email" element={<ResendVerificationPage />} />
-                {/* Auth Routes - Only accessible when not authenticated */}
+
+                {/* Auth Routes */}
                 <Route element={!isAuthenticated ? <AuthLayout /> : <Navigate to={getInitialRoute()} />}>
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
                 </Route>
-                {/* Home Route - Only accessible for guests and verified customers */}
-                <Route path="/" element={
-                    isAuthenticated && user?.role === "customer" && needVerification ?
-                        <Navigate to="/verify-email" replace /> :
-                        isAuthenticated && user?.role === "customer" && !needVerification ?
-                            <CustomerLayout /> :
-                            isAuthenticated && (user?.role === "admin" || user?.role === "staff" || user?.role === "technician") ?
-                                <Navigate to={getInitialRoute()} replace /> :
-                                <GuestLayout />
-                }>
+
+                {/* Home Route */}
+                <Route
+                    path="/"
+                    element={
+                        isAuthenticated && user?.role === "customer" && needVerification ? (
+                            <Navigate to="/verify-email" replace />
+                        ) : isAuthenticated && user?.role === "customer" && !needVerification ? (
+                            <CustomerLayout />
+                        ) : isAuthenticated && ["admin", "staff", "technician"].includes(user?.role || "") ? (
+                            <Navigate to={getInitialRoute()} replace />
+                        ) : (
+                            <GuestLayout />
+                        )
+                    }
+                >
                     <Route index element={<HomePage />} />
                 </Route>
 
-                <Route path="/service-centers" element={
-                    isAuthenticated && user?.role === "customer" && needVerification ?
-                        <Navigate to="/verify-email" replace /> :
-                        isAuthenticated && user?.role === "customer" && !needVerification ?
-                            <CustomerLayout /> :
-                            isAuthenticated && (user?.role === "admin" || user?.role === "staff" || user?.role === "technician") ?
-                                <Navigate to={getInitialRoute()} replace /> :
-                                <GuestLayout />
-                }>
+                {/* Public Routes */}
+                <Route path="/service-centers" element={<GuestLayout />}>
                     <Route index element={<ServiceCentersPage />} />
                 </Route>
-
-                <Route path="/service-centers/:id" element={
-                    isAuthenticated && user?.role === "customer" && needVerification ?
-                        <Navigate to="/verify-email" replace /> :
-                        isAuthenticated && user?.role === "customer" && !needVerification ?
-                            <CustomerLayout /> :
-                            isAuthenticated && (user?.role === "admin" || user?.role === "staff" || user?.role === "technician") ?
-                                <Navigate to={getInitialRoute()} replace /> :
-                                <GuestLayout />
-                }>
+                <Route path="/service-centers/:id" element={<GuestLayout />}>
                     <Route index element={<ServiceCenterDetailPage />} />
                 </Route>
-
-                {/* About Us Route - Public access */}
                 <Route path="/about" element={<GuestLayout />}>
                     <Route index element={<AboutPage />} />
                 </Route>
-
-                {/* Contact Route - Public access */}
                 <Route path="/contact" element={<GuestLayout />}>
                     <Route index element={<ContactPage />} />
                 </Route>
 
-                {/* Customer Routes - Only accessible when authenticated as customer */}
+                {/* Customer Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
                     <Route element={<CustomerLayout />}>
                         <Route path="/customer/profile" element={<ProfileCustomer />} />
@@ -151,32 +135,28 @@ const AppRouter = () => {
                     </Route>
                 </Route>
 
-                {/* Staff Routes - Only accessible when authenticated as staff */}
-                {/* <Route element={<ProtectedRoute allowedRoles={["staff"]} />}>
-                    <Route path="/staff" element={<StaffLayout />}>
-                        <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Dashboard</h1></div>} />
-                        <Route path="service-centers" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Service Centers</h1></div>} />
-                        <Route path="technicians" element={<div className="p-6"><h1 className="text-2xl font-bold">Manage Technicians</h1></div>} />
-                        <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Settings</h1></div>} />
-                    </Route>
-                </Route> */}
-
-                {/* Technician Routes - Only accessible when authenticated as technician */}
+                {/* Technician Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["technician"]} />}>
                     <Route path="/technician" element={<TechnicianLayout />}>
-                        <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Technician Dashboard</h1></div>} />
+                        <Route index element={<Navigate to="/technician/schedule" replace />} />
                         <Route path="schedule" element={<SchedulePage />} />
                         <Route path="services" element={<TechnicianWorkProgressPage />} />
                         <Route path="chat" element={<ChatPage />} />
-                        <Route path="history" element={<div className="p-6"><h1 className="text-2xl font-bold">Service History</h1></div>} />
-                        <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Technician Settings</h1></div>} />
+                        <Route
+                            path="history"
+                            element={<div className="p-6"><h1 className="text-2xl font-bold">Service History</h1></div>}
+                        />
+                        <Route
+                            path="settings"
+                            element={<div className="p-6"><h1 className="text-2xl font-bold">Technician Settings</h1></div>}
+                        />
                     </Route>
                 </Route>
 
-                {/* Staff Routes - Only accessible when authenticated as staff */}
+                {/* Staff Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["staff"]} />}>
                     <Route path="/staff" element={<StaffLayout />}>
-                        <Route index element={<Navigate to="/staff/certificate" replace />} />
+                        <Route index element={<Navigate to="/staff/booking" replace />} />
                         <Route path="booking" element={<StaffBookingManagePage />} />
                         <Route path="payment" element={<StaffPaymentPage />} />
                         <Route path="certificate" element={<CertificatePage />} />
@@ -184,9 +164,16 @@ const AppRouter = () => {
                         <Route path="inventory" element={<StaffInventoryPage />} />
                         <Route path="ai" element={<StaffAiInventoryPage />} />
                         <Route path="technicians" element={<StaffTechnicianPage />} />
+                        <Route path="chat" element={<ChatPage />} />
                         <Route path="schedules" element={<StaffSchedulesTechnicianPage />} />
+                        <Route
+                            path="settings"
+                            element={<div className="p-6"><h1 className="text-2xl font-bold">Staff Settings</h1></div>}
+                        />
                     </Route>
-                </Route>                {/* Admin Routes - Only accessible when authenticated as admin */}
+                </Route>
+
+                {/* Admin Routes */}
                 <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
                     <Route path="/admin" element={<AdminLayout />}>
                         <Route index element={<DashboardPage />} />
@@ -198,17 +185,16 @@ const AppRouter = () => {
                     </Route>
                 </Route>
 
-                {/* Payment Routes - Public access for payment callbacks */}
+                {/* Payment Routes */}
                 <Route path="/payment/success" element={<PaymentSuccessPage />} />
                 <Route path="/payment/cancel" element={<PaymentFailurePage />} />
 
-                {/* Demo Routes */}
                 {/* Error Routes */}
                 <Route path="/unauthorized" element={<UnauthorizedPage />} />
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>
         </>
     );
-}
+};
 
 export default AppRouter;

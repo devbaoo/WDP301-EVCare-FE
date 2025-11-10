@@ -6,7 +6,6 @@ import { fetchServiceCenters, fetchNearbyServiceCenters, setSelectedServiceCente
 import { ServiceCenter } from '../../interfaces/serviceCenter';
 import RealTimeStatus from '../ServiceCenter/RealTimeStatus';
 import { isCurrentlyOpen } from '../../lib/timeUtils';
-import { useServiceCenterRatings } from '../../hooks/useServiceCenterRatings';
 
 interface Step2ServiceCenterSelectionProps {
     onNext: () => void;
@@ -24,18 +23,12 @@ const Step2ServiceCenterSelection: React.FC<Step2ServiceCenterSelectionProps> = 
     const [filterOpen, setFilterOpen] = useState(false);
     const [filterSelection, setFilterSelection] = useState<'all' | 'nearby'>('all');
 
-    // Use the ratings hook
-    const { getEnhancedServiceCenters, loading: ratingsLoading } = useServiceCenterRatings(serviceCenters);
-
     useEffect(() => {
         // Load all centers initially; don't auto-nearby to ensure "Gần tôi" uses latest location on click
         dispatch(fetchServiceCenters({}));
     }, [dispatch]);
 
-    // Get enhanced service centers with ratings
-    const enhancedServiceCenters = getEnhancedServiceCenters();
-
-    const filteredServiceCenters = enhancedServiceCenters.filter((center: ServiceCenter) => {
+    const filteredServiceCenters = serviceCenters.filter((center: ServiceCenter) => {
         const matchesSearch = center.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             center.address.street.toLowerCase().includes(searchTerm.toLowerCase()) ||
             center.address.district.toLowerCase().includes(searchTerm.toLowerCase());
@@ -111,7 +104,7 @@ const Step2ServiceCenterSelection: React.FC<Step2ServiceCenterSelectionProps> = 
         return center.status === 'active' && isServiceCenterOpen(center);
     };
 
-    if (loading || ratingsLoading) {
+    if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
                 <Spin size="large" />

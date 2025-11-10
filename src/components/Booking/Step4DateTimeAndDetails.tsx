@@ -330,6 +330,18 @@ const Step4DateTimeAndDetails: React.FC<Step4DateTimeAndDetailsProps> = ({ onPre
                 <p className="text-gray-600">Chọn ngày giờ và cung cấp thông tin bổ sung</p>
             </div>
 
+            {/* Payment Info Banner */}
+            <div className="bg-blue-50 p-6 rounded-lg flex items-start space-x-4 shadow-sm border border-blue-100">
+                <div className="text-blue-500 mt-1 flex-shrink-0">
+                    <span role="img" aria-label="info" className="text-2xl">ℹ️</span>
+                </div>
+                <div>
+                    
+                    <p className="text-blue-700 text-base leading-relaxed">
+                        Khi chọn thanh toán trực tuyến, bạn chỉ cần thanh toán 20% giá dịch vụ ngay bây giờ. 80% còn lại thanh toán tại Trung tâm sau khi hoàn thành.
+                    </p>
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left Column - Date & Time Selection */}
