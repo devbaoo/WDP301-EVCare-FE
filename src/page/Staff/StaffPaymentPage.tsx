@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Card,
   Select,
@@ -60,10 +60,10 @@ const StaffPaymentPage: React.FC = () => {
   const [selectedWorkProgress, setSelectedWorkProgress] =
     useState<WorkProgress | null>(null);
 
-  // Load data on component mount
+  // Load data on component mount only
   useEffect(() => {
-    dispatch(fetchWorkProgressList(filters));
-  }, [dispatch, filters]);
+    dispatch(fetchWorkProgressList({}));
+  }, [dispatch]); // Only run once on mount
 
   // Handle filter changes
   const handleStatusFilterChange = (value: string) => {
@@ -109,10 +109,13 @@ const StaffPaymentPage: React.FC = () => {
     setSelectedWorkProgress(null);
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = useCallback(() => {
     // Refresh the work progress list after successful payment
     dispatch(fetchWorkProgressList(filters));
-  };
+    // Close modal after refresh
+    setProcessPaymentModalVisible(false);
+    setSelectedWorkProgress(null);
+  }, [dispatch, filters]);
 
   // Handle detail modal
   const handleViewDetails = async (workProgress: WorkProgress) => {

@@ -28,7 +28,7 @@ import {
   processPayment,
   processOnlinePayment,
   clearOnlinePaymentLink,
-  updatePaymentStatus,
+  fetchWorkProgressDetail,
 } from "@/services/features/technician/workProgressSlice";
 import { getPaymentStatus } from "@/services/features/payment/paymentSlice";
 import {
@@ -70,6 +70,7 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
   );
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("pending");
   const [isPolling, setIsPolling] = useState(false);
+  const [hasShownSuccessMessage, setHasShownSuccessMessage] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -102,6 +103,7 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
       setPaymentMethod("offline");
       setPaymentStatus("pending");
       setIsPolling(false);
+      setHasShownSuccessMessage(false); // Reset flag when modal closes
       // Clear polling interval
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
@@ -127,29 +129,51 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
               pollingIntervalRef.current = null;
             }
             setIsPolling(false);
-            message.success("✅ Thanh toán thành công!");
-            // Optimistically update payment status in redux store for faster UI reflect
-            if (workProgress) {
-              // Determine paid amount from payment link info or fallback
-              const paidAmount =
-                onlinePaymentLink?.paymentLink?.amount ||
-                result.data.paymentInfo?.amount ||
-                workProgress.paymentDetails?.paidAmount ||
-                0;
-              dispatch(
-                updatePaymentStatus({
-                  workProgressId: workProgress._id,
-                  paymentMethod: "payos",
-                  paymentStatus: "paid",
-                  paidAmount,
-                })
-              );
+
+            // Only show success message once
+            if (!hasShownSuccessMessage) {
+              message.success("✅ Thanh toán thành công!");
+              setHasShownSuccessMessage(true);
             }
 
-            // Close modal and refresh data after a short delay
+            // Backend webhook now updates everything synchronously:
+            // - appointment.status = "completed"
+            // - workProgress.paymentDetails
+            // - free technician schedules
+            // Just fetch once with a small delay for webhook processing
+            if (workProgress) {
+              console.log(
+                "[ProcessPaymentModal] Payment successful, fetching updated data..."
+              );
+
+              // Small delay to ensure webhook has been processed
+              await new Promise((resolve) => setTimeout(resolve, 1500));
+
+              try {
+                const updatedWorkProgress = await dispatch(
+                  fetchWorkProgressDetail(workProgress._id)
+                ).unwrap();
+
+                const apptData = updatedWorkProgress.data?.appointmentId;
+                const apptStatus =
+                  typeof apptData === "object" ? apptData.status : null;
+
+                console.log("[ProcessPaymentModal] Updated data:", {
+                  appointmentStatus: apptStatus,
+                  paymentDetails: updatedWorkProgress.data?.paymentDetails,
+                });
+              } catch (error) {
+                console.error(
+                  "[ProcessPaymentModal] Error fetching updated data:",
+                  error
+                );
+              }
+            }
+
+            // Close modal and refresh list
             setTimeout(() => {
               form.resetFields();
-              onSuccess?.();
+              onSuccess?.(); // Refresh list to show updated status
               onCancel();
             }, 2000);
           } else if (
@@ -191,7 +215,7 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
         }
       }
     },
-    [dispatch, form, onSuccess, onCancel, workProgress, onlinePaymentLink]
+    [dispatch, form, onSuccess, onCancel, workProgress, hasShownSuccessMessage]
   );
 
   // Polling effect - check payment status every 3 seconds
@@ -428,11 +452,25 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
                   `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
                 }
                 parser={(value) => value!.replace(/\$\s?|(,*)/g, "")}
-                placeholder="Nhập số tiền thanh toán"
+                placeholder="Số tiền thanh toán"
                 addonAfter="VND"
                 size="large"
+                disabled
+                style={{
+                  color: "#000",
+                  fontWeight: "bold",
+                  cursor: "not-allowed",
+                }}
               />
             </Form.Item>
+            <Alert
+              message="Lưu ý"
+              description="Số tiền thanh toán được tính từ báo giá và không thể thay đổi"
+              type="info"
+              showIcon
+              icon={<InfoCircleOutlined />}
+              className="mb-4"
+            />
 
             <Form.Item label={<Text strong>Ghi chú</Text>} name="notes">
               <TextArea
