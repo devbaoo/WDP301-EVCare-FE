@@ -231,7 +231,7 @@ export default function ServicePage() {
               className="flex-1 max-w-md"
             >
               <Input
-                placeholder="Search services..."
+                placeholder="Tìm kiếm dịch vụ..."
                 prefix={<SearchOutlined />}
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
@@ -254,12 +254,12 @@ export default function ServicePage() {
                 className="min-w-40"
                 suffixIcon={<FilterOutlined />}
               >
-                <Option value="all">All categories</Option>
-                <Option value="maintenance">Maintenance</Option>
-                <Option value="repair">Repair</Option>
-                <Option value="upgrade">Upgrade</Option>
-                <Option value="inspection">Inspection</Option>
-                <Option value="emergency">Emergency</Option>
+                <Option value="all">Tất cả danh mục</Option>
+                <Option value="maintenance">Bảo trì</Option>
+                <Option value="repair">Sửa chữa</Option>
+                <Option value="upgrade">Nâng cấp</Option>
+                <Option value="inspection">Kiểm tra</Option>
+                <Option value="emergency">Khẩn cấp</Option>
               </Select>
               <Button type="primary" icon={<PlusOutlined />} size="large" onClick={openCreateModal}>
                 Thêm dịch vụ

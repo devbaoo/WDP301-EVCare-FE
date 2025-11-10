@@ -31,26 +31,26 @@ const Sidebar = () => {
   const dispatch = useDispatch();
 
   const menuItems: MenuItem[] = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
+    { icon: LayoutDashboard, label: 'Tổng Quan', path: '/admin' },
     {
       icon: Users,
-      label: 'Users',
+      label: 'Người Dùng',
       path: '/admin/users',
       children: [
-        { icon: UsersRound, label: 'Manage Users', path: '/admin/users/all' },
-        { icon: UsersRound, label: 'Manage Staff', path: '/admin/users/staff' },
+        { icon: UsersRound, label: 'Quản Lý Người Dùng', path: '/admin/users/all' },
+        { icon: UsersRound, label: 'Quản Lý Nhân Viên', path: '/admin/users/staff' },
       ]
     },
     {
       icon: BookPlus,
-      label: 'Services',
+      label: 'Dịch Vụ',
       path: '/admin/services',
       children: [
-        { icon: Wrench, label: 'Manage Services', path: '/admin/services/manage' },
+        { icon: Wrench, label: 'Quản Lý Dịch Vụ', path: '/admin/services/manage' },
       ]
     },
-    { icon: Building2, label: 'Centers', path: '/admin/service-centers' },
-    { icon: CalendarDays, label: 'Bookings', path: '/admin/booking' },
+    { icon: Building2, label: 'Trung Tâm', path: '/admin/service-centers' },
+    { icon: CalendarDays, label: 'Đặt Lịch', path: '/admin/booking' },
   ];
 
   const handleLogout = () => {

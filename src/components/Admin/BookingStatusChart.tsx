@@ -44,7 +44,7 @@ const BookingStatusChart: React.FC<BookingStatusChartProps> = ({ data }) => {
     return (
         <div className="bg-white rounded-lg shadow-sm p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">
-                Trạng thái Booking
+                Trạng thái Đặt Lịch
             </h3>
 
             {/* Pie Chart representation using bars */}
@@ -79,7 +79,7 @@ const BookingStatusChart: React.FC<BookingStatusChartProps> = ({ data }) => {
             <div className="mt-6 pt-4 border-t border-gray-200">
                 <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">Tổng cộng</span>
-                    <span className="text-lg font-bold text-gray-900">{total} bookings</span>
+                    <span className="text-lg font-bold text-gray-900">{total} đặt lịch</span>
                 </div>
             </div>
         </div>

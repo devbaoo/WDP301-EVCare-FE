@@ -246,7 +246,7 @@ const AllUserPage: React.FC = () => {
 
     return (
         <div className="p-6">
-            <Typography.Title level={3} style={{ margin: 0 }}>All Users</Typography.Title>
+            <Typography.Title level={3} style={{ margin: 0 }}>Tất cả người dùng</Typography.Title>
             <Typography.Paragraph type="secondary" style={{ marginTop: 8 }}>Quản lý tất cả người dùng trong hệ thống.</Typography.Paragraph>
                 
 

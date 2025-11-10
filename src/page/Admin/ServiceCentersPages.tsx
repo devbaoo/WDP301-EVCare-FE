@@ -1,5 +1,5 @@
 
-import ServiceCenterCard from "@/components/ServiceCenter/ServiceCenterCard";
+import AdminServiceCenterCard from "@/components/ServiceCenter/AdminServiceCenterCard";
 import { Spin, Empty, Input, Select, Pagination, Modal, Button, message, Tooltip, Dropdown } from "antd";
 import { useAppDispatch, useAppSelector } from "@/services/store/store";
 import { fetchServiceCenters, createServiceCenter, updateServiceCenter, deleteServiceCenter } from "@/services/features/serviceCenter/serviceCenterSlice";
@@ -242,10 +242,10 @@ export default function ServiceCentersPages() {
                 className="min-w-32"
                 suffixIcon={<FilterOutlined />}
               >
-                <Option value="all">All</Option>
-                <Option value="active">Active</Option>
-                <Option value="maintenance">Maintenance</Option>
-                <Option value="inactive">Inactive</Option>
+                <Option value="all">Tất cả</Option>
+                <Option value="active">Đang hoạt động</Option>
+                <Option value="maintenance">Bảo trì</Option>
+                <Option value="inactive">Ngừng hoạt động</Option>
               </Select>
               <Button type="primary" icon={<PlusOutlined />} size="large" onClick={openCreateModal}>
                 Thêm mới
@@ -307,16 +307,10 @@ export default function ServiceCentersPages() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <motion.div
-                  layout
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8"
-                >
-                  {paginatedServiceCenters.map((serviceCenter, index) => (
-                    <motion.div
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                  {paginatedServiceCenters.map((serviceCenter: ServiceCenter) => (
+                    <div
                       key={serviceCenter._id}
-                      initial={{ opacity: 0, y: 30 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: index * 0.1 }}
                       className="h-full"
                     >
                       <div className="relative h-full flex flex-col group">
@@ -326,7 +320,7 @@ export default function ServiceCentersPages() {
                             trigger={["click"]}
                             menu={{
                               items: cardMenuItems() as any,
-                              onClick: (info) => handleMenuClick(info.key, serviceCenter)
+                              onClick: (info: any) => handleMenuClick(info.key, serviceCenter)
                             }}
                           >
                             <Tooltip title="">
@@ -341,14 +335,14 @@ export default function ServiceCentersPages() {
                           </Dropdown>
                         </div>
 
-                        <ServiceCenterCard
+                        <AdminServiceCenterCard
                           serviceCenter={serviceCenter}
                           onViewDetails={handleViewDetails}
                         />
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
-                </motion.div>
+                </div>
 
                 {/* Pagination */}
                 {totalFilteredItems > pageSize && (

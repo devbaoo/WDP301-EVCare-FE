@@ -29,12 +29,11 @@ const SidebarTechnician = () => {
     const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
 
     const menuItems: MenuItem[] = [
-        
-        { icon: Calendar, label: 'Schedule', path: '/technician/schedule' },
-        { icon: Wrench, label: 'My Services', path: '/technician/services' },
-        { icon: MessageSquare, label: 'Chat', path: '/technician/chat' },
-        { icon: Clock, label: 'History', path: '/technician/history' },
-        { icon: Settings, label: 'Settings', path: '/technician/settings' },
+        { icon: Calendar, label: 'Lịch Làm Việc', path: '/technician/schedule' },
+        { icon: Wrench, label: 'Dịch Vụ Của Tôi', path: '/technician/services' },
+        { icon: MessageSquare, label: 'Trò Chuyện', path: '/technician/chat' },
+        { icon: Clock, label: 'Lịch Sử', path: '/technician/history' },
+        { icon: Settings, label: 'Cài Đặt', path: '/technician/settings' },
     ];
 
     const handleLogout = () => {

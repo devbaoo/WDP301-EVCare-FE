@@ -111,13 +111,22 @@ const DashboardPage: React.FC = () => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">Bảng Điều Khiển</h1>
                     <p className="text-gray-600 mt-1">Tổng quan hệ thống EVCare</p>
                 </div>
 
                 {/* Date Range Filter */}
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
+                        <select
+                            value={revenueGroupBy}
+                            onChange={(e) => setRevenueGroupBy(e.target.value as "day" | "month" | "year")}
+                            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="day">Theo ngày</option>
+                            <option value="month">Theo tháng</option>
+                            <option value="year">Theo năm</option>
+                        </select>
                         <label className="text-sm font-medium text-gray-700">Từ:</label>
                         <input
                             type="date"
@@ -179,7 +188,7 @@ const DashboardPage: React.FC = () => {
                     />
 
                     <StatCard
-                        title="Tổng Booking"
+                        title="Tổng Đặt Lịch"
                         value={overview.bookings.total}
                         subtitle={`${overview.bookings.byStatus.completed} hoàn thành`}
                         icon={
@@ -252,15 +261,7 @@ const DashboardPage: React.FC = () => {
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <h3 className="text-lg font-semibold text-gray-900">Doanh thu</h3>
-                        <select
-                            value={revenueGroupBy}
-                            onChange={(e) => setRevenueGroupBy(e.target.value as "day" | "month" | "year")}
-                            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                            <option value="day">Theo ngày</option>
-                            <option value="month">Theo tháng</option>
-                            <option value="year">Theo năm</option>
-                        </select>
+                        
                     </div>
                     {revenueData && (
                         <RevenueChart

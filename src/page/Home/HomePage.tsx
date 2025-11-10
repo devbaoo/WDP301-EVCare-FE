@@ -167,7 +167,7 @@ export default function HomePage() {
               transition={{ duration: 0.6, delay: 1.2 }}
               className="mx-auto mt-4 max-w-xl text-xl leading-[28px] text-synop-blue-dark"
             >
-              Complete solution for EV service centers: customer tracking, maintenance scheduling, inventory management, and staff coordination
+              Giải pháp hoàn chỉnh cho các trung tâm dịch vụ EV: theo dõi khách hàng, lập lịch bảo trì, quản lý hàng tồn kho và điều phối nhân viên
             </motion.p>
 
             {/* Booking Button */}
@@ -217,7 +217,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-2xl font-black text-synop-blue-dark">
-              Trusted by Fleets of All Sizes
+              Được tin cậy bởi các nhãn hàng ở mọi quy mô
             </h2>
           </div>
 
@@ -360,12 +360,12 @@ export default function HomePage() {
               viewport={{ once: true }}
             >
               <Title level={2} className="text-4xl font-black text-synop-blue-dark mb-4">
-                Service Centers Near You
+                Trung tâm dịch vụ gần bạn
               </Title>
               <Paragraph className="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
                 {locationPermissionDenied
-                  ? "Showing service centers near Ho Chi Minh City (default location)"
-                  : "Discover EV service centers near your location with advanced technology"
+                  ? "Hiển thị các trung tâm dịch vụ gần Thành phố Hồ Chí Minh (vị trí mặc định)"
+                  : "Khám phá các trung tâm dịch vụ EV gần bạn với công nghệ tiên tiến"
                 }
               </Paragraph>
             </motion.div>
@@ -378,7 +378,7 @@ export default function HomePage() {
               viewport={{ once: true }}
               className="flex flex-col sm:flex-row items-center justify-center gap-4"
             >
-              <span className="text-gray-700 font-medium">Search within radius:</span>
+              <span className="text-gray-700 font-medium">Tìm kiếm trong phạm vi:</span>
               <Select
                 value={searchRadius}
                 onChange={handleRadiusChange}
@@ -486,7 +486,7 @@ export default function HomePage() {
                 onClick={handleViewAllServiceCenters}
                 className="bg-synop-blue-primary hover:bg-synop-blue-dark border-0 rounded-full px-8 py-4 h-auto text-lg font-semibold"
               >
-                View All Service Centers
+                Xem tất cả các trung tâm dịch vụ
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </motion.div>
@@ -506,7 +506,7 @@ export default function HomePage() {
             {/* Customer Tracking & Reminders */}
             <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
               <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
-                Customer Features
+                Tính năng của khách hàng
               </div>
               <div className="flex justify-between items-start mb-6">
                 <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
@@ -515,17 +515,17 @@ export default function HomePage() {
                 <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
               </div>
               <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
-                Vehicle Tracking & Maintenance Reminders
+                Theo dõi phương tiện & Nhắc nhở bảo trì
               </h3>
               <p className="text-black leading-relaxed">
-                Automatic reminders for scheduled maintenance by mileage or time, payment notifications for service packages
+                Nhắc nhở tự động cho bảo trì định kỳ theo quãng đường hoặc thời gian, thông báo thanh toán cho các gói dịch vụ
               </p>
             </a>
 
             {/* Service Booking */}
             <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
               <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
-                Online Booking
+                Đặt chỗ trực tuyến
               </div>
               <div className="flex justify-between items-start mb-6">
                 <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
@@ -534,17 +534,17 @@ export default function HomePage() {
                 <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
               </div>
               <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
-                Easy Service Scheduling
+                Lên lịch dịch vụ dễ dàng
               </h3>
               <p className="text-black leading-relaxed">
-                Book maintenance and repair services online, choose service center and service type with real-time status updates
+                Đặt lịch bảo trì và sửa chữa trực tuyến, chọn trung tâm dịch vụ và loại dịch vụ với cập nhật trạng thái theo thời gian thực
               </p>
             </a>
 
             {/* Profile & Cost Management */}
             <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
               <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
-                Profile Management
+                Quản lý hồ sơ & Chi phí
               </div>
               <div className="flex justify-between items-start mb-6">
                 <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
@@ -553,17 +553,17 @@ export default function HomePage() {
                 <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
               </div>
               <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
-                Service History & Payment Management
+                Lịch sử dịch vụ & Quản lý thanh toán
               </h3>
               <p className="text-black leading-relaxed">
-                Track maintenance history, manage service costs, and make online payments with multiple payment options
+                Theo dõi lịch sử bảo trì, quản lý chi phí dịch vụ và thực hiện thanh toán trực tuyến với nhiều tùy chọn thanh toán
               </p>
             </a>
 
             {/* Customer & Vehicle Management */}
             <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
               <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
-                Service Center Features
+                Tính năng của trung tâm dịch vụ
               </div>
               <div className="flex justify-between items-start mb-6">
                 <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
@@ -572,17 +572,17 @@ export default function HomePage() {
                 <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
               </div>
               <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
-                Customer & Vehicle Database
+                Cơ sở dữ liệu Khách hàng & Phương tiện
               </h3>
               <p className="text-black leading-relaxed">
-                Comprehensive customer profiles, vehicle information (model, VIN, service history), and live chat support
+                Hồ sơ khách hàng toàn diện, thông tin phương tiện (mẫu, VIN, lịch sử dịch vụ) và hỗ trợ trò chuyện trực tiếp
               </p>
             </a>
 
             {/* Maintenance Workflow */}
             <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
               <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
-                Maintenance Workflow
+                Quy trình bảo trì
               </div>
               <div className="flex justify-between items-start mb-6">
                 <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
@@ -591,17 +591,17 @@ export default function HomePage() {
                 <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
               </div>
               <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
-                Complete Service Process Management
+                Quản lý quy trình dịch vụ hoàn chỉnh
               </h3>
               <p className="text-black leading-relaxed">
-                Track service progress from waiting to completion, manage technician schedules, and maintain service checklists
+                Theo dõi tiến trình dịch vụ từ chờ đến hoàn thành, quản lý lịch trình kỹ thuật viên và duy trì danh sách kiểm tra dịch vụ
               </p>
             </a>
 
             {/* Inventory Management */}
             <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
               <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
-                Smart Inventory
+                Quản lý tồn kho thông minh
               </div>
               <div className="flex justify-between items-start mb-6">
                 <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
@@ -610,17 +610,17 @@ export default function HomePage() {
                 <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
               </div>
               <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
-                AI-Powered Parts Management
+                Quản lý phụ tùng dựa trên AI
               </h3>
               <p className="text-black leading-relaxed">
-                Track EV parts inventory, monitor minimum stock levels, and get AI suggestions for optimal stock management
+                Theo dõi tồn kho phụ tùng EV, giám sát mức tồn kho tối thiểu và nhận đề xuất từ AI cho việc quản lý tồn kho tối ưu
               </p>
             </a>
 
             {/* Staff Management */}
             <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
               <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
-                Staff Management
+                Quản lý nhân viên & Hiệu suất
               </div>
               <div className="flex justify-between items-start mb-6">
                 <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
@@ -629,17 +629,17 @@ export default function HomePage() {
                 <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
               </div>
               <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
-                Technician & Performance Tracking
+                Theo dõi Kỹ thuật viên & Hiệu suất
               </h3>
               <p className="text-black leading-relaxed">
-                Assign technicians by shift, track performance and work hours, manage EV specialization certifications
+                Phân công kỹ thuật viên theo ca, theo dõi hiệu suất và giờ làm việc, quản lý chứng chỉ chuyên môn EV
               </p>
             </a>
 
             {/* Financial Management */}
             <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
               <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
-                Financial Management
+                Quản lý tài chính & Hóa đơn
               </div>
               <div className="flex justify-between items-start mb-6">
                 <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
@@ -648,17 +648,17 @@ export default function HomePage() {
                 <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
               </div>
               <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
-                Complete Financial Control
+                Quản lý tài chính hoàn chỉnh
               </h3>
               <p className="text-black leading-relaxed">
-                Service quotes to invoicing, revenue and cost tracking, analytics on popular services and EV failure trends
+                Từ báo giá dịch vụ đến lập hóa đơn, theo dõi doanh thu và chi phí, phân tích các dịch vụ phổ biến và xu hướng hỏng hóc EV
               </p>
             </a>
 
             {/* Analytics & Reporting */}
             <a href="#" className="bg-synop-gray-light rounded-xl p-8 group hover:shadow-lg transition-all duration-300 hover:scale-105 block">
               <div className="text-synop-blue-dark/50 text-sm font-bold tracking-widest uppercase mb-6">
-                Analytics & Insights
+                Phân tích & Thông tin chi tiết
               </div>
               <div className="flex justify-between items-start mb-6">
                 <div className="w-16 h-16 bg-synop-blue-light rounded-lg flex items-center justify-center">
@@ -667,10 +667,10 @@ export default function HomePage() {
                 <ArrowRight className="w-6 h-6 text-synop-blue-light group-hover:translate-x-1 transition-transform" />
               </div>
               <h3 className="text-xl font-bold text-synop-blue-dark mb-3">
-                Data-Driven Service Optimization
+                Tối ưu hóa dịch vụ dựa trên dữ liệu
               </h3>
               <p className="text-black leading-relaxed">
-                Comprehensive reporting on service trends, EV failure patterns, and business performance metrics
+                Báo cáo toàn diện về xu hướng dịch vụ, mẫu hỏng hóc EV và các chỉ số hiệu suất kinh doanh chính để đưa ra quyết định sáng suốt
               </p>
             </a>
           </div>
@@ -703,10 +703,10 @@ export default function HomePage() {
                 </div>
                 <div className="space-y-6">
                   <blockquote className="text-lg leading-relaxed">
-                    "EV CARE has revolutionized our service center operations. The automated maintenance reminders and online booking system have increased customer satisfaction by 40%. Our technicians love the streamlined workflow management and the AI-powered inventory suggestions have reduced our parts costs by 25%."
+                    "EV CARE đã cách mạng hóa hoạt động của trung tâm dịch vụ của chúng tôi. Hệ thống nhắc nhở bảo trì tự động và đặt lịch trực tuyến đã giúp tăng sự hài lòng của khách hàng lên 40%. Các kỹ thuật viên của chúng tôi rất hài lòng với quy trình quản lý quy trình làm việc được tinh gọn và các đề xuất kiểm kê dựa trên AI đã giúp giảm 25% chi phí phụ tùng."
                   </blockquote>
                   <div>
-                    <div className="text-synop-blue-primary font-bold">Sarah Johnson</div>
+                    <div className="text-synop-blue-primary font-bold">Cao Khắc Bảo</div>
                     <div className="text-sm text-gray-300">Service Center Manager</div>
                   </div>
                 </div>
@@ -728,10 +728,10 @@ export default function HomePage() {
                 </div>
                 <div className="space-y-6">
                   <blockquote className="text-lg leading-relaxed">
-                    "The comprehensive customer management system and real-time service tracking have transformed how we operate. Our customers appreciate the transparency and automated notifications. The financial reporting features help us understand our most profitable services and optimize our pricing strategy."
+                    "Hệ thống quản lý khách hàng toàn diện và theo dõi dịch vụ theo thời gian thực đã thay đổi cách thức hoạt động của chúng tôi. Khách hàng đánh giá cao tính minh bạch và thông báo tự động. Các tính năng báo cáo tài chính giúp chúng tôi hiểu rõ các dịch vụ mang lại lợi nhuận cao nhất và tối ưu hóa chiến lược giá."
                   </blockquote>
                   <div>
-                    <div className="text-synop-blue-primary font-bold">Michael Chen</div>
+                    <div className="text-synop-blue-primary font-bold">Vũ Thành Đức</div>
                     <div className="text-sm text-gray-300">Operations Director</div>
                   </div>
                 </div>
@@ -747,13 +747,13 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <h2 className="text-3xl font-bold text-white leading-tight">
-                Ready to revolutionize your EV service center with AI-powered management?
+                Bạn đã sẵn sàng cách mạng hóa trung tâm dịch vụ xe điện của mình bằng công nghệ quản lý AI chưa?
               </h2>
               <p className="text-lg text-white/90 leading-relaxed">
-                Experience how EV CARE's comprehensive platform can streamline your service operations, reduce costs, and enhance customer satisfaction with intelligent automation.
+                Trải nghiệm cách nền tảng toàn diện của EV CARE có thể tối ưu hóa hoạt động dịch vụ của bạn, giảm chi phí và nâng cao sự hài lòng của khách hàng với tự động hóa thông minh.
               </p>
               <Button className="bg-synop-blue-primary hover:bg-synop-blue-light text-white rounded-full px-12 py-4 text-lg font-bold">
-                Schedule Demo
+                Đặt lịch demo ngay
               </Button>
             </div>
             <div className="relative">
