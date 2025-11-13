@@ -188,35 +188,7 @@ const WorkProgressDetailModal: React.FC<WorkProgressDetailModalProps> = ({
                 </Col>
                 <Col span={12}>
                   <Space direction="vertical" size="small">
-                    {appointment.payment && (
-                      <div>
-                        <Text strong>Thanh toán cọc:</Text>
-                        <br />
-                        <Space>
-                          <Tag
-                            color={
-                              appointment.payment.status === "paid"
-                                ? "green"
-                                : "orange"
-                            }>
-                            {appointment.payment.status === "paid"
-                              ? "Đã thanh toán"
-                              : "Chưa thanh toán"}
-                          </Tag>
-                          <Text>
-                            {formatCurrency(appointment.payment.amount)}
-                          </Text>
-                        </Space>
-                      </div>
-                    )}
-                    {appointment.confirmation &&
-                      appointment.confirmation.isConfirmed && (
-                        <div>
-                          <Text strong>Xác nhận:</Text>
-                          <br />
-                          <Tag color="green">Đã xác nhận</Tag>
-                        </div>
-                      )}
+                    {/* Hidden per request: remove deposit and confirmation summary in detail view */}
                   </Space>
                 </Col>
               </Row>
