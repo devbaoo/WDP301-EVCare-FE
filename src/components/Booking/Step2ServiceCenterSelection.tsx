@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Input, Tag, Spin, message, Pagination, Popover, Checkbox, Space } from 'antd';
-import { MapPin, Phone, ArrowRight, ArrowLeft, Search } from 'lucide-react';
+import { MapPin, Phone, ArrowRight, ArrowLeft, Search, Navigation } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../services/store/store';
 import { fetchServiceCenters, fetchNearbyServiceCenters, setSelectedServiceCenter } from '../../services/features/serviceCenter/serviceCenterSlice';
 import { ServiceCenter } from '../../interfaces/serviceCenter';
 import RealTimeStatus from '../ServiceCenter/RealTimeStatus';
 import { isCurrentlyOpen } from '../../lib/timeUtils';
+import { getCurrentLocation, calculateDistance, Coordinates } from '../../lib/locationUtils';
 
 interface Step2ServiceCenterSelectionProps {
     onNext: () => void;
@@ -22,11 +23,27 @@ const Step2ServiceCenterSelection: React.FC<Step2ServiceCenterSelectionProps> = 
     const pageSize = 4;
     const [filterOpen, setFilterOpen] = useState(false);
     const [filterSelection, setFilterSelection] = useState<'all' | 'nearby'>('all');
+    const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
 
     useEffect(() => {
         // Load all centers initially; don't auto-nearby to ensure "Gần tôi" uses latest location on click
         dispatch(fetchServiceCenters({}));
     }, [dispatch]);
+
+    // Get user location on mount
+    useEffect(() => {
+        getCurrentLocation().then((location) => {
+            setUserLocation(location);
+        });
+    }, []);
+
+    // Calculate distance from user location to service center
+    const getDistance = (center: ServiceCenter): number | null => {
+        if (!userLocation || !center.address?.coordinates) {
+            return null;
+        }
+        return calculateDistance(userLocation, center.address.coordinates);
+    };
 
     const filteredServiceCenters = serviceCenters.filter((center: ServiceCenter) => {
         const matchesSearch = center.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -38,12 +55,34 @@ const Step2ServiceCenterSelection: React.FC<Step2ServiceCenterSelectionProps> = 
         return matchesSearch && matchesStatus;
     });
 
+    // Sort by distance (nearest first) only when "Gần tôi" filter is selected
+    const sortedServiceCenters = filterSelection === 'nearby'
+        ? [...filteredServiceCenters].sort((a, b) => {
+            if (!userLocation) return 0; // No sorting if no location
+
+            const distanceA = getDistance(a);
+            const distanceB = getDistance(b);
+
+            // If both have distances, sort by distance
+            if (distanceA !== null && distanceB !== null) {
+                return distanceA - distanceB;
+            }
+
+            // If only one has distance, prioritize it
+            if (distanceA !== null && distanceB === null) return -1;
+            if (distanceA === null && distanceB !== null) return 1;
+
+            // If neither has distance, keep original order
+            return 0;
+        })
+        : filteredServiceCenters; // Keep original order when "Tất cả" is selected
+
     // Reset to first page when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm, statusFilter]);
+    }, [searchTerm, statusFilter, filterSelection, userLocation]);
 
-    const paginatedServiceCenters = filteredServiceCenters.slice(
+    const paginatedServiceCenters = sortedServiceCenters.slice(
         (currentPage - 1) * pageSize,
         currentPage * pageSize
     );
@@ -164,17 +203,28 @@ const Step2ServiceCenterSelection: React.FC<Step2ServiceCenterSelectionProps> = 
                                                 } else {
                                                     if (!navigator.geolocation) {
                                                         message.warning('Trình duyệt không hỗ trợ định vị.');
+                                                        // Fallback to HCM coordinates
+                                                        setUserLocation({ lat: 10.762622, lng: 106.660172 });
                                                         return;
                                                     }
                                                     navigator.geolocation.getCurrentPosition(
                                                         (pos) => {
-                                                            dispatch(fetchNearbyServiceCenters({
+                                                            const location = {
                                                                 lat: pos.coords.latitude,
                                                                 lng: pos.coords.longitude,
+                                                            };
+                                                            setUserLocation(location);
+                                                            dispatch(fetchNearbyServiceCenters({
+                                                                lat: location.lat,
+                                                                lng: location.lng,
                                                                 radius: 20,
                                                             }));
                                                         },
-                                                        () => message.warning('Không lấy được vị trí hiện tại. Vui lòng bật quyền định vị.'),
+                                                        () => {
+                                                            message.warning('Không lấy được vị trí hiện tại. Sử dụng vị trí mặc định (TP.HCM).');
+                                                            // Fallback to HCM coordinates
+                                                            setUserLocation({ lat: 10.762622, lng: 106.660172 });
+                                                        },
                                                         { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 }
                                                     );
                                                 }
@@ -192,7 +242,7 @@ const Step2ServiceCenterSelection: React.FC<Step2ServiceCenterSelectionProps> = 
 
             {/* Service Centers List */}
             <div className="space-y-4">
-                {filteredServiceCenters.length === 0 ? (
+                {sortedServiceCenters.length === 0 ? (
                     <div className="text-center py-12">
                         <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                         <h3 className="text-lg font-semibold text-gray-600 mb-2">Không tìm thấy trung tâm nào</h3>
@@ -237,9 +287,17 @@ const Step2ServiceCenterSelection: React.FC<Step2ServiceCenterSelectionProps> = 
                                             {/* Address */}
                                             <div className="flex items-start space-x-2">
                                                 <MapPin className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                                                <div className="text-sm text-gray-600">
+                                                <div className="text-sm text-gray-600 flex-1">
                                                     <p className="font-medium">{center.address.street}</p>
                                                     <p>{center.address.ward}, {center.address.district}, {center.address.city}</p>
+                                                    {getDistance(center) !== null && (
+                                                        <div className="flex items-center gap-1 mt-1">
+                                                            <Navigation className="w-3.5 h-3.5 text-blue-600" />
+                                                            <p className="text-blue-600 font-medium text-xs">
+                                                                {getDistance(center)} km từ vị trí của bạn
+                                                            </p>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
@@ -298,7 +356,7 @@ const Step2ServiceCenterSelection: React.FC<Step2ServiceCenterSelectionProps> = 
                             <Pagination
                                 current={currentPage}
                                 pageSize={pageSize}
-                                total={filteredServiceCenters.length}
+                                total={sortedServiceCenters.length}
                                 showSizeChanger={false}
                                 onChange={(page) => setCurrentPage(page)}
                             />

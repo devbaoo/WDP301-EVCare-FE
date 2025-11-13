@@ -345,7 +345,13 @@ export default function TechnicianWorkProgressPage() {
                     unitPrice: Number(it?.unitPrice || 0),
                     name: it?.name,
                 }));
-            // Handle inspectionNotes: convert array to string if needed (from tags mode)
+            // Handle array values from tags mode: convert to string
+            const vehicleConditionValue = Array.isArray(values.vehicleCondition)
+                ? values.vehicleCondition.join(", ")
+                : (values.vehicleCondition || "");
+            const diagnosisDetailsValue = Array.isArray(values.diagnosisDetails)
+                ? values.diagnosisDetails.join(", ")
+                : (values.diagnosisDetails || "");
             const inspectionNotesValue = Array.isArray(values.inspectionNotes)
                 ? values.inspectionNotes.join(", ")
                 : (values.inspectionNotes || "");
@@ -354,8 +360,8 @@ export default function TechnicianWorkProgressPage() {
                 submitAppointmentInspectionQuote({
                     appointmentId,
                     payload: {
-                        vehicleCondition: values.vehicleCondition,
-                        diagnosisDetails: values.diagnosisDetails,
+                        vehicleCondition: vehicleConditionValue,
+                        diagnosisDetails: diagnosisDetailsValue,
                         inspectionNotes: inspectionNotesValue,
                         quoteDetails: { items },
                     },
@@ -797,7 +803,8 @@ export default function TechnicianWorkProgressPage() {
                 <Form layout="vertical" form={quoteForm} size="small">
                     <Form.Item name="vehicleCondition" label="Tình trạng xe" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
                         <Select
-                            placeholder="Chọn tình trạng xe"
+                            mode="tags"
+                            placeholder="Chọn hoặc nhập tình trạng xe"
                             showSearch
                             allowClear
                             optionFilterProp="label"
@@ -814,13 +821,13 @@ export default function TechnicianWorkProgressPage() {
                                 { label: "Xe không khởi động được", value: "Xe không khởi động được" },
                                 { label: "Hệ thống lái có vấn đề", value: "Hệ thống lái có vấn đề" },
                                 { label: "Rò rỉ dầu", value: "Rò rỉ dầu" },
-                                { label: "Khác", value: "Khác" },
                             ]}
                         />
                     </Form.Item>
                     <Form.Item name="diagnosisDetails" label="Chẩn đoán" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
                         <Select
-                            placeholder="Chọn chẩn đoán"
+                            mode="tags"
+                            placeholder="Chọn hoặc nhập chẩn đoán"
                             showSearch
                             allowClear
                             optionFilterProp="label"
@@ -833,7 +840,6 @@ export default function TechnicianWorkProgressPage() {
                                 { label: "Xe hoạt động bình thường", value: "Xe hoạt động bình thường" },
                                 { label: "Cần vệ sinh và bảo dưỡng", value: "Cần vệ sinh và bảo dưỡng" },
                                 { label: "Cần hiệu chỉnh hệ thống", value: "Cần hiệu chỉnh hệ thống" },
-                                { label: "Khác", value: "Khác" },
                             ]}
                         />
                     </Form.Item>
