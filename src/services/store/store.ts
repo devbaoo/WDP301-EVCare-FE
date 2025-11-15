@@ -15,6 +15,7 @@ import chatReducer from "../features/chat/chatSlice";
 import partsReducer from "../features/parts/partsSlice";
 import inventoryReducer from "../features/inventory/inventorySlice";
 import aiReducer from "../features/ai/aiSlice";
+import aiPredictionReducer from "../features/aiPrediction/aiPredictionSlice";
 
 const presistConfig = {
   key: "root",
@@ -45,6 +46,7 @@ const rootReducer = combineReducers({
   parts: partsReducer,
   inventory: inventoryReducer,
   ai: aiReducer,
+  aiPrediction: aiPredictionReducer,
 });
 
 const persistedReducer = persistReducer(presistConfig, rootReducer);
