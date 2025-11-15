@@ -359,11 +359,10 @@ const StaffAiInventoryPage = () => {
                   <Text strong>Dự báo nhu cầu mới nhất</Text>
                   <div className="text-sm text-gray-500">
                     {latestForecast
-                      ? `${findPartInfo(latestForecast)} • ${latestForecast.predictedValue} (độ tin cậy ${
-                          latestForecast.confidenceScore
-                            ? `${Math.round(latestForecast.confidenceScore * 100)}%`
-                            : "--"
-                        })`
+                      ? `${findPartInfo(latestForecast)} • ${latestForecast.predictedValue} (độ tin cậy ${latestForecast.confidenceScore
+                        ? `${Math.round(latestForecast.confidenceScore * 100)}%`
+                        : "--"
+                      })`
                       : "Chưa có dữ liệu"}
                   </div>
                 </div>
@@ -378,9 +377,8 @@ const StaffAiInventoryPage = () => {
                   <Text strong>Tối ưu tồn kho gần nhất</Text>
                   <div className="text-sm text-gray-500">
                     {latestOptimization
-                      ? `${findPartInfo(latestOptimization)} • Khuyến nghị ${
-                          latestOptimization.predictedValue ?? "--"
-                        }`
+                      ? `${findPartInfo(latestOptimization)} • Khuyến nghị ${latestOptimization.predictedValue ?? "--"
+                      }`
                       : "Chưa có dữ liệu"}
                   </div>
                 </div>

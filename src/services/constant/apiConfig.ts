@@ -1,5 +1,5 @@
-export const BASE_URL = "https://dolphin-app-pwai8.ondigitalocean.app";
-// export const BASE_URL = "http://localhost:8080";
+// export const BASE_URL = "https://dolphin-app-pwai8.ondigitalocean.app";
+export const BASE_URL = "http://localhost:8080";
 
 // Auth endpoints
 export const LOGIN_ENDPOINT = `${BASE_URL}/api/auth/login`;
@@ -221,6 +221,18 @@ export const AI_PREDICTION_DETAIL_ENDPOINT = (predictionId: string) =>
 export const AI_DEMAND_FORECAST_ENDPOINT = `${BASE_URL}/api/ai/demand-forecast`;
 export const AI_STOCK_OPTIMIZATION_ENDPOINT = `${BASE_URL}/api/ai/stock-optimization`;
 export const AI_APPLY_RECOMMENDATIONS_ENDPOINT = `${BASE_URL}/api/ai/apply-recommendations`;
+
+// AI Prediction endpoints
+export const AI_PREDICTION_GENERATE_ENDPOINT = (centerId: string) =>
+  `${BASE_URL}/api/ai-prediction/generate/${centerId}`;
+export const AI_PREDICTION_REGENERATE_ENDPOINT = (centerId: string) =>
+  `${BASE_URL}/api/ai-prediction/regenerate/${centerId}`;
+export const AI_PREDICTION_LATEST_ENDPOINT = (centerId: string) =>
+  `${BASE_URL}/api/ai-prediction/latest/${centerId}`;
+export const AI_PREDICTION_HISTORY_ENDPOINT = (centerId: string) =>
+  `${BASE_URL}/api/ai-prediction/history/${centerId}`;
+export const AI_PREDICTION_STATS_ENDPOINT = (centerId: string) =>
+  `${BASE_URL}/api/ai-prediction/stats/${centerId}`;
 
 // Dashboard endpoints
 export const DASHBOARD_OVERVIEW_ENDPOINT = `${BASE_URL}/api/dashboard/overview`;

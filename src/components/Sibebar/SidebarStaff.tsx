@@ -14,7 +14,8 @@ import {
     Calendar,
     Package,
     Boxes,
-    Sparkles,
+    // Sparkles, // Không sử dụng nữa
+    Brain,
 } from 'lucide-react';
 
 type MenuItem = {
@@ -37,7 +38,8 @@ const SidebarStaff = () => {
         { icon: DollarSign, label: 'Thanh Toán', path: '/staff/payment' },
         { icon: Package, label: 'Phụ Tùng', path: '/staff/parts' },
         { icon: Boxes, label: 'Tồn Kho', path: '/staff/inventory' },
-        { icon: Sparkles, label: 'Tối Ưu Hóa AI', path: '/staff/ai' },
+        // { icon: Sparkles, label: 'Tối Ưu Hóa AI', path: '/staff/ai' }, // Ẩn tạm thời
+        { icon: Brain, label: 'Dự Đoán AI', path: '/staff/ai-prediction' },
         { icon: Wrench, label: 'Kỹ Thuật Viên', path: '/staff/technicians' },
         { icon: Calendar, label: 'Lịch Làm Việc', path: '/staff/schedules' },
     ];
@@ -68,9 +70,8 @@ const SidebarStaff = () => {
 
     return (
         <aside
-            className={`h-screen sticky top-0 shrink-0 bg-white border-r border-gray-200 shadow-sm transition-all duration-200 ${
-                collapsed ? 'w-20' : 'w-64'
-            }`}
+            className={`h-screen sticky top-0 shrink-0 bg-white border-r border-gray-200 shadow-sm transition-all duration-200 ${collapsed ? 'w-20' : 'w-64'
+                }`}
         >
             <div className="h-16 px-4 flex items-center justify-between border-b border-gray-200 ml-1">
                 <div className="flex items-center gap-3">
@@ -103,11 +104,10 @@ const SidebarStaff = () => {
                                         navigate(item.path);
                                     }
                                 }}
-                                className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
-                                    active
-                                        ? 'bg-gray-100 text-gray-900'
-                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                }`}
+                                className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${active
+                                    ? 'bg-gray-100 text-gray-900'
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                    }`}
                             >
                                 <item.icon className="w-5 h-5" />
                                 {!collapsed && (
@@ -115,9 +115,8 @@ const SidebarStaff = () => {
                                         <span className="text-sm font-medium">{item.label}</span>
                                         {hasChildren && (
                                             <ChevronDown
-                                                className={`w-4 h-4 ml-auto transition-transform ${
-                                                    isOpen ? 'rotate-180' : ''
-                                                }`}
+                                                className={`w-4 h-4 ml-auto transition-transform ${isOpen ? 'rotate-180' : ''
+                                                    }`}
                                             />
                                         )}
                                     </>
@@ -140,11 +139,10 @@ const SidebarStaff = () => {
                                                             );
                                                         }
                                                     }}
-                                                    className={`w-full flex items-center gap-3 px-4 py-2 transition-colors ${
-                                                        childActive
-                                                            ? 'bg-gray-100 text-gray-900'
-                                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                                    }`}
+                                                    className={`w-full flex items-center gap-3 px-4 py-2 transition-colors ${childActive
+                                                        ? 'bg-gray-100 text-gray-900'
+                                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                                        }`}
                                                 >
                                                     <child.icon className="w-4 h-4" />
                                                     <span className="text-sm font-medium">
@@ -169,11 +167,10 @@ const SidebarStaff = () => {
                                                             );
                                                         }
                                                     }}
-                                                    className={`w-full flex items-center gap-3 px-4 py-2 text-left transition-colors ${
-                                                        childActive
-                                                            ? 'bg-gray-100 text-gray-900'
-                                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                                    }`}
+                                                    className={`w-full flex items-center gap-3 px-4 py-2 text-left transition-colors ${childActive
+                                                        ? 'bg-gray-100 text-gray-900'
+                                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                                        }`}
                                                 >
                                                     <child.icon className="w-4 h-4" />
                                                     <span className="text-sm font-medium">

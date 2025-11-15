@@ -32,7 +32,10 @@ const initialState: AiState = {
   error: null,
 };
 
-const mergePredictions = (existing: AiPrediction[], incoming: AiPrediction[]) => {
+const mergePredictions = (
+  existing: AiPrediction[],
+  incoming: AiPrediction[]
+) => {
   const map = new Map<string, AiPrediction>();
   existing.forEach((prediction) => {
     map.set(prediction._id, prediction);
@@ -59,11 +62,15 @@ export const fetchAiPredictions = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await axiosInstance.get(AI_PREDICTIONS_ENDPOINT, { params });
+      const response = await axiosInstance.get(AI_PREDICTIONS_ENDPOINT, {
+        params,
+      });
       return response.data as AiPredictionsResponse;
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch AI predictions");
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch AI predictions"
+      );
     }
   }
 );
@@ -72,7 +79,9 @@ export const fetchAiPredictionById = createAsyncThunk(
   "ai/fetchAiPredictionById",
   async (predictionId: string, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(AI_PREDICTION_DETAIL_ENDPOINT(predictionId));
+      const response = await axiosInstance.get(
+        AI_PREDICTION_DETAIL_ENDPOINT(predictionId)
+      );
       return response.data as AiPredictionResponse;
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -87,7 +96,10 @@ export const createDemandForecast = createAsyncThunk(
   "ai/createDemandForecast",
   async (payload: DemandForecastPayload, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post(AI_DEMAND_FORECAST_ENDPOINT, payload);
+      const response = await axiosInstance.post(
+        AI_DEMAND_FORECAST_ENDPOINT,
+        payload
+      );
       return response.data as AiPredictionsResponse;
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -102,7 +114,10 @@ export const createStockOptimization = createAsyncThunk(
   "ai/createStockOptimization",
   async (payload: StockOptimizationPayload, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post(AI_STOCK_OPTIMIZATION_ENDPOINT, payload);
+      const response = await axiosInstance.post(
+        AI_STOCK_OPTIMIZATION_ENDPOINT,
+        payload
+      );
       return response.data as AiPredictionsResponse;
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -166,7 +181,9 @@ const aiSlice = createSlice({
       .addCase(fetchAiPredictionById.fulfilled, (state, action) => {
         state.fetchPredictionLoading = false;
         state.selectedPrediction = action.payload.data;
-        state.predictions = mergePredictions(state.predictions, [action.payload.data]);
+        state.predictions = mergePredictions(state.predictions, [
+          action.payload.data,
+        ]);
       })
       .addCase(fetchAiPredictionById.rejected, (state, action) => {
         state.fetchPredictionLoading = false;
@@ -179,7 +196,10 @@ const aiSlice = createSlice({
       .addCase(createDemandForecast.fulfilled, (state, action) => {
         state.demandForecastLoading = false;
         state.latestDemandForecast = action.payload.data;
-        state.predictions = mergePredictions(state.predictions, action.payload.data);
+        state.predictions = mergePredictions(
+          state.predictions,
+          action.payload.data
+        );
       })
       .addCase(createDemandForecast.rejected, (state, action) => {
         state.demandForecastLoading = false;
@@ -192,7 +212,10 @@ const aiSlice = createSlice({
       .addCase(createStockOptimization.fulfilled, (state, action) => {
         state.stockOptimizationLoading = false;
         state.latestStockOptimization = action.payload.data;
-        state.predictions = mergePredictions(state.predictions, action.payload.data);
+        state.predictions = mergePredictions(
+          state.predictions,
+          action.payload.data
+        );
       })
       .addCase(createStockOptimization.rejected, (state, action) => {
         state.stockOptimizationLoading = false;
