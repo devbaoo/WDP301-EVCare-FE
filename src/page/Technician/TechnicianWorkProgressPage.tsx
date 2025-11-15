@@ -46,9 +46,16 @@ export default function TechnicianWorkProgressPage() {
     const [detailSchedule, setDetailSchedule] = useState<ScheduleLike | null>(null);
     const [detailProgress, setDetailProgress] = useState<WorkProgress | null>(null);
     const [detailSelectedAppointmentId, setDetailSelectedAppointmentId] = useState<string | null>(null);
+    const [inspectionOpen, setInspectionOpen] = useState(false);
     const [quoteOpen, setQuoteOpen] = useState(false);
     const [quoteAppointmentId, setQuoteAppointmentId] = useState<string | null>(null);
+    const [inspectionForm] = Form.useForm();
     const [quoteForm] = Form.useForm();
+    const [inspectionData, setInspectionData] = useState<{
+        vehicleCondition?: string;
+        diagnosisDetails?: string;
+        inspectionNotes?: string;
+    } | null>(null);
     const [completeOpen, setCompleteOpen] = useState(false);
     const [completeForm] = Form.useForm();
     const [progressExistSet, setProgressExistSet] = useState<Set<string>>(new Set());
@@ -119,6 +126,68 @@ export default function TechnicianWorkProgressPage() {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [quoteOpen]);
+
+    // Open inspection modal first, then quote modal
+    const openInspectionQuote = (appointmentId: string) => {
+        setQuoteAppointmentId(appointmentId);
+        inspectionForm.resetFields();
+        setInspectionData(null);
+        setInspectionOpen(true);
+    };
+
+    // After inspection is submitted, open quote modal
+    const submitInspection = async () => {
+        try {
+            const values = await inspectionForm.validateFields();
+            // Handle array values from tags mode: convert to string
+            const vehicleConditionValue = Array.isArray(values.vehicleCondition)
+                ? values.vehicleCondition.join(", ")
+                : (values.vehicleCondition || "");
+            const diagnosisDetailsValue = Array.isArray(values.diagnosisDetails)
+                ? values.diagnosisDetails.join(", ")
+                : (values.diagnosisDetails || "");
+            const inspectionNotesValue = Array.isArray(values.inspectionNotes)
+                ? values.inspectionNotes.join(", ")
+                : (values.inspectionNotes || "");
+
+            setInspectionData({
+                vehicleCondition: vehicleConditionValue,
+                diagnosisDetails: diagnosisDetailsValue,
+                inspectionNotes: inspectionNotesValue,
+            });
+            setInspectionOpen(false);
+            quoteForm.resetFields();
+            setQuoteOpen(true);
+        } catch {
+            // validation error
+        }
+    };
+
+    // Helper function to get quote status from appointment (most accurate source)
+    const getQuoteStatus = (): string | undefined => {
+        // Priority 1: Get from selected appointment in schedule
+        if (detailSelectedAppointmentId && detailSchedule && Array.isArray(detailSchedule.assignedAppointments)) {
+            const currentAppt = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId && a.status !== 'cancelled')
+                || detailSchedule.assignedAppointments.find(a => a.status !== 'cancelled');
+            if (currentAppt?.inspectionAndQuote?.quoteStatus) {
+                return currentAppt.inspectionAndQuote.quoteStatus;
+            }
+        }
+        
+        // Priority 2: Get from appointment in progress
+        if (detailProgress && typeof detailProgress.appointmentId === 'object') {
+            if (detailProgress.appointmentId?.inspectionAndQuote?.quoteStatus) {
+                return detailProgress.appointmentId.inspectionAndQuote.quoteStatus;
+            }
+        }
+        
+        // Priority 3: Fallback to progress quote status (old data)
+        if (detailProgress?.quote?.quoteStatus) {
+            return detailProgress.quote.quoteStatus;
+        }
+        
+        return undefined;
+    };
 
     const categoryOptions = useMemo(() => {
         const set = new Set<string>();
@@ -332,6 +401,10 @@ export default function TechnicianWorkProgressPage() {
             const values = await quoteForm.validateFields();
             const appointmentId = quoteAppointmentId || detailSelectedAppointmentId;
             if (!appointmentId) return;
+            if (!inspectionData) {
+                message.error("Thiếu thông tin kiểm tra");
+                return;
+            }
             // Build payload without quoteAmount and without labor
             type QuoteItemForm = { partId?: string; quantity?: number; unitPrice?: number; name?: string };
             const itemsSource: QuoteItemForm[] = Array.isArray(values?.quoteDetails?.items)
@@ -345,24 +418,20 @@ export default function TechnicianWorkProgressPage() {
                     unitPrice: Number(it?.unitPrice || 0),
                     name: it?.name,
                 }));
-            // Handle array values from tags mode: convert to string
-            const vehicleConditionValue = Array.isArray(values.vehicleCondition)
-                ? values.vehicleCondition.join(", ")
-                : (values.vehicleCondition || "");
-            const diagnosisDetailsValue = Array.isArray(values.diagnosisDetails)
-                ? values.diagnosisDetails.join(", ")
-                : (values.diagnosisDetails || "");
-            const inspectionNotesValue = Array.isArray(values.inspectionNotes)
-                ? values.inspectionNotes.join(", ")
-                : (values.inspectionNotes || "");
+            
+            // Validate that at least one item is required
+            if (items.length === 0) {
+                message.error("Quote must have at least one item");
+                return;
+            }
 
             const result = await dispatch(
                 submitAppointmentInspectionQuote({
                     appointmentId,
                     payload: {
-                        vehicleCondition: vehicleConditionValue,
-                        diagnosisDetails: diagnosisDetailsValue,
-                        inspectionNotes: inspectionNotesValue,
+                        vehicleCondition: inspectionData.vehicleCondition,
+                        diagnosisDetails: inspectionData.diagnosisDetails,
+                        inspectionNotes: inspectionData.inspectionNotes,
                         quoteDetails: { items },
                     },
                 })
@@ -371,14 +440,19 @@ export default function TechnicianWorkProgressPage() {
                 message.success("Đã gửi báo giá");
                 setQuoteOpen(false);
                 setQuoteAppointmentId(null);
+                setInspectionData(null);
+                // Only open detail modal on success
+                if (detailSchedule) {
+                    await openDetails(detailSchedule, appointmentId);
+                }
             } else {
                 const payload = result.payload as unknown;
                 const errMsg = (typeof payload === 'string' ? payload : (payload as { message?: string })?.message) || "Gửi báo giá thất bại";
                 message.error(String(errMsg));
+                // Don't open detail modal on error - keep quote modal open
             }
-            if (detailSchedule) await openDetails(detailSchedule, appointmentId);
         } catch {
-            // validation or request error
+            // validation or request error - don't open detail modal
         }
     };
 
@@ -557,11 +631,31 @@ export default function TechnicianWorkProgressPage() {
                                     <>
                                         {(() => {
                                             const status = detailProgress?.currentStatus || '';
-                                            const maintenanceStartedOrBeyond = ['in_progress', 'paused', 'completed', 'delayed'].includes(status);
-                                            const quoteApproved = detailProgress?.quote?.quoteStatus === 'approved'
-                                                || (typeof detailProgress?.appointmentId === 'object' && detailProgress?.appointmentId?.inspectionAndQuote?.quoteStatus === 'approved')
+                                            
+                                            // Get appointment status (priority: schedule > progress)
+                                            let appointmentStatus: string | undefined;
+                                            if (detailSelectedAppointmentId && detailSchedule && Array.isArray(detailSchedule.assignedAppointments)) {
+                                                const currentAppt = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId && a.status !== 'cancelled')
+                                                    || detailSchedule.assignedAppointments.find(a => a.status !== 'cancelled');
+                                                appointmentStatus = currentAppt?.status;
+                                            }
+                                            
+                                            // Fallback to appointment status from progress
+                                            if (!appointmentStatus && detailProgress && typeof detailProgress.appointmentId === 'object') {
+                                                appointmentStatus = detailProgress.appointmentId?.status;
+                                            }
+                                            
+                                            // Disable if currently in progress, paused, or maintenance is completed
+                                            const isCurrentlyWorking = ['in_progress', 'paused'].includes(status);
+                                            const isMaintenanceCompleted = appointmentStatus === 'maintenance_completed' || status === 'completed';
+                                            
+                                            // Get quote status from appointment (most accurate source)
+                                            const quoteStatus = getQuoteStatus();
+                                            const quoteApproved = String(quoteStatus || '').toLowerCase() === 'approved' 
                                                 || status === 'quote_provided';
-                                            const canStart = !maintenanceStartedOrBeyond && !!quoteApproved;
+                                            
+                                            // Can start if quote is approved, not currently working, and maintenance is not completed
+                                            const canStart = !isCurrentlyWorking && !isMaintenanceCompleted && !!quoteApproved;
                                             return (
                                                 <Button onClick={startMaintenance} disabled={!canStart}>Bắt đầu bảo dưỡng</Button>
                                             );
@@ -597,12 +691,27 @@ export default function TechnicianWorkProgressPage() {
                                     onChange={(e) => onChangeDetailAppointment(e.target.value)}
                                 >
                                     <Space direction="vertical">
-                                        {detailSchedule.assignedAppointments.filter((a) => a.status !== 'cancelled').map((a) => (
-                                            <Radio key={a._id} value={a._id}>
-                                                {(a.appointmentTime?.startTime || '')}{a.appointmentTime?.endTime ? ` - ${a.appointmentTime.endTime}` : ''}
-                                                {a.status ? ` • ${a.status}` : ''}
-                                            </Radio>
-                                        ))}
+                                        {detailSchedule.assignedAppointments.filter((a) => a.status !== 'cancelled').map((a) => {
+                                            // Translate status to Vietnamese
+                                            const statusMap: Record<string, string> = {
+                                                'confirmed': 'Đã xác nhận',
+                                                'quote_provided': 'Đã báo giá',
+                                                'quote_approved': 'Đã duyệt báo giá',
+                                                'quote_rejected': 'Đã từ chối báo giá',
+                                                'in_progress': 'Đang thực hiện',
+                                                'completed': 'Hoàn thành',
+                                                'maintenance_completed': 'Hoàn thành bảo dưỡng',
+                                                'cancelled': 'Đã hủy',
+                                                'pending': 'Đang chờ'
+                                            };
+                                            const displayStatus = a.status ? statusMap[a.status.toLowerCase()] || a.status : '';
+                                            return (
+                                                <Radio key={a._id} value={a._id}>
+                                                    {(a.appointmentTime?.startTime || '')}{a.appointmentTime?.endTime ? ` - ${a.appointmentTime.endTime}` : ''}
+                                                    {displayStatus ? ` • ${displayStatus}` : ''}
+                                                </Radio>
+                                            );
+                                        })}
                                     </Space>
                                 </Radio.Group>
                             </div>
@@ -621,19 +730,34 @@ export default function TechnicianWorkProgressPage() {
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-gray-500">Quote status</p>
+                                        <p className="text-gray-500">Trạng thái báo giá</p>
                                         <p className="font-medium">{(() => {
                                             const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId && a.status !== 'cancelled')
                                                 || detailSchedule.assignedAppointments.find(a => a.status !== 'cancelled');
-                                            return current?.inspectionAndQuote?.quoteStatus || 'pending';
+                                            const status = current?.inspectionAndQuote?.quoteStatus || 'pending';
+                                            // Translate status to Vietnamese
+                                            const statusMap: Record<string, string> = {
+                                                'pending': 'Đang chờ',
+                                                'approved': 'Đã duyệt',
+                                                'rejected': 'Đã từ chối'
+                                            };
+                                            return statusMap[status.toLowerCase()] || status;
                                         })()}</p>
                                     </div>
                                     <div>
-                                        <p className="text-gray-500">Payment</p>
+                                        <p className="text-gray-500">Thanh toán</p>
                                         <p className="font-medium">{(() => {
                                             const current = detailSchedule.assignedAppointments.find(a => a._id === detailSelectedAppointmentId && a.status !== 'cancelled')
                                                 || detailSchedule.assignedAppointments.find(a => a.status !== 'cancelled');
-                                            return current?.payment?.status || '—';
+                                            const paymentStatus = current?.payment?.status || '—';
+                                            // Translate payment status to Vietnamese
+                                            const paymentStatusMap: Record<string, string> = {
+                                                'pending': 'Chờ thanh toán',
+                                                'paid': 'Đã thanh toán',
+                                                'failed': 'Thanh toán thất bại',
+                                                'refunded': 'Đã hoàn tiền'
+                                            };
+                                            return paymentStatusMap[paymentStatus.toLowerCase()] || paymentStatus;
                                         })()}</p>
                                     </div>
                                     <div className="md:col-span-2">
@@ -665,11 +789,42 @@ export default function TechnicianWorkProgressPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                                     <div>
                                         <p className="text-gray-500">Trạng thái hiện tại</p>
-                                        <p className="font-medium">{(detailProgress.currentStatus || '').split('_').join(' ')}</p>
+                                        <p className="font-medium">{(() => {
+                                            const status = detailProgress.currentStatus || '';
+                                            // Translate current status to Vietnamese
+                                            const statusMap: Record<string, string> = {
+                                                'not_started': 'Chưa bắt đầu',
+                                                'pending': 'Chờ bắt đầu',
+                                                'in_progress': 'Đang thực hiện',
+                                                'paused': 'Tạm dừng',
+                                                'completed': 'Hoàn thành',
+                                                'delayed': 'Bị trễ',
+                                                'cancelled': 'Đã hủy',
+                                                'inspection_completed': 'Đã hoàn thành kiểm tra',
+                                                'quote_provided': 'Đã báo giá',
+                                                'quote_approved': 'Đã duyệt báo giá',
+                                                'quote_rejected': 'Đã từ chối báo giá',
+                                                'maintenance_in_progress': 'Đang bảo trì',
+                                                'maintenance_completed': 'Hoàn thành bảo trì',
+                                                'payment_pending': 'Chờ thanh toán',
+                                                'rescheduled': 'Đã đổi lịch',
+                                                'no_show': 'Không đến'
+                                            };
+                                            return statusMap[status.toLowerCase()] || status.split('_').join(' ');
+                                        })()}</p>
                                     </div>
                                     <div>
-                                        <p className="text-gray-500">Quote status</p>
-                                        <p className="font-medium">{detailProgress?.quote?.quoteStatus || (typeof detailProgress?.appointmentId === 'object' && detailProgress?.appointmentId?.inspectionAndQuote?.quoteStatus) || 'pending'}</p>
+                                        <p className="text-gray-500">Trạng thái báo giá</p>
+                                        <p className="font-medium">{(() => {
+                                            const status = getQuoteStatus() || 'pending';
+                                            // Translate status to Vietnamese
+                                            const statusMap: Record<string, string> = {
+                                                'pending': 'Đang chờ',
+                                                'approved': 'Đã duyệt',
+                                                'rejected': 'Đã từ chối'
+                                            };
+                                            return statusMap[status.toLowerCase()] || status;
+                                        })()}</p>
                                     </div>
                                 </div>
                             </div>
@@ -702,7 +857,19 @@ export default function TechnicianWorkProgressPage() {
                                     return (
                                         <Card key={item._id} size="small">
                                             <Space split={<Divider type="vertical" />} wrap>
-                                                <Tag color={statusColor(item.status) as TagProps['color']}>{item.status}</Tag>
+                                                <Tag color={statusColor(item.status) as TagProps['color']}>
+                                                    {(() => {
+                                                        // Translate schedule status to Vietnamese
+                                                        const scheduleStatusMap: Record<string, string> = {
+                                                            'working': 'Đang làm',
+                                                            'completed': 'Hoàn tất',
+                                                            'on_leave': 'Nghỉ phép',
+                                                            'absent': 'Vắng',
+                                                            'pending': 'Chờ'
+                                                        };
+                                                        return scheduleStatusMap[item.status?.toLowerCase() || ''] || item.status || '';
+                                                    })()}
+                                                </Tag>
                                                 <Text>{`${item.shiftStart} - ${item.shiftEnd}`}</Text>
                                                 {item.centerId?.name && (
                                                     <Text type="secondary">{item.centerId.name}</Text>
@@ -738,12 +905,10 @@ export default function TechnicianWorkProgressPage() {
                                                         onClick={() => {
                                                             const chosen = dayModalSelectedAppt[item._id] || (item.assignedAppointments?.[0]?._id as string | undefined) || (item.appointmentId as string | undefined);
                                                             if (!chosen) { message.warning("Không có booking để báo giá"); return; }
-                                                            setQuoteAppointmentId(chosen);
-                                                            quoteForm.resetFields();
-                                                            setQuoteOpen(true);
+                                                            openInspectionQuote(chosen);
                                                         }}
                                                     >
-                                                        Gửi Inspection & Quote
+                                                        Gửi hoá đơn
                                                     </Button>
                                                     <Tooltip title={(() => {
                                                         const chosen = dayModalSelectedAppt[item._id] || (item.assignedAppointments?.[0]?._id as string | undefined) || (item.appointmentId as string | undefined);
@@ -791,17 +956,23 @@ export default function TechnicianWorkProgressPage() {
                 ) : null}
             </Modal>
 
+            {/* Inspection Modal */}
             <Modal
-                title="Inspection & Quote"
-                open={quoteOpen}
-                onCancel={() => setQuoteOpen(false)}
-                onOk={submitInspectionQuote}
-                okText="Gửi báo giá"
-                width={860}
-                destroyOnHidden
+                title="Kiểm tra xe"
+                open={inspectionOpen}
+                onCancel={() => {
+                    setInspectionOpen(false);
+                    setInspectionData(null);
+                    setQuoteAppointmentId(null);
+                }}
+                onOk={submitInspection}
+                okText="Tiếp theo"
+                cancelText="Hủy"
+                width={700}
+                destroyOnClose
             >
-                <Form layout="vertical" form={quoteForm} size="small">
-                    <Form.Item name="vehicleCondition" label="Tình trạng xe" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
+                <Form layout="vertical" form={inspectionForm} size="small">
+                    <Form.Item name="vehicleCondition" label="Tình trạng xe" rules={[{ required: true, message: "Vui lòng nhập tình trạng xe" }]} style={{ marginBottom: 8 }}>
                         <Select
                             mode="tags"
                             placeholder="Chọn hoặc nhập tình trạng xe"
@@ -824,7 +995,7 @@ export default function TechnicianWorkProgressPage() {
                             ]}
                         />
                     </Form.Item>
-                    <Form.Item name="diagnosisDetails" label="Chẩn đoán" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
+                    <Form.Item name="diagnosisDetails" label="Chẩn đoán" rules={[{ required: true, message: "Vui lòng nhập chẩn đoán" }]} style={{ marginBottom: 8 }}>
                         <Select
                             mode="tags"
                             placeholder="Chọn hoặc nhập chẩn đoán"
@@ -857,7 +1028,25 @@ export default function TechnicianWorkProgressPage() {
                             ]}
                         />
                     </Form.Item>
-                    {/** Removed Giá báo (VND) field as it is no longer sent */}
+                </Form>
+            </Modal>
+
+            {/* Quote Modal */}
+            <Modal
+                title="Báo giá"
+                open={quoteOpen}
+                onCancel={() => {
+                    setQuoteOpen(false);
+                    setInspectionData(null);
+                    setQuoteAppointmentId(null);
+                }}
+                onOk={submitInspectionQuote}
+                okText="Gửi báo giá"
+                cancelText="Hủy"
+                width={860}
+                destroyOnClose
+            >
+                <Form layout="vertical" form={quoteForm} size="small">
                     <Card size="small" className="mb-3">
                         <div className="flex items-center justify-between">
                             <Typography.Text strong>Hạng mục linh kiện</Typography.Text>
@@ -918,7 +1107,6 @@ export default function TechnicianWorkProgressPage() {
                             )}
                         </Form.List>
                     </Card>
-                    {/** Removed Công lao động UI and will not include in payload */}
                 </Form>
             </Modal>
 

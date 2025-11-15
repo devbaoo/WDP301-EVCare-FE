@@ -461,6 +461,7 @@ export default function HomePage() {
                     <ServiceCenterCardSimple
                       serviceCenter={serviceCenter}
                       onViewDetails={handleViewDetails}
+                      userLocation={userLocation}
                     />
                   </motion.div>
                 ))}

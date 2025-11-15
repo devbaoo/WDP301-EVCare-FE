@@ -35,6 +35,7 @@ import {
   Divider,
   Modal,
   Input as AntInput,
+  Alert,
 } from "antd";
 import axiosInstance from "../../services/constant/axiosInstance";
 import {
@@ -270,13 +271,13 @@ function BookingHistory() {
         setProgressData({
           notFound: true,
           message:
-            data?.message || "Progress record not found for this appointment",
+            data?.message || "Chưa có tiến độ",
         });
       }
     } catch (e) {
       setProgressData({
         notFound: true,
-        message: "Progress record not found for this appointment",
+        message: "Chưa có tiến độ",
       });
     } finally {
       setProgressLoading(false);
@@ -1300,14 +1301,13 @@ function BookingHistory() {
             <Text className="mt-4">Đang tải dữ liệu...</Text>
           </div>
         ) : progressData?.notFound ? (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
-            <Text className="text-yellow-800">
-              {String(
-                progressData?.message ||
-                  "Không tìm thấy bản ghi tiến độ cho lịch hẹn này"
-              )}
-            </Text>
-          </div>
+          <Alert
+            message="Chưa có tiến độ"
+            description="Booking này chưa có tiến độ làm việc. Vui lòng chờ kỹ thuật viên bắt đầu công việc."
+            type="info"
+            showIcon
+            className="mb-4"
+          />
         ) : (
           <div className="space-y-4">
             {(() => {
@@ -1652,146 +1652,286 @@ function BookingHistory() {
             {(() => {
               const qwrap = quoteData || {};
               const quote: any = (qwrap as any).quote || qwrap;
+              const quoteStatus = String(quote?.quoteStatus || "pending").toLowerCase();
+              const quoteDetails: any = quote?.quoteDetails;
+              const hasQuoteItems = quoteDetails && 
+                Array.isArray(quoteDetails.items) && 
+                quoteDetails.items.length > 0;
+              
+              // Check if quote actually exists (has items)
+              const hasQuote = hasQuoteItems || (quoteDetails && typeof quoteDetails === "string" && quoteDetails.trim() !== "");
+              
+              // If quoteStatus is pending and no quote items, show message
+              if (quoteStatus === "pending" && !hasQuote) {
+                return (
+                  <Alert
+                    message="Chưa có báo giá"
+                    description="Booking này chưa có báo giá. Vui lòng chờ kỹ thuật viên gửi báo giá."
+                    type="info"
+                    showIcon
+                    className="mb-4"
+                  />
+                );
+              }
+              
               const formatCurrency = (v: number) =>
                 new Intl.NumberFormat("vi-VN", {
                   style: "currency",
                   currency: "VND",
                 }).format(Number(v || 0));
+              const qd: any = quote?.quoteDetails;
+              const items = qd && Array.isArray(qd.items) ? qd.items : [];
+              const itemsTotal = items.reduce(
+                (sum: number, it: any) =>
+                  sum +
+                  Number(it.quantity || 0) * Number(it.unitPrice || 0),
+                0
+              );
+              
+              // Get booking info for invoice
+              const currentBooking = currentAppointmentId 
+                ? bookingsArray.find((b: Booking) => {
+                    const appts = (b as any).appointments || [];
+                    return appts.some((a: any) => a._id === currentAppointmentId);
+                  })
+                : null;
+              const serviceCenter = currentBooking?.serviceCenter || (qwrap as any)?.serviceCenter;
+              const customer = (qwrap as any)?.customer || (currentBooking as any)?.customer;
+              
               return (
-                <Card title="Thông tin kiểm tra & báo giá" className="mb-4">
-                  <Row gutter={[16, 16]}>
-                    <Col xs={24} md={12}>
-                      <Text type="secondary" className="block text-xs">
-                        Ghi chú kiểm tra
-                      </Text>
-                      <Text className="block">
-                        {quote?.inspectionNotes || "-"}
-                      </Text>
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <Text type="secondary" className="block text-xs">
-                        Hoàn thành kiểm tra lúc
-                      </Text>
-                      <Text className="block">
-                        {quote?.inspectionCompletedAt
-                          ? new Date(
-                              quote.inspectionCompletedAt
-                            ).toLocaleString()
-                          : "-"}
-                      </Text>
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <Text type="secondary" className="block text-xs">
-                        Tình trạng xe
-                      </Text>
-                      <Text className="block">
-                        {quote?.vehicleCondition || "-"}
-                      </Text>
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <Text type="secondary" className="block text-xs">
-                        Chi tiết chẩn đoán
-                      </Text>
-                      <Text className="block">
-                        {quote?.diagnosisDetails || "-"}
-                      </Text>
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <Text type="secondary" className="block text-xs">
-                        Trạng thái báo giá
-                      </Text>
-                      {(() => {
-                        const qs = String(
-                          quote?.quoteStatus || "pending"
-                        ).toLowerCase();
-                        const qc = QUOTE_STATUS_CONFIG[qs] || {
-                          color: "#8c8c8c",
-                          label: qs,
-                        };
-                        return (
-                          <Tag
-                            style={{ borderColor: qc.color, color: qc.color }}>
-                            {qc.label}
-                          </Tag>
-                        );
-                      })()}
-                    </Col>
-                  </Row>
-                  <Divider />
-                  <div>
-                    <Text strong className="block mb-2">
-                      Chi tiết báo giá
-                    </Text>
-                    {(() => {
-                      const qd: any = quote?.quoteDetails;
-                      if (!qd) return <Text className="block">-</Text>;
-                      const items = Array.isArray(qd.items) ? qd.items : [];
-                      const itemsTotal = items.reduce(
-                        (sum: number, it: any) =>
-                          sum +
-                          Number(it.quantity || 0) * Number(it.unitPrice || 0),
-                        0
-                      );
-                      return (
-                        <div className="space-y-3">
-                          {items.length > 0 && (
-                            <div>
-                              <Text type="secondary" className="block text-xs">
-                                Linh kiện
+                <div className="bg-white" style={{ fontFamily: 'Arial, sans-serif' }}>
+                  {/* Invoice Header */}
+                  <div className="border-b-2 border-gray-300 pb-4 mb-6">
+                    <Row gutter={24}>
+                      <Col xs={24} md={12}>
+                        <div>
+                          <Text strong style={{ fontSize: 28, color: '#1890ff' }} className="block mb-2">
+                            EV CARE
+                          </Text>
+                          <Text type="secondary" className="block text-sm">
+                            {serviceCenter?.name || "Trung tâm dịch vụ"}
+                          </Text>
+                          {serviceCenter?.address && (
+                            <>
+                              <Text className="block text-sm">
+                                {serviceCenter.address.street}
                               </Text>
-                              <ul className="list-disc list-inside space-y-1">
-                                {items.map((it: any, idx: number) => {
-                                  const qty = Number(it.quantity || 0);
-                                  const unit = Number(it.unitPrice || 0);
-                                  const lineTotal = qty * unit;
-                                  return (
-                                    <li
-                                      key={`${
-                                        it.partId || it.name || idx
-                                      }-${idx}`}>
-                                      <Text>
-                                        {it.name || it.partId || "Linh kiện"} x
-                                        {qty > 0 ? qty : 1} —{" "}
-                                        {formatCurrency(unit)} / cái
-                                        {lineTotal > 0 && (
-                                          <span>
-                                            {" "}
-                                            (Tổng: {formatCurrency(lineTotal)})
-                                          </span>
-                                        )}
-                                      </Text>
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                              <div className="flex items-center justify-end mt-1">
-                                <Text type="secondary">
-                                  Tạm tính linh kiện:&nbsp;
-                                </Text>
-                                <Text strong>{formatCurrency(itemsTotal)}</Text>
-                              </div>
+                              <Text className="block text-sm">
+                                {serviceCenter.address.ward}, {serviceCenter.address.district}
+                              </Text>
+                              <Text className="block text-sm">
+                                {serviceCenter.address.city}
+                              </Text>
+                            </>
+                          )}
+                          {serviceCenter?.contact && (
+                            <>
+                              <Text className="block text-sm mt-2">
+                                Điện thoại: {serviceCenter.contact.phone}
+                              </Text>
+                              <Text className="block text-sm">
+                                Email: {serviceCenter.contact.email}
+                              </Text>
+                            </>
+                          )}
+                        </div>
+                      </Col>
+                      <Col xs={24} md={12} className="text-right">
+                        <div>
+                          <Text strong style={{ fontSize: 24 }} className="block mb-4">
+                            BÁO GIÁ DỊCH VỤ
+                          </Text>
+                          <div className="space-y-1 text-sm">
+                            <div className="flex justify-between">
+                              <Text type="secondary">Số báo giá:</Text>
+                              <Text strong>#{currentAppointmentId?.slice(-8) || "N/A"}</Text>
                             </div>
-                          )}
-                          {items.length === 0 && (
-                            <Text className="block">-</Text>
-                          )}
-                          <Divider className="my-2" />
-                          <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
-                            <Text strong className="text-blue-700">
-                              Tổng cộng
-                            </Text>
-                            <Text
-                              strong
-                              className="text-blue-700"
-                              style={{ fontSize: 22 }}>
-                              {formatCurrency(Number(quote?.quoteAmount || 0))}
-                            </Text>
+                            <div className="flex justify-between">
+                              <Text type="secondary">Ngày báo giá:</Text>
+                              <Text>
+                                {quote?.quotedAt 
+                                  ? new Date(quote.quotedAt).toLocaleDateString("vi-VN")
+                                  : quote?.inspectionCompletedAt
+                                  ? new Date(quote.inspectionCompletedAt).toLocaleDateString("vi-VN")
+                                  : new Date().toLocaleDateString("vi-VN")}
+                              </Text>
+                            </div>
+                            <div className="flex justify-between">
+                              <Text type="secondary">Trạng thái:</Text>
+                              {(() => {
+                                const qs = String(quote?.quoteStatus || "pending").toLowerCase();
+                                const qc = QUOTE_STATUS_CONFIG[qs] || { color: "#8c8c8c", label: qs };
+                                return (
+                                  <Tag style={{ borderColor: qc.color, color: qc.color }}>
+                                    {qc.label}
+                                  </Tag>
+                                );
+                              })()}
+                            </div>
                           </div>
                         </div>
-                      );
-                    })()}
+                      </Col>
+                    </Row>
                   </div>
-                </Card>
+
+                  {/* Customer & Vehicle Info */}
+                  <div className="mb-6">
+                    <Row gutter={24}>
+                      <Col xs={24} md={12}>
+                        <div className="bg-gray-50 p-4 rounded">
+                          <Text strong className="block mb-2">Thông tin khách hàng</Text>
+                          {typeof customer === 'object' && customer ? (
+                            <>
+                              <Text className="block text-sm">{customer.fullName || customer.email || "N/A"}</Text>
+                              {customer.phone && <Text className="block text-sm">ĐT: {customer.phone}</Text>}
+                              {customer.email && <Text className="block text-sm">Email: {customer.email}</Text>}
+                            </>
+                          ) : (
+                            <Text className="block text-sm">Khách hàng</Text>
+                          )}
+                        </div>
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <div className="bg-gray-50 p-4 rounded">
+                          <Text strong className="block mb-2">Thông tin xe</Text>
+                          <Text className="block text-sm">
+                            {quote?.vehicleCondition ? `Tình trạng: ${quote.vehicleCondition}` : "N/A"}
+                          </Text>
+                          {quote?.diagnosisDetails && (
+                            <Text className="block text-sm mt-1">
+                              Chẩn đoán: {quote.diagnosisDetails}
+                            </Text>
+                          )}
+                        </div>
+                      </Col>
+                    </Row>
+                  </div>
+
+                  {/* Inspection Notes */}
+                  {quote?.inspectionNotes && (
+                    <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+                      <Text strong className="block mb-2">Ghi chú kiểm tra</Text>
+                      <Text className="text-sm">{quote.inspectionNotes}</Text>
+                      {quote?.inspectionCompletedAt && (
+                        <Text type="secondary" className="block text-xs mt-2">
+                          Hoàn thành kiểm tra: {new Date(quote.inspectionCompletedAt).toLocaleString("vi-VN")}
+                        </Text>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Items Table */}
+                  {items.length > 0 && (
+                    <div className="mb-6">
+                      <Text strong style={{ fontSize: 18 }} className="block mb-4">
+                        Chi tiết báo giá
+                      </Text>
+                      <div className="border border-gray-300 rounded">
+                        <table className="w-full" style={{ borderCollapse: 'collapse' }}>
+                          <thead>
+                            <tr className="bg-gray-100">
+                              <th className="border border-gray-300 px-4 py-3 text-left">
+                                <Text strong>STT</Text>
+                              </th>
+                              <th className="border border-gray-300 px-4 py-3 text-left">
+                                <Text strong>Tên linh kiện</Text>
+                              </th>
+                              <th className="border border-gray-300 px-4 py-3 text-center">
+                                <Text strong>Số lượng</Text>
+                              </th>
+                              <th className="border border-gray-300 px-4 py-3 text-right">
+                                <Text strong>Đơn giá</Text>
+                              </th>
+                              <th className="border border-gray-300 px-4 py-3 text-right">
+                                <Text strong>Thành tiền</Text>
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {items.map((it: any, idx: number) => {
+                              const qty = Number(it.quantity || 0);
+                              const unit = Number(it.unitPrice || 0);
+                              const lineTotal = qty * unit;
+                              return (
+                                <tr key={`${it.partId || it.name || idx}-${idx}`}>
+                                  <td className="border border-gray-300 px-4 py-3">
+                                    <Text>{idx + 1}</Text>
+                                  </td>
+                                  <td className="border border-gray-300 px-4 py-3">
+                                    <Text strong>{it.name || it.partId || "Linh kiện"}</Text>
+                                  </td>
+                                  <td className="border border-gray-300 px-4 py-3 text-center">
+                                    <Text>{qty > 0 ? qty : 1}</Text>
+                                  </td>
+                                  <td className="border border-gray-300 px-4 py-3 text-right">
+                                    <Text>{formatCurrency(unit)}</Text>
+                                  </td>
+                                  <td className="border border-gray-300 px-4 py-3 text-right">
+                                    <Text strong>{formatCurrency(lineTotal)}</Text>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Total Section */}
+                  {items.length > 0 && (
+                    <div className="mb-6">
+                      <Row gutter={24}>
+                        <Col xs={24} md={12}></Col>
+                        <Col xs={24} md={12}>
+                          <div className="border border-gray-300 rounded p-4 bg-gray-50">
+                            <div className="flex justify-between items-center mb-2">
+                              <Text strong style={{ fontSize: 16 }}>Tạm tính:</Text>
+                              <Text style={{ fontSize: 16 }}>{formatCurrency(itemsTotal)}</Text>
+                            </div>
+                            <Divider className="my-2" />
+                            <div className="flex justify-between items-center">
+                              <Text strong style={{ fontSize: 20, color: '#1890ff' }}>TỔNG CỘNG:</Text>
+                              <Text strong style={{ fontSize: 24, color: '#1890ff' }}>
+                                {formatCurrency(Number(quote?.quoteAmount || itemsTotal))}
+                              </Text>
+                            </div>
+                            <div className="mt-2 pt-2 border-t border-gray-300">
+                              <Text type="secondary" className="text-xs">
+                                (Bằng chữ: {(() => {
+                                  const amount = Number(quote?.quoteAmount || itemsTotal);
+                                  // Simple number to words conversion (basic)
+                                  return `${amount.toLocaleString('vi-VN')} đồng`;
+                                })()})
+                              </Text>
+                            </div>
+                          </div>
+                        </Col>
+                      </Row>
+                    </div>
+                  )}
+
+                  {/* Footer */}
+                  <div className="border-t-2 border-gray-300 pt-4 mt-6">
+                    <Row gutter={24}>
+                      <Col xs={24} md={12}>
+                        <Text type="secondary" className="text-xs block">
+                          <Text strong>Ghi chú:</Text> Báo giá này có hiệu lực trong vòng 7 ngày kể từ ngày phát hành.
+                        </Text>
+                      </Col>
+                      <Col xs={24} md={12} className="text-right">
+                        <div className="mt-4">
+                          <Text type="secondary" className="block text-sm mb-2">
+                            Người lập báo giá
+                          </Text>
+                          <div className="border-t border-gray-300 pt-2 inline-block" style={{ minWidth: 200 }}>
+                            <Text className="text-sm">Kỹ thuật viên</Text>
+                          </div>
+                        </div>
+                      </Col>
+                    </Row>
+                  </div>
+                </div>
               );
             })()}
 
@@ -1801,7 +1941,14 @@ function BookingHistory() {
               const status = String(
                 quote?.quoteStatus || "pending"
               ).toLowerCase();
-              const canRespond = status === "pending";
+              const quoteDetails: any = quote?.quoteDetails;
+              const hasQuoteItems = quoteDetails && 
+                Array.isArray(quoteDetails.items) && 
+                quoteDetails.items.length > 0;
+              const hasQuote = hasQuoteItems || (quoteDetails && typeof quoteDetails === "string" && quoteDetails.trim() !== "");
+              
+              // Only show response section if quote exists and status is pending
+              const canRespond = status === "pending" && hasQuote;
               return canRespond;
             })() && (
               <Card title="Phản hồi báo giá">
@@ -2221,3 +2368,4 @@ function BookingHistory() {
 }
 
 export default BookingHistory;
+

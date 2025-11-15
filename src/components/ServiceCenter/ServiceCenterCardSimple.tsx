@@ -9,15 +9,18 @@ import {
 } from 'lucide-react';
 import { ServiceCenter } from '../../interfaces/serviceCenter';
 import RealTimeStatus from './RealTimeStatus';
+import { calculateDistance, Coordinates } from '../../lib/locationUtils';
 
 interface ServiceCenterCardSimpleProps {
   serviceCenter: ServiceCenter;
   onViewDetails?: (serviceCenter: ServiceCenter) => void;
+  userLocation?: Coordinates | null;
 }
 
 const ServiceCenterCardSimple: React.FC<ServiceCenterCardSimpleProps> = ({
   serviceCenter,
-  onViewDetails
+  onViewDetails,
+  userLocation
 }) => {
   const {
     name,
@@ -28,6 +31,14 @@ const ServiceCenterCardSimple: React.FC<ServiceCenterCardSimpleProps> = ({
     status,
     images
   } = serviceCenter;
+
+  // Calculate distance from user location to service center
+  const getDistance = (): number | null => {
+    if (!userLocation || !address?.coordinates) {
+      return null;
+    }
+    return calculateDistance(userLocation, address.coordinates);
+  };
 
 
   const formatOperatingHours = () => {
@@ -116,9 +127,17 @@ const ServiceCenterCardSimple: React.FC<ServiceCenterCardSimpleProps> = ({
         {/* Address */}
         <div className="flex items-start space-x-2 mb-3">
           <MapPin className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 flex-1">
             <p className="font-medium line-clamp-1">{address.street}</p>
             <p className="line-clamp-1">{address.ward}, {address.district}</p>
+            {getDistance() !== null && (
+              <div className="flex items-center gap-1 mt-1">
+                <Navigation className="w-3.5 h-3.5 text-blue-600" />
+                <p className="text-blue-600 font-medium text-xs">
+                  {getDistance()} km từ vị trí của bạn
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

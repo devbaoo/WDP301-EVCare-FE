@@ -5,7 +5,6 @@ import {
   Card,
   Tag,
   Space,
-  Timeline,
   Row,
   Col,
   Spin,
@@ -16,8 +15,6 @@ import {
   DollarOutlined,
   FileTextOutlined,
   CheckCircleOutlined,
-  ExclamationCircleOutlined,
-  ToolOutlined,
   CarOutlined,
 } from "@ant-design/icons";
 import { WorkProgress } from "@/interfaces/workProgress";
@@ -195,130 +192,6 @@ const WorkProgressDetailModal: React.FC<WorkProgressDetailModalProps> = ({
             </Card>
           )}
 
-          {/* Inspection & Quote */}
-          {(workProgress.inspection || workProgress.quote) && (
-            <Card
-              size="small"
-              title={
-                <>
-                  <ToolOutlined className="mr-2" />
-                  Kiểm tra & Báo giá
-                </>
-              }>
-              <Row gutter={[16, 16]}>
-                {workProgress.inspection && (
-                  <Col span={12}>
-                    <Space direction="vertical" size="small" className="w-full">
-                      <Text strong>Kết quả kiểm tra:</Text>
-                      {workProgress.inspection.vehicleCondition && (
-                        <div>
-                          <Text strong>Tình trạng xe:</Text>
-                          <br />
-                          <Text>
-                            {workProgress.inspection.vehicleCondition}
-                          </Text>
-                        </div>
-                      )}
-                      {workProgress.inspection.diagnosisDetails && (
-                        <div>
-                          <Text strong>Chuẩn đoán:</Text>
-                          <br />
-                          <Text>
-                            {workProgress.inspection.diagnosisDetails}
-                          </Text>
-                        </div>
-                      )}
-                      {workProgress.inspection.inspectionNotes && (
-                        <div>
-                          <Text strong>Ghi chú kiểm tra:</Text>
-                          <br />
-                          <Text>{workProgress.inspection.inspectionNotes}</Text>
-                        </div>
-                      )}
-                    </Space>
-                  </Col>
-                )}
-                {workProgress.quote && (
-                  <Col span={12}>
-                    <Space direction="vertical" size="small" className="w-full">
-                      <Text strong>Báo giá:</Text>
-                      {workProgress.quote.quoteAmount && (
-                        <div>
-                          <Text strong>Số tiền:</Text>
-                          <br />
-                          <Text className="text-lg text-green-600">
-                            {formatCurrency(workProgress.quote.quoteAmount)}
-                          </Text>
-                        </div>
-                      )}
-                      {workProgress.quote.quoteDetails && (
-                        <div>
-                          <Text strong>Chi tiết:</Text>
-                          <br />
-                          {typeof workProgress.quote.quoteDetails ===
-                          "string" ? (
-                            <Text>{workProgress.quote.quoteDetails}</Text>
-                          ) : (
-                            <div className="space-y-1">
-                              {(() => {
-                                type QuoteItem = {
-                                  partId?: string;
-                                  name?: string;
-                                  quantity?: number;
-                                  unitPrice?: number;
-                                };
-                                const details = workProgress.quote!
-                                  .quoteDetails as unknown as {
-                                  items?: QuoteItem[];
-                                };
-                                const items = Array.isArray(details?.items)
-                                  ? details.items
-                                  : [];
-                                if (items.length > 0) {
-                                  return items.map((it, idx) => {
-                                    const qty = Number(it?.quantity || 0);
-                                    const price = Number(it?.unitPrice || 0);
-                                    const line = `${
-                                      it?.name || it?.partId || "Mục"
-                                    }: ${qty} x ${formatCurrency(
-                                      price
-                                    )} = ${formatCurrency(qty * price)}`;
-                                    return (
-                                      <div key={idx}>
-                                        <Text>{line}</Text>
-                                      </div>
-                                    );
-                                  });
-                                }
-                                return <Text>-</Text>;
-                              })()}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {workProgress.quote.quoteStatus && (
-                        <div>
-                          <Text strong>Trạng thái:</Text>
-                          <br />
-                          <Tag
-                            color={
-                              workProgress.quote.quoteStatus === "approved"
-                                ? "green"
-                                : "orange"
-                            }>
-                            {workProgress.quote.quoteStatus === "approved"
-                              ? "Đã duyệt"
-                              : "Chờ duyệt"}
-                          </Tag>
-                        </div>
-                      )}
-                    </Space>
-                  </Col>
-                )}
-              </Row>
-            </Card>
-          )}
-
           {/* Payment Details */}
           {(workProgress.paymentDetails ||
             (isAppointmentObject(appointment) && appointment.payment)) && (
@@ -374,45 +247,6 @@ const WorkProgressDetailModal: React.FC<WorkProgressDetailModalProps> = ({
                   </Space>
                 </Col>
               </Row>
-            </Card>
-          )}
-
-          {/* Milestones */}
-          {workProgress.milestones && workProgress.milestones.length > 0 && (
-            <Card
-              size="small"
-              title={
-                <>
-                  <CheckCircleOutlined className="mr-2" />
-                  Các bước thực hiện
-                </>
-              }>
-              <Timeline
-                items={workProgress.milestones.map((milestone) => ({
-                  dot:
-                    milestone.status === "completed" ? (
-                      <CheckCircleOutlined className="text-green-600" />
-                    ) : (
-                      <ExclamationCircleOutlined className="text-gray-400" />
-                    ),
-                  children: (
-                    <div>
-                      <Text strong>{milestone.name}</Text>
-                      <br />
-                      <Text type="secondary">{milestone.description}</Text>
-                      <br />
-                      <Tag
-                        color={
-                          milestone.status === "completed" ? "green" : "default"
-                        }>
-                        {milestone.status === "completed"
-                          ? "Hoàn thành"
-                          : "Chờ thực hiện"}
-                      </Tag>
-                    </div>
-                  ),
-                }))}
-              />
             </Card>
           )}
 

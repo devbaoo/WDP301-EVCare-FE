@@ -387,9 +387,19 @@ const StaffSchedulesTechnicianPage: React.FC = () => {
         {
             title: "Vị trí",
             key: "position",
-            render: (record: TechnicianStaff) => (
-                <Tag color="blue">{record.position}</Tag>
-            ),
+            render: (record: TechnicianStaff) => {
+                // Translate position to Vietnamese
+                const positionMap: Record<string, string> = {
+                    'technician': 'Kỹ thuật viên',
+                    'staff': 'Nhân viên',
+                    'admin': 'Quản trị viên',
+                    'manager': 'Quản lý'
+                };
+                const displayPosition = positionMap[record.position?.toLowerCase() || ''] || record.position || 'N/A';
+                return (
+                    <Tag color="blue">{displayPosition}</Tag>
+                );
+            },
         },
         {
             title: "Hành động",
