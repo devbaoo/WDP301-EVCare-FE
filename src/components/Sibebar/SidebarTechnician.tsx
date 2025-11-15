@@ -5,12 +5,9 @@ import { logout } from '@/services/features/auth/authSlice';
 import {
     Calendar,
     Wrench,
-    Clock,
-    Settings,
     LogOut,
     Menu,
     ChevronDown,
-    MessageSquare,
     type LucideIcon,
 } from 'lucide-react';
 
@@ -31,9 +28,6 @@ const SidebarTechnician = () => {
     const menuItems: MenuItem[] = [
         { icon: Calendar, label: 'Lịch Làm Việc', path: '/technician/schedule' },
         { icon: Wrench, label: 'Dịch Vụ Của Tôi', path: '/technician/services' },
-        { icon: MessageSquare, label: 'Trò Chuyện', path: '/technician/chat' },
-        { icon: Clock, label: 'Lịch Sử', path: '/technician/history' },
-        { icon: Settings, label: 'Cài Đặt', path: '/technician/settings' },
     ];
 
     const handleLogout = () => {
