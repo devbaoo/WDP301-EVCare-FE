@@ -49,6 +49,7 @@ import StaffPartsPage from "@/page/Staff/StaffPartsPage";
 import StaffInventoryPage from "@/page/Staff/StaffInventoryPage";
 import StaffAiInventoryPage from "@/page/Staff/StaffAiInventoryPage";
 import AIPredictionPage from "@/page/Staff/AIPredictionPage";
+import ManageModelPage from "@/page/Admin/ManageModelPage";
 
 const AppRouter = () => {
     const { isAuthenticated, user, needVerification } = useSelector((state: RootState) => state.auth);
@@ -182,6 +183,7 @@ const AppRouter = () => {
                         <Route path="users/all" element={<AllUserPage />} />
                         <Route path="users/staff" element={<StaffPage />} />
                         <Route path="services/manage" element={<ServicePage />} />
+                        <Route path="services/model" element={<ManageModelPage />} />
                         <Route path="service-centers" element={<ServiceCentersPages />} />
                         <Route path="booking" element={<BookingManagePages />} />
                     </Route>
