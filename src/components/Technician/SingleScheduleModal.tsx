@@ -130,6 +130,7 @@ const SingleScheduleModal: React.FC<SingleScheduleModalProps> = ({
                                 className="w-full"
                                 format="DD/MM/YYYY"
                                 placeholder="Chọn ngày"
+                                disabledDate={(current) => current && current < dayjs().startOf('day')}
                             />
                         </Form.Item>
                     </Col>

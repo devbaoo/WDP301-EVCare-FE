@@ -136,6 +136,7 @@ const MultipleScheduleModal: React.FC<MultipleScheduleModalProps> = ({
                         placeholder={["Từ ngày", "Đến ngày"]}
                         showTime={false}
                         picker="date"
+                        disabledDate={(current) => current && current < dayjs().startOf('day')}
                     />
                 </Form.Item>
 

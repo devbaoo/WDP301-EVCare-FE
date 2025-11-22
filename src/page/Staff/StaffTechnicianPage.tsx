@@ -288,6 +288,7 @@ const StaffTechnicianPage: React.FC = () => {
                                 setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)
                             }
                             format="DD/MM/YYYY"
+                            disabledDate={(current) => current && current < dayjs().startOf('day')}
                         />
                     </Col>
                     <Col xs={24} sm={12} md={4}>
