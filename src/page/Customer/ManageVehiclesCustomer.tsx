@@ -9,6 +9,7 @@ import axiosInstance from '@/services/constant/axiosInstance';
 import { VEHICLE_BRANDS_ENDPOINT } from '@/services/constant/apiConfig';
 import { Car, Badge, Palette, Battery, Hash, Pencil, Trash2, Info } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { Modal, Form, Input, AutoComplete, Button, message } from 'antd';
 
 function ManageVehiclesCustomer() {
     const dispatch = useAppDispatch();
@@ -103,34 +104,76 @@ function ManageVehiclesCustomer() {
         return null;
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (values: any) => {
+        // Update form state with values from Ant Design Form
+        const updatedForm: CreateVehicleData = {
+            vehicleInfo: {
+                brand: values.brand || '',
+                modelName: values.modelName || '',
+                year: values.year || new Date().getFullYear(),
+                batteryType: values.batteryType || '',
+                licensePlate: values.licensePlate || '',
+                color: values.color || '',
+                batteryCapacity: values.batteryCapacity || '',
+            },
+        };
+        
+        // Update form state
+        setForm(updatedForm);
+        
+        // Validate form
         const errMsg = validateForm();
         if (errMsg) {
             setFormError(errMsg);
             return;
         }
+        
         setFormError(null);
         setSuccessMsg(null);
-        // normalize plate to uppercase/no surrounding spaces to match booking format
+        
+        // Normalize plate to uppercase/no surrounding spaces to match booking format
         const normalizedForm: CreateVehicleData = {
-            ...form,
+            ...updatedForm,
             vehicleInfo: {
-                ...form.vehicleInfo,
-                licensePlate: String(form.vehicleInfo.licensePlate || '').trim().toUpperCase(),
+                ...updatedForm.vehicleInfo,
+                licensePlate: String(updatedForm.vehicleInfo.licensePlate || '').trim().toUpperCase(),
             },
         };
-        const action = await dispatch(createVehicle(normalizedForm));
-        if ((action as any).error) {
-            const msg = (action as any).payload || 'Không thể thêm xe.';
+        
+        try {
+            const action = await dispatch(createVehicle(normalizedForm));
+            if ((action as any).error) {
+                const msg = (action as any).payload || 'Không thể thêm xe.';
+                setFormError(msg);
+                message.error(msg);
+                toast.error(msg);
+            } else {
+                const msg = 'Thêm xe thành công!';
+                setSuccessMsg(msg);
+                message.success(msg);
+                toast.success(msg);
+                
+                // Reset form
+                setForm({
+                    vehicleInfo: {
+                        brand: '',
+                        modelName: '',
+                        year: new Date().getFullYear(),
+                        batteryType: '',
+                        licensePlate: '',
+                        color: '',
+                        batteryCapacity: '',
+                    },
+                });
+                setFieldErrors({});
+                setIsAddOpen(false);
+                dispatch(fetchVehicles());
+            }
+        } catch (error: unknown) {
+            const msg = (error as string) || 'Có lỗi xảy ra khi thêm xe';
             setFormError(msg);
+            message.error(msg);
             toast.error(msg);
-        } else {
-            const msg = 'Thêm xe thành công!';
-            setSuccessMsg(msg);
-            toast.success(msg);
-            setIsAddOpen(false);
-            dispatch(fetchVehicles());
         }
     };
 
@@ -322,114 +365,155 @@ function ManageVehiclesCustomer() {
             </div>
 
             {/* Add Vehicle Modal */}
-            {isAddOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    <div className="absolute inset-0 bg-black/50" onClick={handleCloseAdd} />
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-xl rounded-2xl bg-white shadow-xl">
-                        <div className="p-6 border-b border-gray-100">
-                            <h2 className="text-xl font-semibold">Thêm xe mới</h2>
-                            <p className="text-sm text-synop-gray-medium mt-1">Nhập thông tin xe để quản lý và đặt lịch bảo dưỡng.</p>
-                        </div>
-                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                            {formError && (
-                                <div className="rounded-md border border-red-200 bg-red-50 px-4 py-2 text-red-700">{formError}</div>
-                            )}
-                            {successMsg && (
-                                <div className="rounded-md border border-green-200 bg-green-50 px-4 py-2 text-green-700">{successMsg}</div>
-                            )}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Hãng xe</label>
-                                    <select
-                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${fieldErrors.brand ? 'border-red-400' : 'border-gray-300'}`}
-                                        value={form.vehicleInfo.brand}
-                                        onChange={(e) => handleChange('brand', e.target.value)}
-                                    >
-                                        <option value="">Chọn hãng</option>
-                                        {brands.map((b) => (
-                                            <option key={b} value={b}>{b}</option>
-                                        ))}
-                                    </select>
-                                    {fieldErrors.brand && <p className="mt-1 text-xs text-red-600">{fieldErrors.brand}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Dòng xe</label>
-                                    <input
-                                        type="text"
-                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${fieldErrors.modelName ? 'border-red-400' : 'border-gray-300'}`}
-                                        placeholder="VD: VF 8"
-                                        value={form.vehicleInfo.modelName}
-                                        onChange={(e) => handleChange('modelName', e.target.value)}
-                                    />
-                                    {fieldErrors.modelName && <p className="mt-1 text-xs text-red-600">{fieldErrors.modelName}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Năm sản xuất</label>
-                                    <input
-                                        type="number"
-                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${fieldErrors.year ? 'border-red-400' : 'border-gray-300'}`}
-                                        value={form.vehicleInfo.year}
-                                        onChange={(e) => handleChange('year', Number(e.target.value))}
-                                        min={1970}
-                                        max={new Date().getFullYear() + 1}
-                                    />
-                                    {fieldErrors.year && <p className="mt-1 text-xs text-red-600">{fieldErrors.year}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Biển số</label>
-                                    <input
-                                        type="text"
-                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${fieldErrors.licensePlate ? 'border-red-400' : 'border-gray-300'}`}
-                                        placeholder="30A-12345"
-                                        value={form.vehicleInfo.licensePlate}
-                                        onChange={(e) => handleChange('licensePlate', e.target.value)}
-                                    />
-                                    {fieldErrors.licensePlate && <p className="mt-1 text-xs text-red-600">{fieldErrors.licensePlate}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Màu xe</label>
-                                    <input
-                                        type="text"
-                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${fieldErrors.color ? 'border-red-400' : 'border-gray-300'}`}
-                                        placeholder="VD: Trắng"
-                                        value={form.vehicleInfo.color}
-                                        onChange={(e) => handleChange('color', e.target.value)}
-                                    />
-                                    {fieldErrors.color && <p className="mt-1 text-xs text-red-600">{fieldErrors.color}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Loại pin</label>
-                                    <input
-                                        type="text"
-                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${fieldErrors.batteryType ? 'border-red-400' : 'border-gray-300'}`}
-                                        placeholder="VD: Lithium-ion"
-                                        value={form.vehicleInfo.batteryType}
-                                        onChange={(e) => handleChange('batteryType', e.target.value)}
-                                    />
-                                    {fieldErrors.batteryType && <p className="mt-1 text-xs text-red-600">{fieldErrors.batteryType}</p>}
-                                </div>
-                                <div className="sm:col-span-2">
-                                    <label className="block text-sm font-medium mb-1">Dung lượng pin (kWh)</label>
-                                    <input
-                                        type="text"
-                                        className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 ${fieldErrors.batteryCapacity ? 'border-red-400' : 'border-gray-300'}`}
-                                        placeholder="VD: 82"
-                                        value={form.vehicleInfo.batteryCapacity}
-                                        onChange={(e) => handleChange('batteryCapacity', e.target.value)}
-                                    />
-                                    {fieldErrors.batteryCapacity && <p className="mt-1 text-xs text-red-600">{fieldErrors.batteryCapacity}</p>}
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-end gap-3 pt-2">
-                                <button type="button" onClick={handleCloseAdd} className="rounded-lg border border-gray-300 px-4 py-2 text-synop-gray-medium hover:bg-gray-50">Hủy</button>
-                                <button type="submit" disabled={createVehicleLoading} className="rounded-lg bg-primary px-4 py-2 text-white hover:opacity-90 disabled:opacity-60">
-                                    {createVehicleLoading ? 'Đang lưu...' : 'Thêm xe'}
-                                </button>
-                            </div>
-                        </form>
-                    </motion.div>
-                </div>
-            )}
+            <Modal
+                title="Thêm xe mới"
+                open={isAddOpen}
+                onCancel={() => {
+                    handleCloseAdd();
+                    setFormError(null);
+                    setSuccessMsg(null);
+                    setFieldErrors({});
+                }}
+                footer={null}
+                width={600}
+            >
+                <Form
+                    layout="vertical"
+                    onFinish={handleSubmit}
+                    initialValues={{
+                        brand: '',
+                        modelName: '',
+                        year: new Date().getFullYear(),
+                        licensePlate: '',
+                        color: '',
+                        batteryType: '',
+                        batteryCapacity: '',
+                    }}
+                    key={isAddOpen ? 'add-vehicle-form' : 'closed'}
+                >
+                    {formError && (
+                        <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-red-700">{formError}</div>
+                    )}
+                    {successMsg && (
+                        <div className="mb-4 rounded-md border border-green-200 bg-green-50 px-4 py-2 text-green-700">{successMsg}</div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Form.Item
+                            label="Hãng xe"
+                            name="brand"
+                            rules={[{ required: true, message: 'Vui lòng nhập hãng xe' }]}
+                            validateStatus={fieldErrors.brand ? 'error' : ''}
+                            help={fieldErrors.brand}
+                        >
+                            <AutoComplete
+                                placeholder="Chọn hoặc nhập hãng xe"
+                                options={brands.map(brand => ({ label: brand, value: brand }))}
+                                filterOption={(inputValue, option) =>
+                                    option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                                }
+                                allowClear
+                            />
+                        </Form.Item>
+
+                        <Form.Item
+                            label="Tên mẫu xe"
+                            name="modelName"
+                            rules={[{ required: true, message: 'Vui lòng nhập tên mẫu xe' }]}
+                            validateStatus={fieldErrors.modelName ? 'error' : ''}
+                            help={fieldErrors.modelName}
+                        >
+                            <Input placeholder="VD: VF 8" />
+                        </Form.Item>
+
+                        <Form.Item
+                            label="Năm sản xuất"
+                            name="year"
+                            rules={[
+                                { required: true, message: 'Vui lòng nhập năm sản xuất' },
+                                {
+                                    validator: (_, value) => {
+                                        const year = Number(value);
+                                        if (year < 1970 || year > new Date().getFullYear() + 1) {
+                                            return Promise.reject(new Error('Năm không hợp lệ'));
+                                        }
+                                        return Promise.resolve();
+                                    },
+                                },
+                            ]}
+                            validateStatus={fieldErrors.year ? 'error' : ''}
+                            help={fieldErrors.year}
+                        >
+                            <Input
+                                type="number"
+                                placeholder="2023"
+                                min={1970}
+                                max={new Date().getFullYear() + 1}
+                            />
+                        </Form.Item>
+
+                        <Form.Item
+                            label="Biển số xe"
+                            name="licensePlate"
+                            rules={[
+                                { required: true, message: 'Vui lòng nhập biển số xe' },
+                                {
+                                    pattern: /^\d{1,2}[A-Z]-\d{4,5}$/,
+                                    message: 'Biển số phải có định dạng: (VD: 30A-12345 hoặc 9B-1234)',
+                                },
+                            ]}
+                            validateStatus={fieldErrors.licensePlate ? 'error' : ''}
+                            help={fieldErrors.licensePlate}
+                        >
+                            <Input placeholder="30A-12345" />
+                        </Form.Item>
+
+                        <Form.Item
+                            label="Màu sắc"
+                            name="color"
+                            rules={[{ required: true, message: 'Vui lòng nhập màu sắc' }]}
+                            validateStatus={fieldErrors.color ? 'error' : ''}
+                            help={fieldErrors.color}
+                        >
+                            <Input placeholder="Ví dụ: White" />
+                        </Form.Item>
+
+                        <Form.Item
+                            label="Loại pin"
+                            name="batteryType"
+                            rules={[{ required: true, message: 'Vui lòng nhập loại pin' }]}
+                            validateStatus={fieldErrors.batteryType ? 'error' : ''}
+                            help={fieldErrors.batteryType}
+                        >
+                            <Input placeholder="Ví dụ: LFP, NMC..." />
+                        </Form.Item>
+
+                        <Form.Item
+                            label="Dung lượng pin (kWh)"
+                            name="batteryCapacity"
+                            className="md:col-span-2"
+                            rules={[{ required: true, message: 'Vui lòng nhập dung lượng pin' }]}
+                            validateStatus={fieldErrors.batteryCapacity ? 'error' : ''}
+                            help={fieldErrors.batteryCapacity}
+                        >
+                            <Input placeholder="77" />
+                        </Form.Item>
+                    </div>
+
+                    <div className="flex justify-end space-x-3 mt-6">
+                        <Button onClick={handleCloseAdd}>
+                            Hủy
+                        </Button>
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            loading={createVehicleLoading}
+                            className="bg-blue-600 hover:bg-blue-700"
+                        >
+                            Thêm xe
+                        </Button>
+                    </div>
+                </Form>
+            </Modal>
 
             {/* View Details Modal */}
             {isViewOpen && selectedVehicle && (

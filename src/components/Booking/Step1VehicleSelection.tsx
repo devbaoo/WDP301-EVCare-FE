@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Input, Select, message, Spin } from 'antd';
+import { Card, Button, Input, Select, AutoComplete, message, Spin } from 'antd';
 import { Car, Plus, Check, ArrowRight } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../services/store/store';
 import { fetchVehicles, createVehicle, setSelectedVehicle } from '../../services/features/booking/bookingSlice';
@@ -184,8 +184,8 @@ const Step1VehicleSelection: React.FC<Step1VehicleSelectionProps> = ({ onNext })
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Hãng xe *
                             </label>
-                            <Select
-                                placeholder="Chọn hãng xe"
+                            <AutoComplete
+                                placeholder="Chọn hoặc nhập hãng xe"
                                 value={formData.vehicleInfo.brand}
                                 onChange={(value) => setFormData({
                                     ...formData,
@@ -193,6 +193,10 @@ const Step1VehicleSelection: React.FC<Step1VehicleSelectionProps> = ({ onNext })
                                 })}
                                 className="w-full"
                                 options={brands.map(brand => ({ label: brand, value: brand }))}
+                                filterOption={(inputValue, option) =>
+                                    option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                                }
+                                allowClear
                             />
                         </div>
 

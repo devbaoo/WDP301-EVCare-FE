@@ -466,6 +466,7 @@ const StaffSchedulesTechnicianPage: React.FC = () => {
                             onChange={(date) => setSelectedDate(date)}
                             format="DD/MM/YYYY"
                             placeholder="Chọn ngày"
+                            disabledDate={(current) => current && current < dayjs().startOf('day')}
                         />
                     </Col>
                     <Col xs={24} sm={12} md={6}>
@@ -701,7 +702,10 @@ const StaffSchedulesTechnicianPage: React.FC = () => {
                             name="workDate"
                             rules={[{ required: true, message: 'Vui lòng chọn ngày làm việc' }]}
                         >
-                            <DatePicker style={{ width: '100%' }} />
+                            <DatePicker 
+                                style={{ width: '100%' }} 
+                                disabledDate={(current) => current && current < dayjs().startOf('day')}
+                            />
                         </Form.Item>
 
                         <Form.Item

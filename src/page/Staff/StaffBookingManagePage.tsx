@@ -310,6 +310,7 @@ const StaffBookingManagePage: React.FC = () => {
                   setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)
                 }
                 format="DD/MM/YYYY"
+                disabledDate={(current) => current && current < dayjs().startOf('day')}
               />
             </div>
           </Col>
