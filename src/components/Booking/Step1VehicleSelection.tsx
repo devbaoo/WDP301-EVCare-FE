@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Input, Select, AutoComplete, message, Spin } from 'antd';
+import { Card, Button, Input, AutoComplete, message, Spin } from 'antd';
 import { Car, Plus, Check, ArrowRight } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../services/store/store';
 import { fetchVehicles, createVehicle, setSelectedVehicle } from '../../services/features/booking/bookingSlice';

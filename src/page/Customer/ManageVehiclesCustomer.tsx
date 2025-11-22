@@ -72,14 +72,6 @@ function ManageVehiclesCustomer() {
         setIsAddOpen(false);
     };
 
-    const handleChange = (field: keyof CreateVehicleData['vehicleInfo'], value: string | number) => {
-        setForm((prev) => ({
-            vehicleInfo: {
-                ...prev.vehicleInfo,
-                [field]: value,
-            },
-        }));
-    };
 
     const validateForm = (): string | null => {
         const v = form.vehicleInfo;
@@ -117,20 +109,20 @@ function ManageVehiclesCustomer() {
                 batteryCapacity: values.batteryCapacity || '',
             },
         };
-        
+
         // Update form state
         setForm(updatedForm);
-        
+
         // Validate form
         const errMsg = validateForm();
         if (errMsg) {
             setFormError(errMsg);
             return;
         }
-        
+
         setFormError(null);
         setSuccessMsg(null);
-        
+
         // Normalize plate to uppercase/no surrounding spaces to match booking format
         const normalizedForm: CreateVehicleData = {
             ...updatedForm,
@@ -139,7 +131,7 @@ function ManageVehiclesCustomer() {
                 licensePlate: String(updatedForm.vehicleInfo.licensePlate || '').trim().toUpperCase(),
             },
         };
-        
+
         try {
             const action = await dispatch(createVehicle(normalizedForm));
             if ((action as any).error) {
@@ -152,7 +144,7 @@ function ManageVehiclesCustomer() {
                 setSuccessMsg(msg);
                 message.success(msg);
                 toast.success(msg);
-                
+
                 // Reset form
                 setForm({
                     vehicleInfo: {
