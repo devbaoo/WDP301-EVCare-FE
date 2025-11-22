@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Wrench,
   type LucideIcon,
+  Car,
 } from 'lucide-react';
 
 type MenuItem = {
@@ -37,8 +38,8 @@ const Sidebar = () => {
       label: 'Người Dùng',
       path: '/admin/users',
       children: [
-        { icon: UsersRound, label: 'Quản Lý Người Dùng', path: '/admin/users/all' },
-        { icon: UsersRound, label: 'Quản Lý Nhân Viên', path: '/admin/users/staff' },
+        { icon: UsersRound, label: 'Tất Cả', path: '/admin/users/all' },
+        { icon: UsersRound, label: 'Nhân Sự', path: '/admin/users/staff' },
       ]
     },
     {
@@ -46,7 +47,8 @@ const Sidebar = () => {
       label: 'Dịch Vụ',
       path: '/admin/services',
       children: [
-        { icon: Wrench, label: 'Quản Lý Dịch Vụ', path: '/admin/services/manage' },
+        { icon: Wrench, label: 'Dịch Vụ', path: '/admin/services/manage' },
+        { icon: Car, label: 'Hãng Xe', path: '/admin/services/model' },
       ]
     },
     { icon: Building2, label: 'Trung Tâm', path: '/admin/service-centers' },
